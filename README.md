@@ -3,7 +3,7 @@
 
 [English Version](README_en.md)
 
-**Neu (31.08.2017)**
+**Neu (31.08.2017)**  
 Kompatibel zu Firmware >= 5.4.x  
 Optionale Weiterleitung zum öffentlichen Server bzw. weiteren lokalen (Raspi-) Server Instanzen implementiert  
 Inkohärenz bei Legacy Plato Diagrammen (Version 4, serverseitiges Polynom) beseitigt  
