@@ -1,0 +1,6 @@
+#!/bin/sh
+echo Updating from GIT...
+git pull
+echo Installing Server Script...
+sudo cp ./iSpindle.py /usr/local/bin/
+echo Done.
