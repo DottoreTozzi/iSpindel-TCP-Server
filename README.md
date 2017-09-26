@@ -3,7 +3,7 @@
 
 [English Version](README_en.md)
 
-**Neu (27.09.2017**  
+**Neu (27.09.2017)**  
 update.sh: Skript für automatisches Update auf neue Versionen
 update-raspi.sh: Skript für komplettes Update (Image/Debian/Raspbian)
 
