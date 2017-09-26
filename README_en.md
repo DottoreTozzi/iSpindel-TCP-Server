@@ -1,19 +1,19 @@
 # genericTCP
 #### (iSpindle.py Version 1.3.1)
 
-**New (31.08.2017)**
-Compatible to firmware >= 5.4.x
-Optional data forwarding to other JSON capable TCP clients, including this one and the upcoming "public server".
-Fixed incoherency with legacy Plato charts (plato4.php), properly using signed parameters in Calibration table now for building the polynomial
-Fixed some minor issues in chart legends (formerly mislabeled but still only in German, sorry for that...)
-Fixed Unix permissions
-Several other small bugfixes
+**New (31.08.2017)**  
+Compatible to firmware >= 5.4.x  
+Optional data forwarding to other JSON capable TCP clients, including this one and the upcoming "public server".  
+Fixed incoherency with legacy Plato charts (plato4.php), properly using signed parameters in Calibration table now for building the polynomial  
+Fixed some minor issues in chart legends (formerly mislabeled but still only in German, sorry for that...)  
+Fixed Unix permissions  
+Several other small bugfixes  
 
-In order to update from former versions:
+In order to update from former versions:  
 Take a look at the [Install Instructions](INSTALL_en.md).
 
-There will of course also be an updated full image for the Raspberry.
-Please watch this thread on the German Hobbybrauer Forum for the announcement:
+There will of course also be an updated full image for the Raspberry.  
+Please watch this thread on the German Hobbybrauer Forum for the announcement:  
 http://hobbybrauer.de/forum/viewtopic.php?f=58&t=12869
 
 Future enhancements and goodies are being announced there, too, so make sure you check it once in a while. ;)
