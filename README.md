@@ -4,17 +4,17 @@
 [English Version](README_en.md)
 
 **Neu (31.08.2017)**
-Kompatibel zu Firmware >= 5.4.x
-Optionale Weiterleitung zum öffentlichen Server bzw. weiteren lokalen (Raspi-) Server Instanzen implementiert
-Inkohärenz bei Legacy Plato Diagrammen (Version 4, serverseitiges Polynom) beseitigt
-Kleinere Fehler in den Diagrammen beseitigt (Legenden)
-Unix Dateizugriffsrechte angepasst
-Kleinere Bugfixes
+Kompatibel zu Firmware >= 5.4.x  
+Optionale Weiterleitung zum öffentlichen Server bzw. weiteren lokalen (Raspi-) Server Instanzen implementiert  
+Inkohärenz bei Legacy Plato Diagrammen (Version 4, serverseitiges Polynom) beseitigt  
+Kleinere Fehler in den Diagrammen beseitigt (Legenden)  
+Unix Dateizugriffsrechte angepasst  
+Kleinere Bugfixes  
 
 Update von bestehenden Versionen:
 Bitte die [Installations Anleitung](INSTALL.md) beachten.
 
-Ein neues Raspbian "Plug & Play" Image wird natürlich ebenfalls in den nächsten Tagen bereitgestellt.
+Ein neues Raspbian "Plug & Play" Image wird natürlich ebenfalls in den nächsten Tagen bereitgestellt.  
 Hierzu bitte diesen Thread im Hobbybrauer Forum beobachten:
 http://hobbybrauer.de/forum/viewtopic.php?f=58&t=12869
 
