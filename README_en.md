@@ -1,6 +1,9 @@
 # genericTCP
 #### (iSpindle.py Version 1.3.1)
 
+**New (27.09.2017)**  
+Added Update Scripts  
+
 **New (31.08.2017)**  
 Compatible to firmware >= 5.4.x  
 Optional data forwarding to other JSON capable TCP clients, including this one and the upcoming "public server".  

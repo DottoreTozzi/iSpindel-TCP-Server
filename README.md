@@ -3,6 +3,10 @@
 
 [English Version](README_en.md)
 
+**Neu (27.09.2017**  
+update.sh: Skript für automatisches Update auf neue Versionen
+update-raspi.sh: Skript für komplettes Update (Image/Debian/Raspbian)
+
 **Neu (31.08.2017)**  
 Kompatibel zu Firmware >= 5.4.x  
 Optionale Weiterleitung zum öffentlichen Server bzw. weiteren lokalen (Raspi-) Server Instanzen implementiert  
