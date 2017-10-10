@@ -58,8 +58,7 @@ NAK = chr(21)           # ASCII NAK (Not Acknowledged)
 BUFF = 1024             # Buffer Size (greatly exaggerated for now)
 
 def dbgprint(s):
-    if DEBUG == 1: print(s)
-
+    if DEBUG == 1: print(str(s))
 def handler(clientsock,addr):
     inpstr = ''
     success = 0
@@ -123,15 +122,15 @@ def handler(clientsock,addr):
         if CSV == 1:
             dbgprint(repr(addr) + ' - writing CSV')
             try:
-                filename = OUTPATH + spindle_name + '_' + spindle_id + '.csv'
+                filename = OUTPATH + spindle_name + '_' + str(spindle_id) + '.csv'
                 with open(filename, 'a') as csv_file:
                     # this would sort output. But we do not want that...
                     # import csv
                     # csvw = csv.writer(csv_file, delimiter=DELIMITER)
                     # csvw.writerow(jinput.values())
                     outstr = ''
-                    outstr += spindle_name + DELIMITER
-                    outstr += spindle_id + DELIMITER
+                    outstr += str(spindle_name) + DELIMITER
+                    outstr += str(spindle_id) + DELIMITER
                     outstr += str(angle) + DELIMITER
                     outstr += str(temperature) + DELIMITER
                     outstr += str(battery) + DELIMITER
