@@ -7,7 +7,7 @@ CREATE TABLE `Data` (
        `Battery` double NOT NULL,
        `ResetFlag` boolean,
        `Gravity` double NOT NULL DEFAULT 0,
-       `UserToken` varchar(64) COLLATE ascii_bin;
+       `UserToken` varchar(64) COLLATE ascii_bin,
 	PRIMARY KEY (`Timestamp`, `Name`, `ID`)
 	) 
 ENGINE=InnoDB DEFAULT CHARSET=ascii 
