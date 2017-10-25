@@ -59,11 +59,12 @@ BUFF = 1024             # Buffer Size (greatly exaggerated for now)
 
 def dbgprint(s):
     if DEBUG == 1: print(str(s))
+
 def handler(clientsock,addr):
     inpstr = ''
     success = 0
     spindle_name = ''
-    spindle_id = ''
+    spindle_id = 0
     angle = 0.0
     temperature = 0.0
     battery = 0.0
@@ -154,7 +155,7 @@ def handler(clientsock,addr):
                 valuelist = [datetime.now(), spindle_name, spindle_id, angle, temperature, battery, gravity]
 
                 # do we have a user token defined? (Fw > 5.4.x)
-                # it's for later use but if it exists, let's store it for testing purposes
+                # this is for later use (public server) but if it exists, let's store it for testing purposes
                 # this also should ensure compatibility with older fw versions and not-yet updated databases
                 if user_token != '':
                     fieldlist.append('UserToken')
