@@ -18,7 +18,7 @@ import json
 # CONFIG Start
 
 # General
-DEBUG = 1                               # Set to 1 to enable debug output on console (usually devs only)
+DEBUG = 0                               # Set to 1 to enable debug output on console (usually devs only)
 PORT = 9501                             # TCP Port to listen to (to be used in iSpindle config as well)
 HOST = '0.0.0.0'                        # Allowed IP range. Leave at 0.0.0.0 to allow connections from anywhere
 
