@@ -49,11 +49,27 @@ If you don't need phpmyadmin and the visualization charts you can safely omit bo
 
 ### Prepare Raspbian 
 - raspi-config: activate ssh, establish network connection (via Ethernet or WiFi). You'll probably need a keyboard and an HDMI capable display for this step. Or you create an empty file called "ssh" in the boot directory of the SD card prior to booting the Raspi from it.
+
+If you don't have an ethernet connection available and want the Raspberry Pi to immediately connect to your WLAN on first boot, you can create a file named "wpa_supplicant.conf" in the /boot partition with the following contents:
+
+	country=DE
+	ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+	update_config=1
+	
+	network={
+    		ssid="YOUR_SSID"
+    		psk="YOUR_PSK"
+	}
+
+- raspi-config: activate ssh, establish network connection (via Ethernet or WiFi). You'll probably need a keyboard and an HDMI capable display for this step. Or you create an empty file called "ssh" in the boot directory of the SD card prior to booting the Raspi from it.
 - connect via putty (Windows) or Terminal and SSH (Mac OS X, Linux):
 ```           
    ssh pi@[ip-address or hostname] 
    Password: raspberry (change this)
 ```
+The host name should be "raspberrypi" by default; if that doesn't work, try "raspberrypi.local".
+if neither of these work, you'll need to find out the raspi's IP address via the router configuration menu.
+
 Update your system:
 
 	sudo apt-get update
