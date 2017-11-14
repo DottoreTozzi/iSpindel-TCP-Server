@@ -52,10 +52,26 @@ Wer auf die Diagramme und auf phpmyadmin verzichten will, also auf die Möglichk
 ### Raspbian vorbereiten
 - raspi-config: ssh einschalten, Netzwerkverbindung herstellen (hierfür braucht man einmalig eine Tastatur und einen HDMI Bildschirm)             
 - Oder: Beim Vorbereiten der SD Karte im /boot Verzeichnis eine leere Datei "ssh" anlegen. Dann kann man sich direkt über einen anderen Rechner im Netzwerk per SSH einloggen und braucht weder Bildschirm noch Tastatur am Raspi.
+
+Hat man keinen Ethernet Anschluss verfügbar und möchte den Raspberry beim ersten Start gleich mit dem Heim WLAN verbinden, so ist auch dieses möglich:
+Hierzu eine Datei namens wpa_supplicant.conf im /boot Verzeichnis anlegen mit diesem Inhalt:
+
+	country=DE
+	ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+	update_config=1
+
+	network={
+    		ssid="YOUR_SSID"
+    		psk="YOUR_PSK"
+	}
+
 - Verbinden mit putty (Windows) oder Terminal (Mac OS X, Linux) und ssh:
 
-	ssh pi@[ip-adresse oder hostname] 
-	Passwort: raspberry (ändern)
+		ssh pi@[ip-adresse oder hostname] 
+		Passwort: raspberry (ändern)
+
+Der Hostname ist per default "raspberrypi" und wenn der nicht gefunden wird, einfach mal "raspberrypi.local" ausprobieren.
+Die IP Adresse kann über die Konfiguration des Routers herausgefunden werden, falls das nicht klappt.
 
 System auf neuesten Stand bringen:
 
