@@ -8,8 +8,10 @@
   Data access via mySQL for the charts is defined in here.
  
   For the original project itself, see: https://github.com/universam1/iSpindel  
-  
-  Tozzi (stephan@sschreiber.de), Mar 15 2017
+ 
+  Got rid of deprecated stuff, ready for Debian Stretch now.
+ 
+  Tozzi (stephan@sschreiber.de), Nov 25 2017
 */
 
 
@@ -21,7 +23,7 @@ function delLastChar($string="")
 }
  
 // Get values from database for selected spindle, between now and timeframe in hours ago
-function getChartValues($iSpindleID='iSpindel000', $timeFrameHours=defaultTimePeriod, $reset=defaultReset)
+function getChartValues($conn, $iSpindleID='iSpindel000', $timeFrameHours=defaultTimePeriod, $reset=defaultReset)
 {
    if ($reset)
    {
@@ -30,24 +32,24 @@ function getChartValues($iSpindleID='iSpindel000', $timeFrameHours=defaultTimePe
    }  
    else
    {
-  $where ="WHERE Name = '".$iSpindleID."' 
+   $where ="WHERE Name = '".$iSpindleID."' 
             AND Timestamp >= date_sub(NOW(), INTERVAL ".$timeFrameHours." HOUR) 
             and Timestamp <= NOW()";
    }  
-   $q_sql = mysql_query("SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle
+   $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle
                          FROM Data " 
                          .$where 
-                         ." ORDER BY Timestamp ASC") or die(mysql_error());
+                         ." ORDER BY Timestamp ASC") or die(mysqli_error($conn));
                          
   // retrieve number of rows
-  $rows = mysql_num_rows($q_sql);
+  $rows = mysqli_num_rows($q_sql);
   if ($rows > 0)
   {
     $valAngle = '';
     $valTemperature = '';
     
     // retrieve and store the values as CSV lists for HighCharts
-    while($r_row = mysql_fetch_array($q_sql))
+    while($r_row = mysqli_fetch_array($q_sql))
     {
       $jsTime = $r_row['unixtime'] * 1000;
       $valAngle         .= '['.$jsTime.', '.$r_row['angle'].'],';
@@ -62,7 +64,7 @@ function getChartValues($iSpindleID='iSpindel000', $timeFrameHours=defaultTimePe
 }
 
 // Get values from database including gravity (Fw 5.0.1 required) for selected spindle, between now and timeframe in hours ago
-function getChartValuesPlato($iSpindleID='iSpindel000', $timeFrameHours=defaultTimePeriod, $reset=defaultReset)
+function getChartValuesPlato($conn, $iSpindleID='iSpindel000', $timeFrameHours=defaultTimePeriod, $reset=defaultReset)
 {
    if ($reset)
    {
@@ -75,13 +77,13 @@ function getChartValuesPlato($iSpindleID='iSpindel000', $timeFrameHours=defaultT
             AND Timestamp >= date_sub(NOW(), INTERVAL ".$timeFrameHours." HOUR) 
             AND Timestamp <= NOW()";
    }  
-   $q_sql = mysql_query("SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, gravity
+   $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, gravity
                           FROM Data " 
                          .$where 
-                         ." ORDER BY Timestamp ASC") or die(mysql_error());
+                         ." ORDER BY Timestamp ASC") or die(mysqli_error($conn));
 
   // retrieve number of rows
-  $rows = mysql_num_rows($q_sql);
+  $rows = mysqli_num_rows($q_sql);
   if ($rows > 0)
   {
     $valAngle = '';
@@ -89,7 +91,7 @@ function getChartValuesPlato($iSpindleID='iSpindel000', $timeFrameHours=defaultT
     $valGravity = '';
 
     // retrieve and store the values as CSV lists for HighCharts
-    while($r_row = mysql_fetch_array($q_sql))
+    while($r_row = mysqli_fetch_array($q_sql))
     {
       $jsTime = $r_row['unixtime'] * 1000;
       $valAngle         .= '['.$jsTime.', '.$r_row['angle'].'],';
@@ -106,17 +108,17 @@ function getChartValuesPlato($iSpindleID='iSpindel000', $timeFrameHours=defaultT
 }
 
 // Get current values (angle, temperature, battery)
-function getCurrentValues($iSpindleID='iSpindel000')
+function getCurrentValues($conn, $iSpindleID='iSpindel000')
 {
-   $q_sql = mysql_query("SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, battery
+   $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, battery
                 FROM Data
                 WHERE Name = '".$iSpindleID."'
-                ORDER BY Timestamp DESC LIMIT 1") or die (mysql_error());
+                ORDER BY Timestamp DESC LIMIT 1") or die (mysqli_error($conn));
   
-  $rows = mysql_num_rows($q_sql);                                                                                         
+  $rows = mysqli_num_rows($q_sql);                                                                                         
   if ($rows > 0)                                                                                                          
   {
-    $r_row = mysql_fetch_array($q_sql);
+    $r_row = mysqli_fetch_array($q_sql);
     $valTime = $r_row['unixtime'];
     $valTemperature = $r_row['temperature'];
     $valAngle = $r_row['angle'];
@@ -127,7 +129,7 @@ function getCurrentValues($iSpindleID='iSpindel000')
                         
 // Get calibrated values from database for selected spindle, between now and [number of hours] ago
 // Old Method for Firmware before 5.x
-function getChartValuesPlato4($iSpindleID='iSpindel000', $timeFrameHours=defaultTimePeriod, $reset=defaultReset)
+function getChartValuesPlato4($conn, $iSpindleID='iSpindel000', $timeFrameHours=defaultTimePeriod, $reset=defaultReset)
 {
     $isCalibrated = 0;  // is there a calbration record for this iSpindle?
     $valAngle = '';
@@ -148,36 +150,36 @@ function getChartValuesPlato4($iSpindleID='iSpindel000', $timeFrameHours=default
             AND Timestamp <= NOW()";
    }  
    
-   $q_sql = mysql_query("SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle
+   $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle
                            FROM Data " 
                            .$where 
-                          ." ORDER BY Timestamp ASC") or die(mysql_error());
+                          ." ORDER BY Timestamp ASC") or die(mysqli_error($conn));
                      
     // retrieve number of rows
-    $rows = mysql_num_rows($q_sql);
+    $rows = mysqli_num_rows($q_sql);
     if ($rows > 0)
     {
      // get unique hardware ID for calibration
-     $u_sql = mysql_query("SELECT ID FROM Data WHERE Name = '".$iSpindleID."' ORDER BY Timestamp DESC LIMIT 1") or die(mysql_error());
-     $rowsID = mysql_num_rows($u_sql);
+     $u_sql = mysqli_query($conn, "SELECT ID FROM Data WHERE Name = '".$iSpindleID."' ORDER BY Timestamp DESC LIMIT 1") or die(mysqli_error($conn));
+     $rowsID = mysqli_num_rows($u_sql);
      if ($rowsID > 0)
      {
         // try to get calibration for iSpindle hardware ID
-        $r_id = mysql_fetch_array($u_sql);
+        $r_id = mysqli_fetch_array($u_sql);
         $uniqueID = $r_id['ID'];
-        $f_sql = mysql_query("SELECT const1, const2, const3 FROM Calibration WHERE ID = '$uniqueID' ") or die(mysql_error());
-        $rows_cal = mysql_num_rows($f_sql);
+        $f_sql = mysqli_query($conn, "SELECT const1, const2, const3 FROM Calibration WHERE ID = '$uniqueID' ") or die(mysqli_error($conn));
+        $rows_cal = mysqli_num_rows($f_sql);
         if ($rows_cal > 0)
         {
             $isCalibrated = 1;
-            $r_cal = mysql_fetch_array($f_sql);
+            $r_cal = mysqli_fetch_array($f_sql);
             $const1 = $r_cal['const1'];
             $const2 = $r_cal['const2'];
             $const3 = $r_cal['const3'];
         }
      }
      // retrieve and store the values as CSV lists for HighCharts
-     while($r_row = mysql_fetch_array($q_sql))
+     while($r_row = mysqli_fetch_array($q_sql))
      {
          $jsTime = $r_row['unixtime'] * 1000;
          $angle = $r_row['angle'];
@@ -194,3 +196,4 @@ function getChartValuesPlato4($iSpindleID='iSpindel000', $timeFrameHours=default
     }
  }
 ?>
+

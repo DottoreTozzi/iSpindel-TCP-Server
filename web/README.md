@@ -21,7 +21,7 @@ Ich habe insgesamt folgende verschiedene Diagramme implementiert:
 
 * angle.php - zeigt Winkel und Temperatur für vergangene X Stunden
 * plato.php - zeigt Restextrakt und Temperatur für vergangene X Stunden bei **kalibrierter** iSpindel (ab Firmware 5.x)
-* plato4.php - zeigt Restextrakt und Temperatur für vergangene X Stunden bei **nach alter Methode kalibrierter iSpindel** (Firmware 4.x)
+* plato4.php - zeigt Restextrakt und Temperatur für vergangene X Stunden bei **nach alter Methode kalibrierter iSpindel** (Firmware 4.x), ist aber auch gut, um eine iSpindel, die sich bereits im Gärfass befindet, erst mal vorzukalibrieren und somit bereits Restextrakt ablesen zu können. Die ermittelten Werte lassen sich dann nachher übertragen.
 * battery.php - zeigt den Ladezustand einer Spindel
 * status.php - zeigt Ladezustand, Winkel und Temperatur einer Spindel, wie aktuell gemessen
 
@@ -52,11 +52,13 @@ Die externen Libraries habe ich mit hier aufgenommen, um die Daten auch ohne Int
 Damit Apache die Diagramme "sehen" kann, müssen sie irgendwie in **/var/www/html** (oder einem Unterverzeichnis dort) zu finden sein.
 Ich mache das mittels Symlink auf mein GIT Arbeitsverzeichnis, somit ist der Webserver nach GIT PULL sofort auf dem neuesten Stand:
 
-      cd /var/www/html    
-      sudo ln -s ~/iSpindel/tools/genericTCP/web/ iSpindle
+        cd /var/www/html    
+        sudo ln -sf /home/pi/iSpindel-Srv/web/ iSpindle
+        sudo chown -R pi:pi iSpindle/*
+        sudo chown -h pi:pi iSpindle
 
 #### Datenbankschnittstelle:
-Um die Verbindung zur Datenbank herzustellen, muss die Datei include/common_db.php editiert werden:
+Um die Verbindung zur Datenbank herzustellen, muss die Datei include/common_db.php eventuell editiert werden:
 
       // configure your database connection here:
       define('DB_SERVER',"localhost");

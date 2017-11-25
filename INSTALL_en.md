@@ -70,29 +70,45 @@ If you don't have an ethernet connection available and want the Raspberry Pi to 
 The host name should be "raspberrypi" by default; if that doesn't work, try "raspberrypi.local".
 if neither of these work, you'll need to find out the raspi's IP address via the router configuration menu.
 
-Update your system:
+First thing you should do now is do some basic configurations via raspi-config:
+
+	sudo raspi-config
+
+Make sure you set the system locale properly, and change your password and perhaps the host name, too.
+Improperly set system locale might lead to some nasty problems later.
+Check by entering the "locale" command and make sure all the variables are defined and correct.
+
+
+Then, update your system:
 
 	sudo apt-get update
 	sudo apt-get dist-upgrade
+
+You'll need to reboot the Raspi after this.
+
+### Download the Server Software
+
+	git clone https://github.com/DottoreTozzi/iSpindel-TCP-Server iSpindel-Srv
 
 ### MySQL, Apache2 and phpMyAdmin database GUI 
 
 #### Install:
 
-	sudo apt-get install apache2 mysql-server mysql-client php5-mysql python-mysql.connector
+	sudo apt-get install apache2 mysql-server mysql-client python-mysql.connector
 
 When asked, choose a password for the database admin account.
 
 	sudo apt-get install phpmyadmin
 
 When asked, choose Apache2 as web server, and enter the database root user's password (as above).
+Or keep it blank and look it up in /etc/dbconfig-common/phpmyadmin.conf later.
 MySQL is now managable through http://[myraspi]/phpmyadmin.
 
-You can now complete the following steps either by using phpmyadmin (logging in as root, then click on the "SQL" tab) or directly in mysql via command line:
+The following steps should also be done on the command line, as the user "phpmyadmin" doesn't have the needed access rights (yet).
 
-	mysql -u root -p
+	mysql -u root
 
-You'll have to enter the root user's password again.    
+You should not be asked for a password there, as you are already logging in as the super user (root).
 Now you should see a **mysql>** prompt.
 
 #### Create and Select the Database:
@@ -129,7 +145,7 @@ The field "ID" stores the iSpindle's unique hardware ID, which we'll need in ord
 
 #### Create a Database User, Grant Permissions, Set Password):
 
-	CREATE USER 'iSpindle' IDENTIFIED BY 'password';
+	CREATE USER 'iSpindle' IDENTIFIED BY 'ohyeah';
 	GRANT USAGE ON *.* TO 'iSpindle';
 	GRANT ALL PRIVILEGES ON `iSpindle`.* TO 'iSpindle' WITH GRANT OPTION;
 
@@ -184,6 +200,7 @@ See section below on how to install it.
 
 #### Start Samba Daemon:
 
+	sudo apt-get install insserv
 	sudo insserv smbd
 	sudo service smbd start
 
@@ -196,8 +213,8 @@ If you're not too familiar with Unix and the shell, you could follow this guide 
 Copy both iSpindle.py and ispindle-serv to the pi home directory.
 Then, within the SSH terminal session, type:
 
-    cd /home/pi
-    sudo mv ./iSpindle.py /usr/local/bin
+    	cd /home/pi/iSpindel-Srv
+    	sudo mv ./iSpindle.py /usr/local/bin
 	sudo mv ./ispindle-srv /etc/init.d
 	sudo chmod 755 /usr/local/bin/iSpindle.py
 	sudo chmod 755 /etc/init.d/ispindle-srv

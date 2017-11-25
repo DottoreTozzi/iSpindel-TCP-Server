@@ -13,7 +13,7 @@ if(!isset($_GET['hours'])) $_GET['hours'] = defaultTimePeriod; else $_GET['hours
 if(!isset($_GET['name'])) $_GET['name'] = 'iSpindel000'; else $_GET['name'] = $_GET['name'];
 if(!isset($_GET['reset'])) $_GET['reset'] = defaultReset; else $_GET['reset'] = $_GET['reset'];
 
-list($isCalib, $dens, $temperature, $angle) = getChartValuesPlato4($_GET['name'], $_GET['hours'], $_GET['reset']);
+list($isCalib, $dens, $temperature, $angle) = getChartValuesPlato4($conn, $_GET['name'], $_GET['hours'], $_GET['reset']);
 
 ?>
 

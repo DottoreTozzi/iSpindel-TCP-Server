@@ -9,7 +9,7 @@ echo Updating Raspbian Packages...
 sudo apt-get dist-upgrade
 echo Cleaning Up...
 sudo apt-get autoremove
-sudo apt-get autoclean
+sudo apt-get clean
 echo Done.
 read -p 'Reboot Now? (y/n): ' -e reboot
 if [[ "$reboot" = "y" ]]; then

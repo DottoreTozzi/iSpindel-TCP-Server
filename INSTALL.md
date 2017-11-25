@@ -3,9 +3,12 @@
 
 [English Version](INSTALL_en.md)
 
+### Interim Release: Debian/Raspbian Stretch
+
+
 ### Update auf die neueste Version, kompatibel mit Firmware 5.4.x und höher:
 
-(Bei Neuinstallation bitte ignorieren)
+(Bei Neuinstallation bitte ignorieren; dieser Schritt ist nicht notwendig und führt nur zur Verwirrung, falls irgendwas nicht geht.)
 
 GIT PULL im iSpindel Verzeichnis machen, das Skript (iSpindle.py) konfigurieren und nach /usr/local/bin kopieren.
 
@@ -73,30 +76,74 @@ Hierzu eine Datei namens wpa_supplicant.conf im /boot Verzeichnis anlegen mit di
 Der Hostname ist per default "raspberrypi" und wenn der nicht gefunden wird, einfach mal "raspberrypi.local" ausprobieren.
 Die IP Adresse kann über die Konfiguration des Routers herausgefunden werden, falls das nicht klappt.
 
-System auf neuesten Stand bringen:
+Nun als erstes bitte raspi-config aufrufen, das Benutzerpasswort und eventuell den Host Namen ändern, und unbedingt die Sprache unter "Localisation Options" richtig einstellen. Dabei zur Sicherheit auch immer die englischen Sprachversionen mit generieren lassen, also alles unter "en_US" oder auch en_GB:
+
+	sudo raspi-config
+
+Anschließend sicherstellen, dass die Lokale wirklich richtig eingestellt ist, sonst kann es zu Problemen kommen.
+
+	sudo update-locale LANG="de_DE.utf8" LANGUAGE="de:en" LC_ALL="de_DE.utf8"
+	locale
+
+Es sollten die richtigen Einstellungen angezeigt werden, keine der Variablen sollte leer (undefiniert) sein.
+Anstelle von DE kann natürlich AT, LU, CH stehen, je nach Land.
+Oder man wählt Englisch, in dem Fall dann normalerweise en_US.utf8.
+Meistens gibt es Fehlermeldungen. Klappt seltsamerweise fast nie auf Anhieb.
+Einfach nochmal ausloggen ("exit") und neu einloggen.
+
+Spätestens dann sollte das so aussehen:
+
+	LANG=de_DE.utf8
+	LANGUAGE=de:en
+	LC_CTYPE="de_DE.utf8"
+	LC_NUMERIC="de_DE.utf8"
+	LC_TIME="de_DE.utf8"
+	LC_COLLATE="de_DE.utf8"
+	LC_MONETARY="de_DE.utf8"
+	LC_MESSAGES="de_DE.utf8"
+	LC_PAPER="de_DE.utf8"
+	LC_NAME="de_DE.utf8"
+	LC_ADDRESS="de_DE.utf8"
+	LC_TELEPHONE="de_DE.utf8"
+	LC_MEASUREMENT="de_DE.utf8"
+	LC_IDENTIFICATION="de_DE.utf8"
+	LC_ALL=de_DE.utf8
+
+Dann das System auf den neuesten Stand bringen:
 
 	sudo apt-get update
 	sudo apt-get dist-upgrade
+
+(Oder auch nicht. Es sollte alles auch so funktionieren und falls das Update aus irgend einem Grund nicht hinhaut, wird die Fehlersuche schwierig. Also am besten erst machen, wenn sonst alles funktioniert und Ihr ein Backup gemacht habt).
+Danach aber auf jeden Fall neu starten:
+	
+	sudo reboot
+
+### Server Software herunterladen
+
+	git clone https://github.com/DottoreTozzi/iSpindel-TCP-Server iSpindel-Srv
 
 ### MySQL Datenbank, Apache2 Webserver und phpMyAdmin Datenbank GUI 
 
 #### Installieren:
 
-	sudo apt-get install apache2 mysql-server mysql-client php5-mysql python-mysql.connector
+	sudo apt-get install apache2 mysql-server mysql-client python-mysql.connector
 
-Passwort für Datenbank root Benutzer eingeben.
+Passwort für Datenbank root Benutzer eingeben, falls angefordert.
 
 	sudo apt-get install phpmyadmin
 
 Apache2 als Webserver auswählen, Datenbank root Passwort wieder eingeben.
+Falls im vorigen Schritt keines angegeben wurde, freilassen und das Passwort danach in der Datei /etc/dbconfig-common/phpmyadmin.conf nachschauen.
 MySQL kann nun über http://[meinraspi]/phpmyadmin erreicht werden.
 
-Die folgenden Schritte lassen sich über phpadmin im Browser erledigen (dazu als root einloggen und oben den Reiter "SQL" anklicken) oder über die Kommandozeile machen, dazu einfach aus dem Terminal aufrufen:
+Die folgenden Schritte sollten aber über die Kommandozeile gemacht werden.
+Der phpmyadmin User verfügt noch nicht über die nötigen Rechte.
 
-	mysql -u root -p
+	sudo mysql -u root
 
-Ihr werdet aufgefordert, das obige Passwort wieder einzugeben.        
-Danach landet Ihr auf einem **mysql>** Prompt.
+Danach landet Ihr auf einem **mysql>** Prompt und seit als Datenbank Admin angemeldet. Dies ist neu seit Debian Stretch.
+Da Ihr Euch bereits via "sudo" als Superuser identifiziert habt, werdet Ihr hier nicht (mehr) nach einem Passwort gefragt.
 
 #### Datenbank erstellen und auswählen:
 	CREATE DATABASE iSpindle;
@@ -132,7 +179,7 @@ Die Datentabelle folgt diesem Schema:
 
 #### Benutzer anlegen und berechtigen (und ihm ein eigenes Passwort geben):
 
-	CREATE USER 'iSpindle' IDENTIFIED BY 'xxxxxxxxxx';
+	CREATE USER 'iSpindle' IDENTIFIED BY 'ohyeah';
 	GRANT USAGE ON *.* TO 'iSpindle';
 	GRANT ALL PRIVILEGES ON `iSpindle`.* TO 'iSpindle' WITH GRANT OPTION;
 
@@ -186,6 +233,7 @@ Das Server Skript hierzu wie im [README](./README.md) beschrieben anpassen und n
 
 #### Samba daemon (smbd) starten
 
+	sudo apt-get install insserv
 	sudo insserv smbd
 	sudo service smbd start
 
@@ -195,9 +243,10 @@ Das pi Home Verzeichnis ist nun im Heimnetzwerk freigegeben und Ihr könnt es im
 Zunächst das Skript konfigurieren, wie im README beschrieben.    
 Die Dateien iSpindle.py und ispindle-srv in das mit Samba freigegebene Verzeichnis kopieren.    
 Dann wieder auf dem Raspi im ssh Terminal eingeben:
-
-	sudo mv ~./iSpindle.py /usr/local/bin
-	sudo mv ~/ispindle-srv /etc/init.d
+	
+	cd /home/pi/iSpindel-Srv
+	sudo mv iSpindle.py /usr/local/bin
+	sudo mv ispindle-srv /etc/init.d
 	sudo chmod 755 /usr/local/bin/iSpindle.py
 	sudo chmod 755 /etc/init.d/ispindle-srv
 	cd /etc/init.d

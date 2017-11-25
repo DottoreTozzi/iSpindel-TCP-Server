@@ -11,7 +11,7 @@ My goal was to implement a solution as simple yet effective as possible.
 I've implemented these basic charts:
 
 * angle.php - tilt and temperature over the past x hours
-* plato4.php - deprecated as per firmware 5.x - gravity and temperature over the past x hours (calibration record required as explained below)
+* plato4.php - no longer required as per firmware 5.x - gravity and temperature over the past x hours (calibration record required as explained below). This is a cool way to pre-calibrate your iSpindle, however, while it still floats inside the fermenter. You will already receive extract measurements instead of just the iSpindle's angle by simply editing its record in the "Calibration" table.
 * plato.php - gravity and temperature over the past x hours, requires firmware 5.x
 * battery.php - current battery voltage
 * status.php - battery, tilt and temperature of the specified iSpindle
@@ -37,10 +37,12 @@ In order for apache to "see" the charts, they'll have to be somewhere in **/var/
 I achieve that by simply creating a symlink there, pointing towards my work directory.
 
       cd /var/www/html    
-      sudo ln -s ~/iSpindel/tools/genericTCP/web/ iSpindle
+      sudo ln -sf /home/pi/iSpindel-Srv/web/ iSpindle
+      sudo chown -R pi:pi iSpindle/*
+      sudo chown -h pi:pi iSpindle
 
 #### Database Interface:
-You'll need to configure the database connection, found in include/common_db.php, so edit this file section:
+You might have to configure the database connection, found in include/common_db.php, so edit this file section:
 
       // configure your database connection here:
       define('DB_SERVER',"localhost");
@@ -49,9 +51,10 @@ You'll need to configure the database connection, found in include/common_db.php
       define('DB_PASSWORD',"password");
 
 #### Calibration (Angle:Gravity)
-Note: This is deprecated as per firmware 5.0.1.      
+Note: This is no longer necessary as per firmware 5.0.1.      
 The iSpindle now has its own algorithm for density/gravity output.      
 The following applies if you are still using an older firmware version.      
+It also comes in handy, however, if you have an iSpindel "floating" in your fermenter and want to calibrate it on-the-fly for the current batch.
 
 Before you can use plato4.php to display the calculated gravity (%w/w) in Plato degrees, you'll need enter the [calibration results](../../../docs/Calibration_en.md) and add them to the database.      
 The reference being used is the spindle's unique hardware id, stored as "ID" in the 'Data' table.    
