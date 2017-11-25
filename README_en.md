@@ -1,6 +1,12 @@
 # genericTCP
 #### (iSpindle.py Version 1.3.1)
 
+**New (25.11.2017)**
+Interim Release
+Restored compatibility with Raspbian/Debian Jessie and PHP7.
+Using mysqli Library now.
+Docs have been updated accordingly and also reflect the new mirror.
+
 **New (27.09.2017)**  
 Added Update Scripts  
 
