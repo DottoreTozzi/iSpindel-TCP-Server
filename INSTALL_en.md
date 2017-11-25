@@ -106,7 +106,7 @@ MySQL is now managable through http://[myraspi]/phpmyadmin.
 
 The following steps should also be done on the command line, as the user "phpmyadmin" doesn't have the needed access rights (yet).
 
-	mysql -u root
+	sudo mysql -u root
 
 You should not be asked for a password there, as you are already logging in as the super user (root).
 Now you should see a **mysql>** prompt.
