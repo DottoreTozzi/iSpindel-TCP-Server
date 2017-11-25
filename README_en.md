@@ -1,4 +1,4 @@
-# genericTCP
+# iSpindel Generic TCP Server
 #### (iSpindle.py Version 1.3.1)
 
 **New (25.11.2017)**
