@@ -115,6 +115,9 @@ Dann das System auf den neuesten Stand bringen:
 	sudo apt-get dist-upgrade
 
 (Oder auch nicht. Es sollte alles auch so funktionieren und falls das Update aus irgend einem Grund nicht hinhaut, wird die Fehlersuche schwierig. Also am besten erst machen, wenn sonst alles funktioniert und Ihr ein Backup gemacht habt).
+Spätestens jetzt zeigt sich, ob die SD Karte und das Netzteil in Ordnung sind.
+Ich habe an dieser Stelle 2 Tage verschwendet aufgrund letztlich fehlerhafter SD Karten.
+
 Danach aber auf jeden Fall neu starten:
 	
 	sudo reboot
