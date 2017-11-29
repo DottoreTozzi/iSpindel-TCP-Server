@@ -86,7 +86,7 @@ Then, update your system:
 
 You'll need to reboot the Raspi after this.
 If this fails, there is a good chance that your SD Card or Power Supply are faulty.
-I'e once wasted 2 days because both SD cards I tried were bad.
+I once wasted 2 days because both SD cards I tried were bad.
 
 ### Download the Server Software
 
