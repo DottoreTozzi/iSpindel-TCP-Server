@@ -249,7 +249,11 @@ Das pi Home Verzeichnis ist nun im Heimnetzwerk freigegeben und Ihr könnt es im
 
 ### Das genericTCP Skript installieren
 Zunächst das Skript konfigurieren, wie im README beschrieben.    
-Die Dateien iSpindle.py und ispindle-srv in das mit Samba freigegebene Verzeichnis kopieren.    
+Die Dateien iSpindle.py und ispindle-srv in das mit Samba freigegebene Verzeichnis kopieren. 
+Das Paket insserv muss installiert sein, auch wenn auf Samba verzichtet wurde!
+
+	sudo apt-get install insserv
+
 Dann wieder auf dem Raspi im ssh Terminal eingeben:
 	
 	cd /home/pi/iSpindel-Srv
