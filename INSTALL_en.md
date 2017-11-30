@@ -11,7 +11,7 @@ GIT PULL within the iSpindel Directory, then configure (edit) iSpindle.py and co
 Update the Database:
 
         mysql -u iSpindle -p
-        (Passwort if unchanged: ohyeah)
+        (Password if unchanged: ohyeah)
 	USE iSpindle;
         ALTER TABLE Data MODIFY ID INT UNSIGNED NOT NULL;
         ALTER TABLE Calibration MODIFY ID INT UNSIGNED NOT NULL;
