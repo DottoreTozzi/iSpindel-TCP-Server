@@ -217,6 +217,10 @@ Configure the script as explained here: [README](./README_en.md).
 If you're not too familiar with Unix and the shell, you could follow this guide below:
 
 Copy both iSpindle.py and ispindle-serv to the pi home directory.
+The insserv package and its dependencies have to yet be installed, should you have chosen to skip Samba:
+
+	sudo apt-get install insserv
+	
 Then, within the SSH terminal session, type:
 
 	cd /home/pi/iSpindel-Srv
