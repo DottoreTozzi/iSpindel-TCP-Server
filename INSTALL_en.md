@@ -213,9 +213,11 @@ Leave the MySQL Command Shell:
 The pi user's home and system log directories are now being shared and you should be able to see them in Explorer/Finder.
 
 ### Install the Python Server Script for genericTCP:
-Configure the script as explained here: [README](./README_en.md).
-If you're not too familiar with Unix and the shell, you could follow this guide below:
+Configure the script as explained here: [README](./README_en.md), if you need to.
+You'll want to in order to enable Ubidots forwarding or other features such as CSV file output.
+Otherwise just leave it as is.
 
+Then:
 Copy both iSpindle.py and ispindle-serv to the pi home directory.
 The insserv package and its dependencies have to yet be installed, should you have chosen to skip Samba:
 
