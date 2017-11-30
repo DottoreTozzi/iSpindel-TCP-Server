@@ -192,8 +192,9 @@ Die MySQL Command Shell verlassen:
 
 	QUIT;
 
-Das Server Skript hierzu wie im [README](./README.md) beschrieben anpassen und neu starten.
-
+Das Server Skript falls nötig wie im [README](./README.md) beschrieben anpassen.
+Der Datenbankzugriff ist vorkonfiguriert. Falls man eine CSV Datei haben will oder das eigene Ubidots Token eintragen möchte, um die Weiterleitung zu aktivieren, muss das Skript wie dort beschrieben editiert werden.
+Ansonsten kann man alles so lassen wie es ist und direkt hier weitermachen.
 
 ### Optional: Samba installieren (empfohlen):
 
