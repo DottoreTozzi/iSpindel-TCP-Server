@@ -188,6 +188,9 @@ Die Datentabelle folgt diesem Schema:
 	GRANT ALL PRIVILEGES ON `iSpindle`.* TO 'iSpindle' WITH GRANT OPTION;
 
 Ab sofort steht die MySQL Datenbank für die iSpindel zur Verfügung.        
+
+	QUIT;
+
 Das Server Skript hierzu wie im [README](./README.md) beschrieben anpassen und neu starten.
 
 
