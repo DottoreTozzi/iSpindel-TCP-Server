@@ -187,7 +187,8 @@ Die Datentabelle folgt diesem Schema:
 	GRANT USAGE ON *.* TO 'iSpindle';
 	GRANT ALL PRIVILEGES ON `iSpindle`.* TO 'iSpindle' WITH GRANT OPTION;
 
-Ab sofort steht die MySQL Datenbank für die iSpindel zur Verfügung.        
+Ab sofort steht die MySQL Datenbank für die iSpindel zur Verfügung.
+Die MySQL Command Shell verlassen:
 
 	QUIT;
 
