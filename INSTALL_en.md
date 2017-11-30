@@ -12,7 +12,7 @@ Update the Database:
 
         mysql -u iSpindle -p
         (Password if unchanged: ohyeah)
-	USE iSpindle;
+	 USE iSpindle;
         ALTER TABLE Data MODIFY ID INT UNSIGNED NOT NULL;
         ALTER TABLE Calibration MODIFY ID INT UNSIGNED NOT NULL;
         ALTER TABLE Data ADD UserToken VARCHAR(64);
