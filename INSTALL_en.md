@@ -152,10 +152,13 @@ The field "ID" stores the iSpindle's unique hardware ID, which we'll need in ord
 	GRANT USAGE ON *.* TO 'iSpindle';
 	GRANT ALL PRIVILEGES ON `iSpindle`.* TO 'iSpindle' WITH GRANT OPTION;
 
-Now the database is accessible by the Python server script.    
+Now the database is accessible by the Python server script.
 Configure it as explained here: [README](./README_en.md).
 See section below on how to install it.
 
+Leave the MySQL Command Shell:
+
+	QUIT;
 
 ### Optional: Install Samba (Recommended):
 
@@ -216,8 +219,8 @@ If you're not too familiar with Unix and the shell, you could follow this guide 
 Copy both iSpindle.py and ispindle-serv to the pi home directory.
 Then, within the SSH terminal session, type:
 
-    	cd /home/pi/iSpindel-Srv
-    	sudo mv ./iSpindle.py /usr/local/bin
+	cd /home/pi/iSpindel-Srv
+	sudo mv ./iSpindle.py /usr/local/bin
 	sudo mv ./ispindle-srv /etc/init.d
 	sudo chmod 755 /usr/local/bin/iSpindle.py
 	sudo chmod 755 /etc/init.d/ispindle-srv
