@@ -1,13 +1,14 @@
 #!/usr/bin/env python2.7
 
-# Version: 1.3.1
+# Version: 1.3.2
+# Fix: Debug Output of Ubidots response
 # New: Forward data to another instance of this script or any other JSON recipient
 # New: Support changes in firmware >= 5.4.0 (ID now transmitted as Integer)
 #
 # Generic TCP Server for iSpindel (https://github.com/universam1/iSpindel)
 # Receives iSpindel data as JSON via TCP socket and writes it to a CSV file, Database and/or forwards it
 #
-# Stephan Schreiber <stephan@sschreiber.de>, 2017-02-02 - 2017-08-31
+# Stephan Schreiber <stephan@sschreiber.de>, 2017-02-02 - 2017-12-03
 #
 
 from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
@@ -224,7 +225,7 @@ def handler(clientsock,addr):
                 req.add_header('Content-Type', 'application/json')
                 req.add_header('User-Agent', spindle_name)
                 response = urllib2.urlopen(req, out)
-                dbgprint(repr(addr) + ' - received: ' + str(response))
+                dbgprint(repr(addr) + ' - received: ' + response.read())
             except Exception as e:
                 dbgprint(repr(addr) + ' Ubidots Error: ' + str(e))
 
