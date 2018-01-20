@@ -1,6 +1,8 @@
 #!/usr/bin/env python2.7
 
-# Version: 1.3.2
+# Version: 1.3.3
+# New:  Added config parameter to use token field in iSpindle config as Ubidots token
+# Previous changes and fixes:
 # Fix: Debug Output of Ubidots response
 # New: Forward data to another instance of this script or any other JSON recipient
 # New: Support changes in firmware >= 5.4.0 (ID now transmitted as Integer)
@@ -8,7 +10,7 @@
 # Generic TCP Server for iSpindel (https://github.com/universam1/iSpindel)
 # Receives iSpindel data as JSON via TCP socket and writes it to a CSV file, Database and/or forwards it
 #
-# Stephan Schreiber <stephan@sschreiber.de>, 2017-02-02 - 2017-12-03
+# Stephan Schreiber <stephan@sschreiber.de>, 2017-02-02 - 2018-01-20
 #
 
 from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
@@ -39,8 +41,9 @@ SQL_USER = 'iSpindle'                   # DB user
 SQL_PASSWORD = 'ohyeah'                 # DB user's password (change this)
 
 # Ubidots (using existing account)
-UBIDOTS = 0                                     # 1 to enable output to ubidots
-UBI_TOKEN = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'    # ubidots token, see manual or ubidots.com
+UBIDOTS = 1                                     # 1 to enable output to ubidots
+UBI_USE_ISPINDLE_TOKEN = 1                      # 1 to use "token" field in iSpindle config (overrides UBI_TOKEN)
+UBI_TOKEN = '******************************'    # global ubidots token, see manual or ubidots.com
 
 # Forward to public server or other relay (i.e. another instance of this script)
 FORWARD = 0
@@ -59,7 +62,7 @@ NAK = chr(21)           # ASCII NAK (Not Acknowledged)
 BUFF = 1024             # Buffer Size (greatly exaggerated for now)
 
 def dbgprint(s):
-    if DEBUG == 1: print(str(s))
+    if DEBUG: print(str(s))
 
 def handler(clientsock,addr):
     inpstr = ''
@@ -119,9 +122,9 @@ def handler(clientsock,addr):
     clientsock.close()
     dbgprint(repr(addr) + " - closed connection") #log on console
 
-    if success == 1:
+    if success:
         # We have the complete spindle data now, so let's make it available
-        if CSV == 1:
+        if CSV:
             dbgprint(repr(addr) + ' - writing CSV')
             try:
                 filename = OUTPATH + spindle_name + '_' + str(spindle_id) + '.csv'
@@ -147,7 +150,7 @@ def handler(clientsock,addr):
             except Exception as e:
                 dbgprint(repr(addr) + ' CSV Error: ' + str(e))
 
-        if SQL == 1:
+        if SQL:
             try:
                 import mysql.connector
                 dbgprint(repr(addr) + ' - writing to database')
@@ -170,7 +173,7 @@ def handler(clientsock,addr):
                 # this is kinda ugly; if new columns should persist, make sure you add them to the lists above...
                 # for testing purposes it allows to introduce new values of raw data without having to fiddle around.
                 # Basically, do not use this unless your name is Sam and you are the firmware developer... ;)
-                if ENABLE_ADDCOLS == 1:
+                if ENABLE_ADDCOLS:
                     jinput = json.loads(inpstr)
                     for key in jinput:
                         if not key in fieldlist:
@@ -208,28 +211,34 @@ def handler(clientsock,addr):
             except Exception as e:
                 dbgprint(repr(addr) + ' Database Error: ' + str(e))
 
-        if UBIDOTS == 1:
+        if UBIDOTS:
             try:
-                dbgprint(repr(addr) + ' - sending to ubidots')
-                import urllib2
-                outdata = {
-                    'tilt' : angle,
-                    'temperature' : temperature,
-                    'battery' : battery,
-                    'gravity' : gravity
-                }
-                out = json.dumps(outdata)
-                dbgprint(repr(addr) + ' - sending: ' + out)
-                url = 'http://things.ubidots.com/api/v1.6/devices/' + spindle_name + '?token=' + UBI_TOKEN
-                req = urllib2.Request(url)
-                req.add_header('Content-Type', 'application/json')
-                req.add_header('User-Agent', spindle_name)
-                response = urllib2.urlopen(req, out)
-                dbgprint(repr(addr) + ' - received: ' + response.read())
+                if UBI_USE_ISPINDLE_TOKEN:
+                    token = user_token
+                else:
+                    token = UBI_TOKEN
+                if token != '':
+                    if token[:1] != '*':
+                        dbgprint(repr(addr) + ' - sending to ubidots')
+                        import urllib2
+                        outdata = {
+                            'tilt' : angle,
+                            'temperature' : temperature,
+                            'battery' : battery,
+                            'gravity' : gravity
+                        }
+                        out = json.dumps(outdata)
+                        dbgprint(repr(addr) + ' - sending: ' + out)
+                        url = 'http://things.ubidots.com/api/v1.6/devices/' + spindle_name + '?token=' + token
+                        req = urllib2.Request(url)
+                        req.add_header('Content-Type', 'application/json')
+                        req.add_header('User-Agent', spindle_name)
+                        response = urllib2.urlopen(req, out)
+                        dbgprint(repr(addr) + ' - received: ' + response.read())
             except Exception as e:
                 dbgprint(repr(addr) + ' Ubidots Error: ' + str(e))
 
-        if FORWARD == 1:
+        if FORWARD:
             try:
                 dbgprint(repr(addr) + ' - forwarding to ' + FORWARDADDR)
                 outdata = {

@@ -1,6 +1,13 @@
 # iSpindel Generic TCP Server
 #### (iSpindle.py Version 1.3.1)
 
+**New (20.01.2018)**
+iSpindle.py Version 1.3.3
+The iSpindle config option "token" can now be used as Ubidots Token, in order to only forward the data of certain devices, or use different tokens for several of them.
+Leave blank or put a leading asterisk ("*") in order to exclude an iSpindle from Ubidots forwarding.
+This is now the default behavior (Ubidots Forwarding switched on; new parameter UBI_USE_ISPINDLE_TOKEN enabled, too).
+The global UBIDOTS_TOKEN parameter will now only be used if UBI_USE_ISPINDLE_TOKEN is disabled while UBIDOTS is enabled.
+
 **New (25.11.2017)**
 Interim Release.      
 Restored compatibility with Raspbian/Debian Jessie and PHP7.      
@@ -147,7 +154,8 @@ If unsure, set it to 0.
 	UBI_TOKEN = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 
 **UBIDOTS** = 0 will switch off Ubidots Forwarding.    
-**UBI\_TOKEN** is where you enter your personal Ubidots Token (see iSpindle docs).
+**UBI\_TOKEN** is where you can globally (i.e. for all your devices) enter your personal Ubidots Token (see iSpindle docs).
+In more recent versions (beginning with 1.3.3) it is recommended to enter your Ubidots token within the iSpindel's Configuration and use the default UBI_USE_ISPINDLE_TOKEN parameter setting of "1" (true), so that the Script will use this entry instead, for each iSpindel individually, as is the case with the standard (direct) connection.
 
 Your data should now show up in Ubidots as usual, plus you have it available locally to fiddle around with.    
 Ubidots will not know the difference and even create new devices just as well.
