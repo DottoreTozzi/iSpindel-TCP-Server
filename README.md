@@ -148,6 +148,7 @@ Falls der Server nach außen offen ist (z.B. extern gehostet), empfehle ich aber
 #### Ubidots Anbindung
 
 	UBIDOTS = 1
+	UBI_USE_ISPINDLE_TOKEN = 1
 	UBI_TOKEN = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 
 **UBIDOTS** = 0 schaltet die Ubidots Weiterleitung aus.    

@@ -151,6 +151,7 @@ If unsure, set it to 0.
 #### Ubidots Forwarding
 
 	UBIDOTS = 1
+	UBI_USE_ISPINDLE_TOKEN = 1
 	UBI_TOKEN = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 
 **UBIDOTS** = 0 will switch off Ubidots Forwarding.    
