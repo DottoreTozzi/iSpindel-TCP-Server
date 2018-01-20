@@ -168,6 +168,7 @@ Die Datentabelle folgt diesem Schema:
  		`Battery` double NOT NULL,
 		`ResetFlag` boolean,
 		`Gravity` double NOT NULL DEFAULT 0,
+		`UserToken` varchar(64) COLLATE ascii_bin,
  	PRIMARY KEY (`Timestamp`,`Name`,`ID`)
 	) ENGINE=InnoDB DEFAULT CHARSET=ascii COLLATE=ascii_bin COMMENT='iSpindle Data';
 
