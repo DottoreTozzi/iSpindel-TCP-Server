@@ -1,5 +1,5 @@
 # iSpindel Generic TCP Server
-#### (iSpindle.py Version 1.3.1)
+#### (iSpindle.py Version 1.3.3)
 
 [English Version](README_en.md)
 
