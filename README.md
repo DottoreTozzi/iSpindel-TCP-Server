@@ -3,15 +3,15 @@
 
 [English Version](README_en.md)
 
-**Neu (20.01.2018)**
-iSpindle.py Version 1.3.3
-Neuer Parameter UBI_USE_ISPINDLE_TOKEN
-Die neue Version erlaubt das in der iSpindel Konfiguration vorgesehene Feld "Token" als Ubidots Token zu verwenden.
-Das im Skript global gesetzte Ubidots Token wird durch das in der iSpindel hinterlegte überschrieben, falls diese Option ausgewählt ist.
-Damit wird es möglich, nur die Daten einzelner iSpindeln weiterzuleiten oder einzelnen iSpindeln verschiedene Ubidots Token zuzuweisen.
-Um die Weiterleitung für einzelne iSpindeln zu unterdrücken, wird das Feld "Token" in der iSpindel Konfiguration leer gelassen, oder (falls das Feld für Kommentare etc. genutzt wird) mit einem Asterisk ("*") eingeleitet.
+**Neu (20.01.2018)**     
+iSpindle.py Version 1.3.3     
+Neuer Parameter UBI_USE_ISPINDLE_TOKEN     
+Die neue Version erlaubt das in der iSpindel Konfiguration vorgesehene Feld "Token" als Ubidots Token zu verwenden.     
+Das im Skript global gesetzte Ubidots Token wird durch das in der iSpindel hinterlegte überschrieben, falls diese Option ausgewählt ist.     
+Damit wird es möglich, nur die Daten einzelner iSpindeln weiterzuleiten oder einzelnen iSpindeln verschiedene Ubidots Token zuzuweisen.     
+Um die Weiterleitung für einzelne iSpindeln zu unterdrücken, wird das Feld "Token" in der iSpindel Konfiguration leer gelassen, oder (falls das Feld für Kommentare etc. genutzt wird) mit einem Asterisk ("*") eingeleitet.     
 
-**Neu (28.11.2017)**
+**Neu (28.11.2017)**     
 Interim Release.      
 Diagramme benutzen jetzt die mysqli Library.      
 Damit ist die Kompatibilität zu PHP7 (Debian/Raspbian Stretch) wieder hergestellt.      

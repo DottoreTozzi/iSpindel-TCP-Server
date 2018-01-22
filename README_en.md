@@ -1,14 +1,14 @@
 # iSpindel Generic TCP Server
 #### (iSpindle.py Version 1.3.3)
 
-**New (20.01.2018)**
-iSpindle.py Version 1.3.3
-The iSpindle config option "token" can now be used as Ubidots Token, in order to only forward the data of certain devices, or use different tokens for several of them.
-Leave blank or put a leading asterisk ("*") in order to exclude an iSpindle from Ubidots forwarding.
-This is now the default behavior (Ubidots Forwarding switched on; new parameter UBI_USE_ISPINDLE_TOKEN enabled, too).
-The global UBIDOTS_TOKEN parameter will now only be used if UBI_USE_ISPINDLE_TOKEN is disabled while UBIDOTS is enabled.
+**New (20.01.2018)**     
+iSpindle.py Version 1.3.3     
+The iSpindle config option "token" can now be used as Ubidots Token, in order to only forward the data of certain devices, or use different tokens for several of them.     
+Leave blank or put a leading asterisk ("*") in order to exclude an iSpindle from Ubidots forwarding.     
+This is now the default behavior (Ubidots Forwarding switched on; new parameter UBI_USE_ISPINDLE_TOKEN enabled, too).     
+The global UBIDOTS_TOKEN parameter will now only be used if UBI_USE_ISPINDLE_TOKEN is disabled while UBIDOTS is enabled.     
 
-**New (25.11.2017)**
+**New (25.11.2017)**     
 Interim Release.      
 Restored compatibility with Raspbian/Debian Jessie and PHP7.      
 Using mysqli Library now.      
