@@ -19,7 +19,7 @@ if(!isset($_GET['weeks'])) $_GET['weeks'] = 0; else $_GET['weeks'] = $_GET['week
 $timeFrame = $_GET['hours'] + ($_GET['days'] * 24) + ($_GET['weeks'] * 168);
 if($timeFrame == 0) $timeFrame = defaultTimePeriod;
 
-list($angle, $temperature) = getChartValues($_GET['name'], $timeFrame, $_GET['reset']);
+list($angle, $temperature) = getChartValues($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 
 ?>
 
