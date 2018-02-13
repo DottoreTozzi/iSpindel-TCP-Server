@@ -1,13 +1,15 @@
 CREATE TABLE `Data` (
-       `Timestamp` datetime NOT NULL,
-       `Name` varchar(64) COLLATE ascii_bin NOT NULL,
-       `ID` INT UNSIGNED NOT NULL,
-       `Angle` double NOT NULL,
-       `Temperature` double NOT NULL,
-       `Battery` double NOT NULL,
-       `ResetFlag` boolean,
-       `Gravity` double NOT NULL DEFAULT 0,
-       `UserToken` varchar(64) COLLATE ascii_bin,
+	`Timestamp` datetime NOT NULL,
+	`Name` varchar(64) COLLATE ascii_bin NOT NULL,
+	`ID` INT UNSIGNED NOT NULL,
+	`Angle` double NOT NULL,
+	`Temperature` double NOT NULL,
+	`Battery` double NOT NULL,
+	`ResetFlag` boolean,
+	`Gravity` double NOT NULL DEFAULT 0,
+	`UserToken` varchar(64) COLLATE ascii_bin,
+	`Interval` int,
+	`RSSI` int,
 	PRIMARY KEY (`Timestamp`, `Name`, `ID`)
 	) 
 ENGINE=InnoDB DEFAULT CHARSET=ascii 

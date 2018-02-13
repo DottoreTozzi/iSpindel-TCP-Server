@@ -3,6 +3,14 @@
 
 [English Version](README_en.md)
 
+**Neu (12.02.2018)**
+iSpindle.py Version 1.4.0
+Angepasst an [Sam's iSpindel](https://github.com/universam1/iSpindel) Firmware 5.8 und aufwärts.
+Die nunmehr mitgesendeten Daten (Intervall, WLAN Empfangsqualität) werden jetzt mit abgefragt und in der Datenbank hinterlegt.
+Alles sollte nach wie vor rückwärtskompatibel sein.
+Im Debug Modus wird ein Hinweis ausgegeben, falls die iSpindel Firmware "veraltet" ist.
+Bitte bei bestehenden Installationen die Datenbank anpassen und um die nötigen Felder erweitern, siehe MySQL_Update-3.sql Skript.
+
 **Neu (20.01.2018)**     
 iSpindle.py Version 1.3.3     
 Neuer Parameter UBI_USE_ISPINDLE_TOKEN     

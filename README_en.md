@@ -1,6 +1,16 @@
 # iSpindel Generic TCP Server
 #### (iSpindle.py Version 1.3.3)
 
+
+**New (12.02.2018)**
+iSpindle.py Version 1.4.0
+Updated to [Sam's iSpindel](https://github.com/universam1/iSpindel) Firmware 5.8 and higher.
+Newly sent data (interval, Wi-Fi signal quality) will now be registered and stored to the database accordingly.
+Everything should still be backwards compatible.
+Debug mode will show a message asking you to consider updating the iSpindel firmware, if an outdated version is being detected.
+When updating an existing version of this script, please take a look at MySQL_Update-3.sql and add the required fields to your database accordingly before using this new version of the python script.
+
+
 **New (20.01.2018)**     
 iSpindle.py Version 1.3.3     
 The iSpindle config option "token" can now be used as Ubidots Token, in order to only forward the data of certain devices, or use different tokens for several of them.     

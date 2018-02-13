@@ -6,7 +6,21 @@
 ### Interim Release: Debian/Raspbian Stretch
 
 
-### Update auf die neueste Version, kompatibel mit Firmware 5.4.x und höher:
+### Update auf Version 1.4.0, Firmare 5.8 und höher...
+
+Diese Schritte sind nur nötig, wenn eine bestehende Version aktualisiert werden soll.
+Auch diese Anpassungen sind im Folgenden bereits berücksichtigt.
+Falls momentan noch die ältere Version im Einsatz ist, müssen der Datenbank 2 neue Felder hinzugefügt werden:
+
+        mysql -u iSpindle -p
+        (Password if unchanged: ohyeah)
+        USE iSpindle;
+        ALTER TABLE Data ADD `Interval` int;
+        ALTER TABLE Data ADD RSSI int;
+        quit;
+
+
+### Update auf Version 1.3.0, kompatibel mit Firmware 5.4.x und höher:
 
 (Bei Neuinstallation bitte ignorieren; dieser Schritt ist nicht notwendig und führt nur zur Verwirrung, falls irgendwas nicht geht.)
 
@@ -169,6 +183,8 @@ Die Datentabelle folgt diesem Schema:
 		`ResetFlag` boolean,
 		`Gravity` double NOT NULL DEFAULT 0,
 		`UserToken` varchar(64) COLLATE ascii_bin,
+		`Interval` int,
+		`RSSI` int,
  	PRIMARY KEY (`Timestamp`,`Name`,`ID`)
 	) ENGINE=InnoDB DEFAULT CHARSET=ascii COLLATE=ascii_bin COMMENT='iSpindle Data';
 

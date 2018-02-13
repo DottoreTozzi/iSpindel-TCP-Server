@@ -2,6 +2,19 @@
 ### Step-by-Step
 
 
+### Update to 1.4.0, Firmware 5.8 and later:
+
+Again, ignore this if newly installing.
+If you are using the previous version, you will need to add yet 2 more columns to your database:
+
+        mysql -u iSpindle -p                                    
+        (Password if unchanged: ohyeah)                         
+        USE iSpindle;                                                                                       
+        ALTER TABLE Data ADD `Interval` int;                                                    
+        ALTER TABLE Data ADD RSSI int;                                             
+        quit;                                                                                                
+ 
+
 ### Update to latest Version (1.3.1), compatible with Firmware 5.4.x and later:
 
 (Ignore this when newly installing)
@@ -12,7 +25,7 @@ Update the Database:
 
         mysql -u iSpindle -p
         (Password if unchanged: ohyeah)
-	 USE iSpindle;
+	USE iSpindle;
         ALTER TABLE Data MODIFY ID INT UNSIGNED NOT NULL;
         ALTER TABLE Calibration MODIFY ID INT UNSIGNED NOT NULL;
         ALTER TABLE Data ADD UserToken VARCHAR(64);
@@ -134,6 +147,8 @@ Otherwise, the main data table will suffice:
 		`ResetFlag` boolean,
 		`Gravity` double NOT NULL DEFAULT 0,
 		`UserToken` varchar(64) COLLATE ascii_bin,
+		`Interval` int,
+		`RSSI` int,
  	PRIMARY KEY (`Timestamp`,`Name`,`ID`)
 	) ENGINE=InnoDB DEFAULT CHARSET=ascii COLLATE=ascii_bin COMMENT='iSpindle Data';
 

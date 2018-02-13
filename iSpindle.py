@@ -1,7 +1,12 @@
 #!/usr/bin/env python2.7
 
+# Version: 1.4.0
+# New: Added new data fields for Interval and WiFi reception (RSSI) for Firmware 5.8 and later
+# Chg: TimeStamp in CSV now in first column
+
 # Version: 1.3.3
 # New:  Added config parameter to use token field in iSpindle config as Ubidots token
+
 # Previous changes and fixes:
 # Fix: Debug Output of Ubidots response
 # New: Forward data to another instance of this script or any other JSON recipient
@@ -10,7 +15,7 @@
 # Generic TCP Server for iSpindel (https://github.com/universam1/iSpindel)
 # Receives iSpindel data as JSON via TCP socket and writes it to a CSV file, Database and/or forwards it
 #
-# Stephan Schreiber <stephan@sschreiber.de>, 2017-02-02 - 2018-01-20
+# Stephan Schreiber <stephan@sschreiber.de>, 2017-02-02 - 2018-02-13
 #
 
 from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
@@ -74,6 +79,9 @@ def handler(clientsock,addr):
     battery = 0.0
     gravity = 0.0
     user_token = ''
+    interval = 0
+    rssi = 0
+
     while 1:
         data = clientsock.recv(BUFF)
         if not data: break  # client closed connection
@@ -98,15 +106,17 @@ def handler(clientsock,addr):
                 battery = jinput['battery']
                 try:
                    gravity = jinput['gravity']
+                   interval = jinput['interval']
+                   rssi = jinput['RSSI']
                 except:
-                   # older firmwares < 5.0.1 are not transmitting this parameter
-                   gravity = 0.0
+                   # older firmwares might not be transmitting all of these
+                   dbgprint("Consider updating your iSpindel's Firmware.")
                 try:
                     # get user token for connection to ispindle.de public server
                     user_token = jinput['token']
                 except:
-                    # older firmwares < 5.         4 or field not filled in
-                    user_token = ''
+                    # older firmwares < 5.4 or field not filled in
+                    user_token = '*'
                 # looks like everything went well :)
                 clientsock.send(ACK)
                 dbgprint(repr(addr) + ' ' + spindle_name + ' (ID:' + str(spindle_id) + ') : Data received OK.')
@@ -134,16 +144,18 @@ def handler(clientsock,addr):
                     # csvw = csv.writer(csv_file, delimiter=DELIMITER)
                     # csvw.writerow(jinput.values())
                     outstr = ''
+                    if DATETIME == 1:
+                        cdt = datetime.now()
+                        outstr += cdt.strftime('%x %X') + DELIMITER
                     outstr += str(spindle_name) + DELIMITER
                     outstr += str(spindle_id) + DELIMITER
                     outstr += str(angle) + DELIMITER
                     outstr += str(temperature) + DELIMITER
                     outstr += str(battery) + DELIMITER
                     outstr += str(gravity) + DELIMITER
-                    outstr += user_token
-                    if DATETIME == 1:
-                        cdt = datetime.now()
-                        outstr += DELIMITER + cdt.strftime('%x %X')
+                    outstr += user_token + DELIMITER
+                    outstr += interval + DELIMITER
+                    outstr += rssi
                     outstr += NEWLINE
                     csv_file.writelines(outstr)
                     dbgprint(repr(addr) + ' - CSV data written.')
@@ -164,6 +176,13 @@ def handler(clientsock,addr):
                 if user_token != '':
                     fieldlist.append('UserToken')
                     valuelist.append(user_token)
+
+                # If we have firmware 5.8 or higher:
+                if rssi != 0:
+                    fieldlist.append('`Interval`') # this is a reserved SQL keyword so it requires additional quotes
+                    valuelist.append(interval)
+                    fieldlist.append('RSSI')
+                    valuelist.append(rssi)
 
                 # establish database connection
                 cnx = mysql.connector.connect(user=SQL_USER, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
@@ -203,13 +222,15 @@ def handler(clientsock,addr):
                 valuestr = ', '.join(['%s' for x in valuelist])
                 add_sql = 'INSERT INTO Data (' + fieldstr + ')'
                 add_sql += ' VALUES (' + valuestr + ')'
+		dbgprint(add_sql)
+		dbgprint(valuelist)
                 cur.execute(add_sql, valuelist)
                 cnx.commit()
                 cur.close()
                 cnx.close()
                 dbgprint(repr(addr) + ' - DB data written.')
             except Exception as e:
-                dbgprint(repr(addr) + ' Database Error: ' + str(e))
+                dbgprint(repr(addr) + ' Database Error: ' + str(e) + NEWLINE + 'Did you update your database?')
 
         if UBIDOTS:
             try:
@@ -225,7 +246,10 @@ def handler(clientsock,addr):
                             'tilt' : angle,
                             'temperature' : temperature,
                             'battery' : battery,
-                            'gravity' : gravity
+                            'gravity' : gravity,
+                            'interval' : interval,
+                            'rssi' : rssi,
+                            'usertoken' : user_token
                         }
                         out = json.dumps(outdata)
                         dbgprint(repr(addr) + ' - sending: ' + out)
@@ -248,7 +272,9 @@ def handler(clientsock,addr):
                     'temperature' : temperature,
                     'battery' : battery,
                     'gravity' : gravity,
-                    'token' : user_token
+                    'token' : user_token,
+                    'interval' : interval,
+                    'RSSI' : rssi
                 }
                 out = json.dumps(outdata)
                 dbgprint(repr(addr) + ' - sending: ' + out)
