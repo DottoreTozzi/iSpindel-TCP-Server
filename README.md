@@ -3,9 +3,16 @@
 
 [English Version](README_en.md)
 
+**Neu (15.02.2018)**
+Neues Diagramm wifi.php zeigt die zuletzt gemessene und übertragene Verbindungsqualität zum WLAN.        
+angle.php, plato.php und plato4.php wurden erweitert um neue Parameter "days" und "weeks".        
+Die Untertitel dieser Diagramme wurden angepasst, um dies zu reflektieren und deren Lesbarkeit zu erhöhen.      
+3600 Stunden werden jetzt angezeigt als 21 Wochen, 3 Tage.     
+Die Parameter können beliebig kombiniert werden.
+
 **Neu (12.02.2018)**
-iSpindle.py Version 1.4.0
-Angepasst an [Sam's iSpindel](https://github.com/universam1/iSpindel) Firmware 5.8 und aufwärts.
+iSpindle.py Version 1.4.0      
+Angepasst an [Sam's iSpindel](https://github.com/universam1/iSpindel) Firmware 5.8 und aufwärts.      
 Die nunmehr mitgesendeten Daten (Intervall, WLAN Empfangsqualität) werden jetzt mit abgefragt und in der Datenbank hinterlegt.
 Alles sollte nach wie vor rückwärtskompatibel sein.
 Im Debug Modus wird ein Hinweis ausgegeben, falls die iSpindel Firmware "veraltet" ist.

@@ -126,6 +126,30 @@ function getCurrentValues($conn, $iSpindleID='iSpindel000')
     return array($valTime, $valTemperature, $valAngle, $valBattery);  
   }
 }
+
+// Get current values (angle, temperature, battery, rssi)
+// Keeping original function unchanged in order to preserve backwards compatibility.
+// RSSI is brand new with this version and version 5.8.x of iSpindle Firmware.
+function getCurrentValues2($conn, $iSpindleID='iSpindel000')
+{                                                          
+   $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, battery, `interval`, rssi
+                FROM Data                                                                                 
+                WHERE Name = '".$iSpindleID."'              
+                ORDER BY Timestamp DESC LIMIT 1") or die (mysqli_error($conn));
+                                                                               
+  $rows = mysqli_num_rows($q_sql);                                                                                            
+  if ($rows > 0)                                                                                                      
+  {                                                                                                                                        
+    $r_row = mysqli_fetch_array($q_sql);    
+    $valTime = $r_row['unixtime'];      
+    $valTemperature = $r_row['temperature'];  
+    $valAngle = $r_row['angle'];                                                                                    
+    $valBattery = $r_row['battery']; 
+    $valInterval = $r_row['interval'];
+    $valRSSI = $r_row['rssi'];
+    return array($valTime, $valTemperature, $valAngle, $valBattery, $valInterval, $valRSSI);
+  }                                                                 
+}  
                         
 // Get calibrated values from database for selected spindle, between now and [number of hours] ago
 // Old Method for Firmware before 5.x

@@ -5,7 +5,7 @@
 ### Update to 1.4.0, Firmware 5.8 and later:
 
 Again, ignore this if newly installing.
-If you are using the previous version, you will need to add yet 2 more columns to your database:
+If you are using the previous version, however, you will need to add yet 2 more columns to your database:
 
         mysql -u iSpindle -p                                    
         (Password if unchanged: ohyeah)                         
@@ -25,7 +25,7 @@ Update the Database:
 
         mysql -u iSpindle -p
         (Password if unchanged: ohyeah)
-	USE iSpindle;
+        USE iSpindle;
         ALTER TABLE Data MODIFY ID INT UNSIGNED NOT NULL;
         ALTER TABLE Calibration MODIFY ID INT UNSIGNED NOT NULL;
         ALTER TABLE Data ADD UserToken VARCHAR(64);

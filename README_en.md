@@ -2,9 +2,16 @@
 #### (iSpindle.py Version 1.3.3)
 
 
+**New (15.02.2018)**
+New chart wifi.php shows current connection quality (RSSI).          
+angle.php, plato.php and plato4.php have been updated and accept the new parameters "days" and "weeks".        
+Their subtitles will reflect these changes now and will make the charts easier to read.        
+For example, a timeframe of 3600 hours will now be displayed as 21 weeks, 3 days and 0 hours.      
+These parameters can be combined completely at will.
+
 **New (12.02.2018)**
-iSpindle.py Version 1.4.0
-Updated to [Sam's iSpindel](https://github.com/universam1/iSpindel) Firmware 5.8 and higher.
+iSpindle.py Version 1.4.0        
+Updated to [Sam's iSpindel](https://github.com/universam1/iSpindel) Firmware 5.8 and higher.         
 Newly sent data (interval, Wi-Fi signal quality) will now be registered and stored to the database accordingly.
 Everything should still be backwards compatible.
 Debug mode will show a message asking you to consider updating the iSpindel firmware, if an outdated version is being detected.
