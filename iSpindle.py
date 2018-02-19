@@ -154,8 +154,8 @@ def handler(clientsock,addr):
                     outstr += str(battery) + DELIMITER
                     outstr += str(gravity) + DELIMITER
                     outstr += user_token + DELIMITER
-                    outstr += interval + DELIMITER
-                    outstr += rssi
+                    outstr += str(interval) + DELIMITER
+                    outstr += str(rssi)
                     outstr += NEWLINE
                     csv_file.writelines(outstr)
                     dbgprint(repr(addr) + ' - CSV data written.')
@@ -248,8 +248,7 @@ def handler(clientsock,addr):
                             'battery' : battery,
                             'gravity' : gravity,
                             'interval' : interval,
-                            'rssi' : rssi,
-                            'usertoken' : user_token
+                            'rssi' : rssi
                         }
                         out = json.dumps(outdata)
                         dbgprint(repr(addr) + ' - sending: ' + out)
