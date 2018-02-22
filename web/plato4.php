@@ -28,7 +28,7 @@ $tfhours = $tftemp;
                                                    
 if($timeFrame == 0) $timeFrame = defaultTimePeriod;                                           
  
-list($isCalib, $dens, $temperature, $angle) = getChartValuesPlato4($conn, $_GET['name'], $_GET['hours'], $_GET['reset']);
+list($isCalib, $dens, $temperature, $angle) = getChartValuesPlato4($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 
 ?>
 
