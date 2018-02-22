@@ -19,6 +19,7 @@ if(!isset($_GET['weeks'])) $_GET['weeks'] = 0; else $_GET['weeks'] = $_GET['week
                                                                             
 // Calculate Timeframe in Hours                                             
 $timeFrame = $_GET['hours'] + ($_GET['days'] * 24) + ($_GET['weeks'] * 168);
+if($timeFrame == 0) $timeFrame = defaultTimePeriod;
 $tftemp = $timeFrame;           
 $tfweeks = floor($tftemp / 168);
 $tftemp -= $tfweeks * 168;    
@@ -26,8 +27,6 @@ $tfdays = floor($tftemp / 24);
 $tftemp -= $tfdays * 24;
 $tfhours = $tftemp;                                
                                                    
-if($timeFrame == 0) $timeFrame = defaultTimePeriod;                                           
- 
 list($isCalib, $dens, $temperature, $angle) = getChartValuesPlato4($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 
 ?>
@@ -86,13 +85,13 @@ $(function ()
                   }     
                   if($tfweeks != 0)                
                   {                                
-                    $timetext .= $tfweeks . ' Wochen, ';                                      
+                    $timetext .= $tfweeks . ' Woche(n), ';                                      
                   }                                                                           
                   if($tfdays != 0)                                                            
                   {
-                    $timetext .= $tfdays . ' Tage, ';
+                    $timetext .= $tfdays . ' Tag(e), ';
                   }
-                  $timetext .= $tfhours . ' Stunden.';
+                  $timetext .= $tfhours . ' Stunde(n).';
                   echo $timetext;
                 ?>'                        
       },                                                                
