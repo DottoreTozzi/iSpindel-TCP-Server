@@ -60,9 +60,9 @@ FORWARDPORT = 9501
 
 # Fermentrack
 FERMENTRACK = 0 
-FERM_USE_ISPINDLE_TOKEN = 0 
-FERMENTRACKADDR = '192.168.1.10' 
-FERMENTRACK_TOKEN = '*****************************' 
+FERM_USE_ISPINDLE_TOKEN = 1
+FERMENTRACKADDR = '192.168.10.164' 
+FERMENTRACK_TOKEN = 'mytoken' 
 FERMENTRACKPORT = 80
 
 # ADVANCED
@@ -299,35 +299,36 @@ def handler(clientsock,addr):
 
             except Exception as e:
                 dbgprint(repr(addr) + ' Error while forwarding to ' + FORWARDADDR + ': ' + str(e))
-
+                
+                
         if FERMENTRACK: 
             try: 
                 if FERM_USE_ISPINDLE_TOKEN: 
                     token = user_token 
                 else: 
                     token = FERMENTRACK_TOKEN 
-                    if token != '': 
-                        if token[:1] != '*': 
-                            dbgprint(repr(addr) + ' - sending to fermentrack') 
-                            import urllib2 
-                            outdata = { 
-                                    "ID" : spindle_id 
-                                    "angle" : angle, 
-                                    "battery" : battery, 
-                                    "gravity" : gravity, 
-                                    "name" : spindle_name 
-                                    "temperature" : temperature, 
-                                    "token" : token 
-                                    }
-                            out = json.dumps(outdata) 
-                            dbgprint(repr(addr) + ' - sending: ' + out) 
-                            url = 'http://' + FERMENTRACKADDR + ':' + FERMENTRACKPORT'/ispindle/'
-                            dbgprint(repr(addr) + ' to : ' + url)
-                            req = urllib2.Request(url) 
-                            req.add_header('Content-Type', 'application/json') 
-                            req.add_header('User-Agent', spindle_name)
-                            response = urllib2.urlopen(req, out) 
-                            dbgprint(repr(addr) + ' - received: ' + response.read()) 
+                if token != '': 
+                    if token[:1] != '*': 
+                        dbgprint(repr(addr) + ' - sending to fermentrack') 
+                        import urllib2 
+                        outdata = { 
+                                "ID" : spindle_id, 
+                                "angle" : angle, 
+                                "battery" : battery, 
+                                "gravity" : gravity, 
+                                "name" : spindle_name, 
+                                "temperature" : temperature, 
+                                "token" : token 
+                                }
+                        out = json.dumps(outdata) 
+                        dbgprint(repr(addr) + ' - sending: ' + out) 
+                        url = 'http://' + FERMENTRACKADDR + ':' + str(FERMENTRACKPORT) + '/ispindel/'
+                        dbgprint(repr(addr) + ' to : ' + url)
+                        req = urllib2.Request(url) 
+                        req.add_header('Content-Type', 'application/json') 
+                        req.add_header('User-Agent', spindle_name)
+                        response = urllib2.urlopen(req, out) 
+                        dbgprint(repr(addr) + ' - received: ' + response.read()) 
             except Exception as e: 
                 dbgprint(repr(addr) + ' Fermentrack Error: ' + str(e)) 
 
