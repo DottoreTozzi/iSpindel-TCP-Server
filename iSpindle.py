@@ -1,8 +1,9 @@
 #!/usr/bin/env python2.7
 
-# Version: 1.4.0
+# Version: 1.4.1
 # New: Added new data fields for Interval and WiFi reception (RSSI) for Firmware 5.8 and later
 # Chg: TimeStamp in CSV now in first column
+# New:  Added option to forward to fermentrack http://www.fermentrack.com/
 
 # Version: 1.3.3
 # New:  Added config parameter to use token field in iSpindle config as Ubidots token
@@ -56,6 +57,13 @@ FORWARD = 0
 # FORWARDPORT = 9501
 FORWARDADDR = '192.168.2.21'
 FORWARDPORT = 9501
+
+# Fermentrack
+FERMENTRACK = 0 
+FERM_USE_ISPINDLE_TOKEN = 0 
+FERMENTRACKADDR = '192.168.1.10' 
+FERMENTRACK_TOKEN = '*****************************' 
+FERMENTRACKPORT = 80
 
 # ADVANCED
 ENABLE_ADDCOLS = 0                              # Enable dynamic columns (do not use this unless you're a developer)
@@ -291,6 +299,37 @@ def handler(clientsock,addr):
 
             except Exception as e:
                 dbgprint(repr(addr) + ' Error while forwarding to ' + FORWARDADDR + ': ' + str(e))
+
+        if FERMENTRACK: 
+            try: 
+                if FERM_USE_ISPINDLE_TOKEN: 
+                    token = user_token 
+                else: 
+                    token = FERMENTRACK_TOKEN 
+                    if token != '': 
+                        if token[:1] != '*': 
+                            dbgprint(repr(addr) + ' - sending to fermentrack') 
+                            import urllib2 
+                            outdata = { 
+                                    "ID" : spindle_id 
+                                    "angle" : angle, 
+                                    "battery" : battery, 
+                                    "gravity" : gravity, 
+                                    "name" : spindle_name 
+                                    "temperature" : temperature, 
+                                    "token" : token 
+                                    }
+                            out = json.dumps(outdata) 
+                            dbgprint(repr(addr) + ' - sending: ' + out) 
+                            url = 'http://' + FERMENTRACKADDR + ':' + FERMENTRACKPORT'/ispindle/'
+                            dbgprint(repr(addr) + ' to : ' + url)
+                            req = urllib2.Request(url) 
+                            req.add_header('Content-Type', 'application/json') 
+                            req.add_header('User-Agent', spindle_name)
+                            response = urllib2.urlopen(req, out) 
+                            dbgprint(repr(addr) + ' - received: ' + response.read()) 
+            except Exception as e: 
+                dbgprint(repr(addr) + ' Fermentrack Error: ' + str(e)) 
 
 
 def main():
