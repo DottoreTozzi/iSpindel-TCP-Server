@@ -207,7 +207,7 @@ function getChartValuesPlato4($conn, $iSpindleID='iSpindel000', $timeFrameHours=
      {
          $jsTime = $r_row['unixtime'] * 1000;
          $angle = $r_row['angle'];
-         $dens = $const1 * $angle ** 2 + $const2 * $angle + $const3;   // complete polynome from database
+         $dens = $const1 * pow($angle, 2) + $const2 * $angle + $const3;   // complete polynome from database
                          
          $valAngle         .= '['.$jsTime.', '.$angle.'],';
          $valDens          .= '['.$jsTime.', '.$dens.'],';
