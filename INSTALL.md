@@ -104,6 +104,7 @@ Anstelle von DE kann natürlich AT, LU, CH stehen, je nach Land.
 Oder man wählt Englisch, in dem Fall dann normalerweise en_US.utf8.
 Meistens gibt es Fehlermeldungen. Klappt seltsamerweise fast nie auf Anhieb.
 Einfach nochmal ausloggen ("exit") und neu einloggen.
+Eventuell muss man (je nach Debian Version) auch die richtige Locale in /etc/default/locale eintragen.
 
 Spätestens dann sollte das so aussehen:
 
