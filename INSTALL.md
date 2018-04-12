@@ -244,6 +244,20 @@ Ansonsten kann man alles so lassen wie es ist und direkt hier weitermachen.
 
 /etc/samba/shares.conf:
 
+        [boot]
+	path = /boot
+        guest ok = yes
+        read only = no
+        force user = pi
+        browseable = yes
+
+	[iSpindle-Srv]
+	path = /usr/local/bin
+        guest ok = yes
+        read only = no
+        force user = pi
+        browseable = yes
+
 	[pi-home]
     	path = /home/pi
     	guest ok = yes
@@ -265,6 +279,9 @@ Ansonsten kann man alles so lassen wie es ist und direkt hier weitermachen.
 	sudo service smbd start
 
 Das pi Home Verzeichnis ist nun im Heimnetzwerk freigegeben und Ihr könnt es im Explorer/Finder Eures Computers sehen.
+Ebenso das boot Verzeichnis und /usr/local/bin, wo das Python Script (der iSpindel Server) residieren wird.
+Wenn das alles mal passt, kann man diese Einträge irgendwann sicherheitshalber entfernen.
+Ebenso einfach kann man natürlich andere Ordner freigeben, z.B. für Musik.
 
 ### Das genericTCP Skript installieren
 Zunächst das Skript konfigurieren, wie im README beschrieben.    
