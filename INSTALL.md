@@ -245,32 +245,32 @@ Ansonsten kann man alles so lassen wie es ist und direkt hier weitermachen.
 /etc/samba/shares.conf:
 
         [boot]
-	path = /boot
+        path = /boot
         guest ok = yes
         read only = no
         force user = pi
         browseable = yes
 
-	[iSpindle-Srv]
-	path = /usr/local/bin
+        [iSpindle-Srv]
+        path = /usr/local/bin
         guest ok = yes
         read only = no
         force user = pi
         browseable = yes
 
-	[pi-home]
-    	path = /home/pi
-    	guest ok = yes
-    	read only = no
-    	force user = pi
-    	browseable = yes
+        [pi-home]
+        path = /home/pi
+        guest ok = yes
+        read only = no
+        force user = pi
+        browseable = yes
 
-	[system-logs]
-    	path = /var/log
-    	guest ok = yes
-    	read only = yes
-    	force user = root
-    	browseable = yes
+        [system-logs]
+        path = /var/log
+        guest ok = yes
+        read only = yes
+        force user = root
+        browseable = yes
 
 #### Samba daemon (smbd) starten
 
