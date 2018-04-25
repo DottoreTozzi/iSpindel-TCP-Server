@@ -177,7 +177,7 @@ Die Datentabelle folgt diesem Schema:
 	CREATE TABLE `Data` (
  		`Timestamp` datetime NOT NULL,
  		`Name` varchar(64) COLLATE ascii_bin NOT NULL,
- 		`ID` varchar(64) COLLATE ascii_bin NOT NULL,
+ 		`ID` int NOT NULL,
  		`Angle` double NOT NULL,
  		`Temperature` double NOT NULL,
  		`Battery` double NOT NULL,
@@ -192,7 +192,7 @@ Die Datentabelle folgt diesem Schema:
 (Im Feld ID wird die Hardware ID abgelegt, welche wir zum Hinterlegen der Kalibrierung benötigen.)     
 
 	CREATE TABLE `Calibration` (
-		`ID` varchar(64) COLLATE ascii_bin NOT NULL,
+		`ID` int NOT NULL,
 		`const1` double NOT NULL,
 		`const2` double NOT NULL,
 		`const3` double NOT NULL,
