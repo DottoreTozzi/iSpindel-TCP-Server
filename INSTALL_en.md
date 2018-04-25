@@ -140,7 +140,7 @@ Otherwise, the main data table will suffice:
 	CREATE TABLE `Data` (
  		`Timestamp` datetime NOT NULL,
  		`Name` varchar(64) COLLATE ascii_bin NOT NULL,
- 		`ID` varchar(64) COLLATE ascii_bin NOT NULL,
+ 		`ID` int NOT NULL,
  		`Angle` double NOT NULL,
  		`Temperature` double NOT NULL,
  		`Battery` double NOT NULL,
@@ -155,7 +155,7 @@ Otherwise, the main data table will suffice:
 The field "ID" stores the iSpindle's unique hardware ID, which we'll need in order to use calibration.
 
 	CREATE TABLE `Calibration` (
-		`ID` varchar(64) COLLATE ascii_bin NOT NULL,
+		`ID` int NOT NULL,
 		`const1` double NOT NULL,
 		`const2` double NOT NULL,
 		`const3` double NOT NULL,
