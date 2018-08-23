@@ -32,7 +32,7 @@ import time
 # CONFIG Start
 
 # General
-DEBUG = 1  # Set to 1 to enable debug output on console (usually devs only)
+DEBUG = 0  # Set to 1 to enable debug output on console (usually devs only)
 PORT = 9501  # TCP Port to listen to (to be used in iSpindle config as well)
 HOST = '0.0.0.0'  # Allowed IP range. Leave at 0.0.0.0 to allow connections from anywhere
 
@@ -73,6 +73,7 @@ FERMENTRACKPORT = 80
 # ADVANCED
 ENABLE_ADDCOLS = 0  # Enable dynamic columns (do not use this unless you're a developer)
 RETURN_JSON = 1
+RETURN_JSON_EXTENDED = 1
 
 # BREWPILESS
 BREWPILESS = 0
@@ -142,7 +143,10 @@ def handler(clientsock, addr):
                 # Testing: Return Interval as JSON?
                 reply = ''
                 if RETURN_JSON:
-                    reply = '{ "interval" : ' + str(interval) + ' }'
+		    if RETURN_JSON_EXTENDED:
+		        reply = '{ "interval" : ' + str(interval) + ',"name":"iSpindel01","vfact":191.80,"token":"*dummy","polyn":"0.002378287*tilt^2+0.327188119*tilt-8.88"}'
+		    else:
+                        reply = '{ "interval" : ' + str(interval) + ' }'
                     clientsock.send(reply)
                 else:
                     reply = 'ACK'
