@@ -72,6 +72,15 @@ ENABLE_ADDCOLS = 0                              # Enable dynamic columns (do not
 BREWPILESS = 0
 BREWPILESSADDR = '192.168.0.102:80'
 
+# Forward to CraftBeerPi3 iSpindel Addon
+CRAFTBEERPI3 = 0
+CRAFTBEERPI3ADDR = 'localhost:5000'
+# if this is true the raw angle will be sent to CBPI3 instead of
+# the gravity value. Use this if you want to configure the
+# polynome from within CBPI3.
+# Otherwise leave this 0 and just use "tilt" in CBPI3
+CRAFTBEERPI3_SEND_ANGLE = 0
+
 # CONFIG End
 
 ACK = chr(6)            # ASCII ACK (Acknowledge)
@@ -266,6 +275,29 @@ def handler(clientsock,addr):
 
             except Exception as e:
                 dbgprint(repr(addr) + ' Error while forwarding to URL ' + url + ' : ' + str(e))
+
+        if CRAFTBEERPI3:
+            try:
+                dbgprint(repr(addr) + ' - forwarding to CraftBeerPi3 at http://' + CRAFTBEERPI3ADDR)
+                import urllib2
+                outdata = {
+                    'name' : spindle_name,
+                    'angle' : angle if CRAFTBEERPI3_SEND_ANGLE else gravity,
+                    'temperature' : temperature,
+                    'battery' : battery,
+                }
+                out = json.dumps(outdata)
+		dbgprint(repr(addr) + ' - sending: ' + out)
+		url = 'http://' + CRAFTBEERPI3ADDR + '/api/hydrometer/v1/data'
+		req = urllib2.Request(url)
+		req.add_header('Content-Type', 'application/json')
+		req.add_header('User-Agent', spindle_name)
+		response = urllib2.urlopen(req, out)
+		dbgprint(repr(addr) + ' - received: ' + response.read())
+
+            except Exception as e:
+                dbgprint(repr(addr) + ' Error while forwarding to URL ' + url + ' : ' + str(e))
+
 
         if UBIDOTS:
             try:
