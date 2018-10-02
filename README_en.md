@@ -1,6 +1,12 @@
 # iSpindel Generic TCP Server
-#### (iSpindle.py Version 1.3.3)
+#### (iSpindle.py Version 1.6.0)
 
+**New (02.10.2018)**
+CBP3 support thanks to jlanger     
+Brewpiless support thanks to ollinator2000     
+iSpindel Remote Configuration: a set of config parameters can now be sent to the iSpindel as response.     
+Currently, this is limited by the firmware to the "Interval" setting, although you can already set the polynomial and token parameters server side.      
+You'll need firmware 6.0.1 or above for this.
 
 **New (15.02.2018)**
 New chart wifi.php shows current connection quality (RSSI).          
