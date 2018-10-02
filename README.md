@@ -4,11 +4,11 @@
 [English Version](README_en.md)
 
 **Neu (02.10.2018)**
-CBP3 support (Dank an jlanger)
-Brewpiless support (Dank an ollinator2000)
-iSpindel Remote Configuration: Die iSpindel kann nun bestimmte Konfigurations Parameter empfangen.
-Momentan funktioniert das nur mit der "Intervall" Einstellung.
-Das Polynom und das Token können Server seitig bereits konfiguriert werden, diese werden aber von der momentanen Firmware Version (6.0.1) noch ignoriert.
+CBP3 support (Dank an jlanger)     
+Brewpiless support (Dank an ollinator2000)     
+iSpindel Remote Configuration: Die iSpindel kann nun bestimmte Konfigurations Parameter empfangen.     
+Momentan funktioniert das nur mit der "Intervall" Einstellung.     
+Das Polynom und das Token können Server seitig bereits konfiguriert werden, diese werden aber von der momentanen Firmware Version (6.0.1) noch ignoriert.     
 Benötigt wird auf jeden Fall Firmware 6.0.1 oder neuer.
 
 **Neu (15.02.2018)**
