@@ -2,6 +2,21 @@
 ### Step-by-Step
 
 
+### Update to 1.6.0, Firmware 6.0.1 und above:
+     
+Ignore if directly installing the latest version.
+If you're upgrading, you'll need to add this table to your database, however:
+
+	CREATE TABLE `Config` (
+		`ID` int NOT NULL,
+		`Interval` int NOT NULL,
+		`Token` varchar(64) NOT NULL,
+		`Polynomial` varchar(64) NOT NULL,
+	        `Sent` boolean NOT NULL,
+		PRIMARY KEY (`ID`)
+		) ENGINE=InnoDB DEFAULT CHARSET=ascii COLLATE=ascii_bin COMMENT='iSpindle Config Data';
+
+
 ### Update to 1.4.0, Firmware 5.8 and later:
 
 Again, ignore this if newly installing.
@@ -152,7 +167,7 @@ Otherwise, the main data table will suffice:
  	PRIMARY KEY (`Timestamp`,`Name`,`ID`)
 	) ENGINE=InnoDB DEFAULT CHARSET=ascii COLLATE=ascii_bin COMMENT='iSpindle Data';
 
-The field "ID" stores the iSpindle's unique hardware ID, which we'll need in order to use calibration.
+The field "ID" stores the iSpindle's unique hardware ID, which we'll need in order to use calibration and remote config.
 
 	CREATE TABLE `Calibration` (
 		`ID` int NOT NULL,
@@ -161,6 +176,17 @@ The field "ID" stores the iSpindle's unique hardware ID, which we'll need in ord
 		`const3` double NOT NULL,
 		PRIMARY KEY (`ID`)
 		) ENGINE=InnoDB DEFAULT CHARSET=ascii COLLATE=ascii_bin COMMENT='iSpindle Calibration Data';
+
+
+	CREATE TABLE `Config` (
+		`ID` int NOT NULL,
+		`Interval` int NOT NULL,
+		`Token` varchar(64) NOT NULL,
+		`Polynomial` varchar(64) NOT NULL,
+	        `Sent` boolean NOT NULL,
+		PRIMARY KEY (`ID`)
+		) ENGINE=InnoDB DEFAULT CHARSET=ascii COLLATE=ascii_bin COMMENT='iSpindle Config Data';
+
 
 #### Create a Database User, Grant Permissions, Set Password):
 
