@@ -6,6 +6,19 @@
 ### Interim Release: Debian/Raspbian Stretch
 
 
+### Update auf Version 1.6.0, Firmware 6.0.1 und höher:
+     
+Bei Einsatz einer älteren Version muss die Datenbank angepasst werden, wenn die "Remote Configuration" der iSpindel genutzt werden soll.
+
+	CREATE TABLE `Config` (
+		`ID` int NOT NULL,
+		`Interval` int NOT NULL,
+		`Token` varchar(64) NOT NULL,
+		`Polynomial` varchar(64) NOT NULL,
+	        `Sent` boolean NOT NULL,
+		PRIMARY KEY (`ID`)
+		) ENGINE=InnoDB DEFAULT CHARSET=ascii COLLATE=ascii_bin COMMENT='iSpindle Config Data';
+
 ### Update auf Version 1.4.0, Firmare 5.8 und höher...
 
 Diese Schritte sind nur nötig, wenn eine bestehende Version aktualisiert werden soll.
@@ -198,6 +211,17 @@ Die Datentabelle folgt diesem Schema:
 		`const3` double NOT NULL,
 		PRIMARY KEY (`ID`)
 		) ENGINE=InnoDB DEFAULT CHARSET=ascii COLLATE=ascii_bin COMMENT='iSpindle Calibration Data';
+		
+		
+	CREATE TABLE `Config` (
+		`ID` int NOT NULL,
+		`Interval` int NOT NULL,
+		`Token` varchar(64) NOT NULL,
+		`Polynomial` varchar(64) NOT NULL,
+	        `Sent` boolean NOT NULL,
+		PRIMARY KEY (`ID`)
+		) ENGINE=InnoDB DEFAULT CHARSET=ascii COLLATE=ascii_bin COMMENT='iSpindle Config Data';
+
 
 #### Benutzer anlegen und berechtigen (und ihm ein eigenes Passwort geben):
 
