@@ -62,6 +62,52 @@ function getChartValues($conn, $iSpindleID='iSpindel000', $timeFrameHours=defaul
     return array($valAngle, $valTemperature);
   }
 }
+// Get values from database for selected spindle, between now and timeframe in hours ago and calculate Moving average 
+function getChartValues_ma($conn, $iSpindleID='iSpindel000', $timeFrameHours=defaultTimePeriod, $movingtime, $reset=defaultReset)  
+{
+$where_ma='';                                
+   if ($reset)                                 
+   {                               
+   $where="WHERE Data1.Name = '".$iSpindleID."'
+						AND Data1.Timestamp >= (Select max(Timestamp) FROM Data WHERE Data.ResetFlag = true AND Data.Name = '".$iSpindleID."')";   
+						$where_ma="Data2.Timestamp >= (Select max(Data2.Timestamp) FROM Data AS Data2  WHERE Data2.ResetFlag = true) AND";	
+}
+	else
+	{
+   $where ="WHERE Data1.Name = '".$iSpindleID."'
+						AND Data1.Timestamp >= date_sub(NOW(), INTERVAL ".$timeFrameHours." HOUR)
+						and Data1.Timestamp <= NOW()";  
+	} 
+   $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data1.Timestamp) as unixtime, Data1.temperature, Data1.angle,
+                                (SELECT SUM(Data2.Angle) / COUNT(Data2.Angle)
+								FROM Data AS Data2
+                                WHERE "
+				.$where_ma
+				." TIMESTAMPDIFF(MINUTE, Data2.Timestamp, Data1.Timestamp) BETWEEN 0 and "
+				.$movingtime
+				." ) AS mv_angle             
+								FROM Data AS Data1 " 
+								.$where
+								." ORDER BY Data1.Timestamp ASC") or die(mysqli_error($conn));
+  // retrieve number of rows              
+  $rows = mysqli_num_rows($q_sql);
+  if ($rows > 0) 
+  {
+    $valAngle = ''; 
+    $valTemperature = '';
+    // retrieve and store the values as CSV lists for HighCharts           
+    while($r_row = mysqli_fetch_array($q_sql))
+    {
+      $jsTime = $r_row['unixtime'] * 1000;
+      $valAngle         .= '['.$jsTime.', '.$r_row['mv_angle'].'],';
+      $valTemperature   .= '['.$jsTime.', '.$r_row['temperature'].'],';
+    } 
+    // remove last comma from each CSV
+    $valAngle         = delLastChar($valAngle);
+    $valTemperature   = delLastChar($valTemperature);
+    return array($valAngle, $valTemperature);
+  }
+}    
 
 // Get values from database including gravity (Fw 5.0.1 required) for selected spindle, between now and timeframe in hours ago
 function getChartValuesPlato($conn, $iSpindleID='iSpindel000', $timeFrameHours=defaultTimePeriod, $reset=defaultReset)
@@ -219,5 +265,83 @@ function getChartValuesPlato4($conn, $iSpindleID='iSpindel000', $timeFrameHours=
      return array($isCalibrated, $valDens, $valTemperature, $valAngle);
     }
  }
+ 
+ // Get calibrated values from database for selected spindle, between now and [number of hours] ago
+// Old Method for Firmware before 5.x
+function getChartValuesPlato4_ma($conn, $iSpindleID='iSpindel000', $timeFrameHours=defaultTimePeriod, $movingtime, $reset=defaultReset)
+{
+    $isCalibrated = 0;  // is there a calbration record for this iSpindle?
+    $valAngle = '';
+    $valTemperature = '';
+    $valDens = '';
+    $const1 = 0;
+    $const2 = 0;
+    $const3 = 0;
+    $where_ma='';
+   if ($reset)
+   {
+   	$where="WHERE Data1.Name = '".$iSpindleID."' 
+            AND Data1.Timestamp >= (Select max(Timestamp) FROM Data  WHERE ResetFlag = true AND Name = '".$iSpindleID."')";
+	$where_ma="Data2.Timestamp >= (Select max(Data2.Timestamp) FROM Data AS Data2  WHERE Data2.ResetFlag = true) AND";
+   }  
+   else
+   {
+   	$where ="WHERE Data1.Name = '".$iSpindleID."' 
+            AND Data1.Timestamp >= date_sub(NOW(), INTERVAL ".$timeFrameHours." HOUR) 
+            AND Data1.Timestamp <= NOW()";
+   }  
+   $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data1.Timestamp) as unixtime, Data1.temperature, Data1.angle,
+                           (SELECT SUM(Data2.Angle) / COUNT(Data2.Angle)
+							FROM Data AS Data2
+                            WHERE "
+				.$where_ma
+				." TIMESTAMPDIFF(MINUTE, Data2.Timestamp, Data1.Timestamp) BETWEEN 0 and "
+				.$movingtime
+				." ) AS mv_angle
+						    FROM Data AS Data1 " 
+                           .$where 
+                          ." ORDER BY Data1.Timestamp ASC") or die(mysqli_error($conn));
+                     
+    // retrieve number of rows
+    $rows = mysqli_num_rows($q_sql);
+    if ($rows > 0)
+    {
+     // get unique hardware ID for calibration
+     $u_sql = mysqli_query($conn, "SELECT ID FROM Data WHERE Name = '".$iSpindleID."' ORDER BY Timestamp DESC LIMIT 1") or die(mysqli_error($conn));
+     $rowsID = mysqli_num_rows($u_sql);
+     if ($rowsID > 0)
+     {
+        // try to get calibration for iSpindle hardware ID
+        $r_id = mysqli_fetch_array($u_sql);
+        $uniqueID = $r_id['ID'];
+        $f_sql = mysqli_query($conn, "SELECT const1, const2, const3 FROM Calibration WHERE ID = '$uniqueID' ") or die(mysqli_error($conn));
+        $rows_cal = mysqli_num_rows($f_sql);
+        if ($rows_cal > 0)
+        {
+            $isCalibrated = 1;
+            $r_cal = mysqli_fetch_array($f_sql);
+            $const1 = $r_cal['const1'];
+            $const2 = $r_cal['const2'];
+            $const3 = $r_cal['const3'];
+        }
+     }
+     // retrieve and store the values as CSV lists for HighCharts
+     while($r_row = mysqli_fetch_array($q_sql))
+     {
+         $jsTime = $r_row['unixtime'] * 1000;
+         $angle = $r_row['mv_angle'];
+         $dens = $const1 * pow($angle, 2) + $const2 * $angle + $const3;   // complete polynome from database
+                         
+         $valAngle         .= '['.$jsTime.', '.$angle.'],';
+         $valDens          .= '['.$jsTime.', '.$dens.'],';
+         $valTemperature   .= '['.$jsTime.', '.$r_row['temperature'].'],';
+     }
+     // remove last comma from each CSV
+     $valAngle         = delLastChar($valAngle);
+     $valTemperature   = delLastChar($valTemperature);
+     return array($isCalibrated, $valDens, $valTemperature, $valAngle);
+    }
+ }
+ 
 ?>
 
