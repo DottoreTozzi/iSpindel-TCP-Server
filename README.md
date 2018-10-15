@@ -3,6 +3,12 @@
 
 [English Version](README_en.md)
 
+**Neu (15.10.2018)**
+Neue Diagramme: Moving Average (Glättung für angle.php und plato4.php, konfigurierbar)
+"Landing Page" index.php - Die lang ersehnte Auswahlseite für iSpindeln und Diagramme.
+Erreichbar über "http://myraspi/index.php" (je nach Konfiguration).
+Am besten gleich einen Shortcut (Lesezeichen) erstellen.
+
 **Neu (02.10.2018)**
 CBP3 support (Dank an jlanger)     
 Brewpiless support (Dank an ollinator2000)     
