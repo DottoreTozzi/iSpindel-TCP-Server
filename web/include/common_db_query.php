@@ -1,19 +1,22 @@
 <?php
 
 /* 
-  Visualizer for iSpindle using genericTCP with mySQL 
-  Shows mySQL iSpindle data on the browser as a graph via Highcharts:
-  http://www.highcharts.com
+ Visualizer for iSpindle using genericTCP with mySQL
+ Shows mySQL iSpindle data on the browser as a graph via Highcharts:
+ http://www.highcharts.com
  
-  Data access via mySQL for the charts is defined in here.
+ Data access via mySQL for the charts is defined in here.
  
-  For the original project itself, see: https://github.com/universam1/iSpindel  
+ For the original project itself, see: https://github.com/universam1/iSpindel
  
-  Got rid of deprecated stuff, ready for Debian Stretch now.
+ Got rid of deprecated stuff, ready for Debian Stretch now.
  
-  Tozzi (stephan@sschreiber.de), Nov 25 2017
+ Tozzi (stephan@sschreiber.de), Nov 25 2017
+ 
+ Oct 14 2018:
+ Added Moving Average Selects, thanks to nice job by mrhyde
+ Minor fixes
 */
-
 
 // remove last character from a string
 function delLastChar($string="")
@@ -34,7 +37,7 @@ function getChartValues($conn, $iSpindleID='iSpindel000', $timeFrameHours=defaul
    {
    $where ="WHERE Name = '".$iSpindleID."' 
             AND Timestamp >= date_sub(NOW(), INTERVAL ".$timeFrameHours." HOUR) 
-            and Timestamp <= NOW()";
+            AND Timestamp <= NOW()";
    }  
    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle
                          FROM Data " 
@@ -62,6 +65,7 @@ function getChartValues($conn, $iSpindleID='iSpindel000', $timeFrameHours=defaul
     return array($valAngle, $valTemperature);
   }
 }
+    
 // Get values from database for selected spindle, between now and timeframe in hours ago and calculate Moving average 
 function getChartValues_ma($conn, $iSpindleID='iSpindel000', $timeFrameHours=defaultTimePeriod, $movingtime, $reset=defaultReset)  
 {
@@ -266,7 +270,7 @@ function getChartValuesPlato4($conn, $iSpindleID='iSpindel000', $timeFrameHours=
     }
  }
  
- // Get calibrated values from database for selected spindle, between now and [number of hours] ago
+// Get calibrated values from database for selected spindle, between now and [number of hours] ago
 // Old Method for Firmware before 5.x
 function getChartValuesPlato4_ma($conn, $iSpindleID='iSpindel000', $timeFrameHours=defaultTimePeriod, $movingtime, $reset=defaultReset)
 {
@@ -342,6 +346,6 @@ function getChartValuesPlato4_ma($conn, $iSpindleID='iSpindel000', $timeFrameHou
      return array($isCalibrated, $valDens, $valTemperature, $valAngle);
     }
  }
- 
+
 ?>
 
