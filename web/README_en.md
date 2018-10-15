@@ -1,5 +1,19 @@
 # Charts From Local Server 
 
+A short heads-up on recent updates:
+We now have a "landing page", highly requested and anticipated, in order to select charts from a central html page.
+Fittingly, its name is "index.php".
+You can give it a parameter ("?days=[days]") in order to make active iSpindels choosable from the dropdown menu.
+By default, iSpindels which have been active in the past 7 days will be made available.
+From there, you can choose among the different visualizations.
+There is a lot of room to expand on this, of course.
+It looks ugly, it doesn't do all it COULD do, but it works.
+Any help will be highly appreciated.
+
+For now, we'll leave it as-is. For me, personally, it's cool this way.
+
+---------------------
+
 While exporting CSVs or directly accessing the database via ODBC from, for example, Excel, is fine for data analysis, we'll definitely also want a quick way to take a glance at the current fermentation.
 So, here are a few essential charts, developed using [highcharts](http://www.highcharts.com), browser accessible.
 Especially nice in Firefox fullscreen mode on a Raspi touch display. Just put some bookmarks on the Raspi Desktop.
