@@ -16,6 +16,10 @@
  Oct 14 2018:
  Added Moving Average Selects, thanks to nice job by mrhyde
  Minor fixes
+
+ Nov 04 2018:
+ Update of SQL queries for moving average calculations as usage of multiples spindles at the same time caused an issue and resulted in a mixed value of both spindle data 
+
 */
 
 // remove last character from a string
@@ -73,8 +77,8 @@ $where_ma='';
    if ($reset)                                 
    {                               
    $where="WHERE Data1.Name = '".$iSpindleID."'
-						AND Data1.Timestamp >= (Select max(Timestamp) FROM Data WHERE Data.ResetFlag = true AND Data.Name = '".$iSpindleID."')";   
-						$where_ma="Data2.Timestamp >= (Select max(Data2.Timestamp) FROM Data AS Data2  WHERE Data2.ResetFlag = true) AND";	
+						AND Data1.Timestamp >= (Select max(Timestamp) FROM Data WHERE Data.Name = '".$iSpindleID."' AND Data.ResetFlag = true)";   
+						$where_ma="Data2.Timestamp >= (Select max(Data2.Timestamp) FROM Data AS Data2  WHERE Data2.ResetFlag = true AND Data2.Name = '".$iSpindleID."') AND";	
 }
 	else
 	{
@@ -85,7 +89,7 @@ $where_ma='';
    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data1.Timestamp) as unixtime, Data1.temperature, Data1.angle,
                                 (SELECT SUM(Data2.Angle) / COUNT(Data2.Angle)
 								FROM Data AS Data2
-                                WHERE "
+                                WHERE Data2.Name = '".$iSpindleID."' AND "
 				.$where_ma
 				." TIMESTAMPDIFF(MINUTE, Data2.Timestamp, Data1.Timestamp) BETWEEN 0 and "
 				.$movingtime
@@ -286,7 +290,7 @@ function getChartValuesPlato4_ma($conn, $iSpindleID='iSpindel000', $timeFrameHou
    {
    	$where="WHERE Data1.Name = '".$iSpindleID."' 
             AND Data1.Timestamp >= (Select max(Timestamp) FROM Data  WHERE ResetFlag = true AND Name = '".$iSpindleID."')";
-	$where_ma="Data2.Timestamp >= (Select max(Data2.Timestamp) FROM Data AS Data2  WHERE Data2.ResetFlag = true) AND";
+	$where_ma="Data2.Timestamp >= (Select max(Data2.Timestamp) FROM Data AS Data2  WHERE Data2.ResetFlag = true AND Data2.Name = '".$iSpindleID."') AND";
    }  
    else
    {
@@ -297,7 +301,7 @@ function getChartValuesPlato4_ma($conn, $iSpindleID='iSpindel000', $timeFrameHou
    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data1.Timestamp) as unixtime, Data1.temperature, Data1.angle,
                            (SELECT SUM(Data2.Angle) / COUNT(Data2.Angle)
 							FROM Data AS Data2
-                            WHERE "
+                            WHERE Data2.Name = '".$iSpindleID."' AND "
 				.$where_ma
 				." TIMESTAMPDIFF(MINUTE, Data2.Timestamp, Data1.Timestamp) BETWEEN 0 and "
 				.$movingtime
