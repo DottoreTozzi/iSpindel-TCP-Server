@@ -2,6 +2,15 @@
 
 [English Version](README_en.md)
 
+Update 15.10.2018:
+Wir haben jetzt eine "Landing Page", also eine Portalseite, von der aus die einzelnen Diagramme aufgerufen werden können.
+Treffenderweise lautet der Name ganz einfach "index.php" und nimmt als Parameter die Anzahl der Tage, innerhalb welcher für die Auswahl nach aktiven iSpindel Namen gesucht werden soll.
+Die Voreinstellung ist 7, und sollte normalerweise passen.
+Außerdem haben wir jetzt (dank "mrhyde") ein paar neue Diagramme, welche eine Kurvenglättung auf der Basis von "moving averages" durchführen.
+Dies nur als Vorbemerkung, es geht weiter mit der ursprünglichen Doku:
+
+------------------------------------------
+
 OK, der lokale Server ist im Einsatz und funktioniert, jetzt wollen wir auch die Daten darstellen können, notfalls auch ohne Internetverbindung.     
 Zu was war das Ganze sonst gut?  
 Man kann zwar jederzeit per Excel eine CSV Datei importieren oder auch über ODBC auf die Datenbank zugreifen, aber das ist ein wenig umständlich.

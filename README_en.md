@@ -1,6 +1,12 @@
 # iSpindel Generic TCP Server
 #### (iSpindle.py Version 1.6.0)
 
+**New (15.10.2018)**
+Moving Average Diagrams (thanks to mrhyde).
+Also introducing the long-awaited "landing page", index.php.
+Select iSpindels having been active for a default of 7 days (change this by appending "?days=x" to the URL or editing include/common_db.php)
+Put this on your desktop or have it start up.
+
 **New (02.10.2018)**
 CBP3 support thanks to jlanger     
 Brewpiless support thanks to ollinator2000     
