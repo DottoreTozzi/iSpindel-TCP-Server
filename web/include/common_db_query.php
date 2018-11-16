@@ -20,56 +20,104 @@
  Nov 04 2018:
  Update of SQL queries for moving average calculations as usage of multiples spindles at the same time caused an issue and resulted in a mixed value of both spindle data 
 
+ Nov 16 2018
+Function getcurrentrecipe rewritten: Recipe Name will be only returned if reset= true or timeframe < timeframe of last reset
+Return of variables changed for all functions that return x/y diagram data. Recipe name is added in array and returned to php script
+
 */
 
 // remove last character from a string
+
+
 function delLastChar($string="")
 {
   $t = substr($string, 0, -1);
   return($t);
 }
- 
-// Get values from database for selected spindle, between now and timeframe in hours ago
-function getChartValues($conn, $iSpindleID='iSpindel000', $timeFrameHours=defaultTimePeriod, $reset=defaultReset)
+//Returns name of Recipe for current fermentation - Name can be set with reset.
+function getCurrentRecipeName($conn, $iSpindleID='iSpindel000', $timeFrameHours=defaultTimePeriod, $reset=defaultReset)
 {
-   if ($reset)
-   {
-   $where="WHERE Name = '".$iSpindleID."' 
-                  AND Timestamp >= (Select max(Timestamp) FROM Data  WHERE ResetFlag = true AND Name = '".$iSpindleID."')";
-   }  
-   else
-   {
-   $where ="WHERE Name = '".$iSpindleID."' 
-            AND Timestamp >= date_sub(NOW(), INTERVAL ".$timeFrameHours." HOUR) 
-            AND Timestamp <= NOW()";
-   }  
-   $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle
-                         FROM Data " 
-                         .$where 
-                         ." ORDER BY Timestamp ASC") or die(mysqli_error($conn));
-                         
-  // retrieve number of rows
-  $rows = mysqli_num_rows($q_sql);
+$q_sql1 = mysqli_query($conn, "SELECT Data.Recipe, Data.Timestamp FROM Data WHERE Data.Name = '"
+                              .$iSpindleID
+                              ."' AND Data.Timestamp >= (SELECT max( Data.Timestamp )FROM Data WHERE Data.Name = '"
+                              .$iSpindleID
+                              ."' AND Data.ResetFlag = true) LIMIT 1") or die(mysqli_error($conn));
+
+
+$q_sql2 = mysqli_query($conn, "SELECT Data.Timestamp FROM Data WHERE Data.Name = '"
+                              .$iSpindleID
+                              ."' AND Timestamp >= date_sub(NOW(), INTERVAL ".$timeFrameHours." HOUR)                                                                                                                                                                          AND Timestamp <= NOW() LIMIT 1") or die(mysqli_error($conn));
+
+  $rows = mysqli_num_rows($q_sql1);
+
+
   if ($rows > 0)
   {
-    $valAngle = '';
-    $valTemperature = '';
-    
-    // retrieve and store the values as CSV lists for HighCharts
-    while($r_row = mysqli_fetch_array($q_sql))
-    {
-      $jsTime = $r_row['unixtime'] * 1000;
-      $valAngle         .= '['.$jsTime.', '.$r_row['angle'].'],';
-      $valTemperature   .= '['.$jsTime.', '.$r_row['temperature'].'],';
-    }
-    
-    // remove last comma from each CSV
-    $valAngle         = delLastChar($valAngle);
-    $valTemperature   = delLastChar($valTemperature);
-    return array($valAngle, $valTemperature);
+    $r_row = mysqli_fetch_array($q_sql1);
+    $t_row = mysqli_fetch_array($q_sql2); 
+    $RecipeName = '';
+    $showCurrentRecipe=false;
+    $TimeFrame = $t_row['Timestamp'];
+    $ResetTime = $r_row['Timestamp'];
+  if ($reset==true)
+   {
+    $RecipeName = $r_row['Recipe'];
+    $showCurrentRecipe=true;
+   }
+  else
+  {  
+  if ($ResetTime < $TimeFrame) 
+   {
+    $RecipeName = $r_row['Recipe'];
+    $showCurrentRecipe=true;
+   }
+   }
+    return array($RecipeName, $showCurrentRecipe);
+  
   }
 }
-    
+
+// Get values from database for selected spindle, between now and timeframe in hours ago                                                                                                                                                      
+function getChartValues($conn, $iSpindleID='iSpindel000', $timeFrameHours=defaultTimePeriod, $reset=defaultReset)                                                                                                                             
+{                                                                                                                                                                                                                                             
+   if ($reset)                                                                                                                                                                                                                                
+   {                                                                                                                                                                                                                                          
+   $where="WHERE Name = '".$iSpindleID."'                                                                                                                                                                                                     
+                  AND Timestamp >= (Select max(Timestamp) FROM Data  WHERE ResetFlag = true AND Name = '".$iSpindleID."')";                                                                                                                   
+   }                                                                                                                                                                                                                                          
+   else                                                                                                                                                                                                                                       
+   {                                                                                                                                                                                                                                          
+   $where ="WHERE Name = '".$iSpindleID."'                                                                                                                                                                                                    
+            AND Timestamp >= date_sub(NOW(), INTERVAL ".$timeFrameHours." HOUR)                                                                                                                                                               
+            AND Timestamp <= NOW()";                                                                                                                                                                                                          
+   }                                                                                                                                                                                                                                          
+   $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe                                                                                                                                     
+                         FROM Data "                                                                                                                                                                                                          
+                         .$where                                                                                                                                                                                                              
+                         ." ORDER BY Timestamp ASC") or die(mysqli_error($conn));                                                                                                                                                             
+                                                                                                                                                                                                                                              
+  // retrieve number of rows                                                                                                                                                                                                                  
+  $rows = mysqli_num_rows($q_sql);                                                                                                                                                                                                            
+  if ($rows > 0)                                                                                                                                                                                                                              
+  {                                                                                                                                                                                                                                           
+    $valAngle = '';                                                                                                                                                                                                                           
+    $valTemperature = '';                                                                                                                                                                                                                     
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+    // retrieve and store the values as CSV lists for HighCharts                                                                                                                                                                              
+    while($r_row = mysqli_fetch_array($q_sql))                                                                                                                                                                                                
+    {                                                                                                                                                                                                                                         
+      $jsTime = $r_row['unixtime'] * 1000;                                                                                                                                                                                                    
+      $valAngle         .= '{ timestamp: '.$jsTime.', value: '.$r_row['angle'].", recipe: \"".$r_row['recipe']."\"},";
+      $valTemperature   .= '{ timestamp: '.$jsTime.', value: '.$r_row['temperature'].", recipe: \"".$r_row['recipe']."\"},";
+    }                                                                                                                                                                                                                                         
+                                                                                                                                                                                                                                              
+    // remove last comma from each CSV                                                                                                                                                                                                        
+    #$valAngle         = delLastChar($valAngle);                                                                                                                                                                                               
+    #$valTemperature   = delLastChar($valTemperature);                                                                                                                                                                                         
+                                                                                                                                                                                                                                              
+    return array($valAngle, $valTemperature);                                                                                                                                                                                     
+  }                                                                                                                                                                                                                                           
+}
 // Get values from database for selected spindle, between now and timeframe in hours ago and calculate Moving average 
 function getChartValues_ma($conn, $iSpindleID='iSpindel000', $timeFrameHours=defaultTimePeriod, $movingtime, $reset=defaultReset)  
 {
@@ -86,7 +134,7 @@ $where_ma='';
 						AND Data1.Timestamp >= date_sub(NOW(), INTERVAL ".$timeFrameHours." HOUR)
 						and Data1.Timestamp <= NOW()";  
 	} 
-   $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data1.Timestamp) as unixtime, Data1.temperature, Data1.angle,
+   $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data1.Timestamp) as unixtime, Data1.temperature, Data1.angle, Data1.recipe,
                                 (SELECT SUM(Data2.Angle) / COUNT(Data2.Angle)
 								FROM Data AS Data2
                                 WHERE Data2.Name = '".$iSpindleID."' AND "
@@ -107,12 +155,12 @@ $where_ma='';
     while($r_row = mysqli_fetch_array($q_sql))
     {
       $jsTime = $r_row['unixtime'] * 1000;
-      $valAngle         .= '['.$jsTime.', '.$r_row['mv_angle'].'],';
-      $valTemperature   .= '['.$jsTime.', '.$r_row['temperature'].'],';
+      $valAngle         .= '{ timestamp: '.$jsTime.', value: '.$r_row['mv_angle'].", recipe: \"".$r_row['recipe']."\"},";
+      $valTemperature   .= '{ timestamp: '.$jsTime.', value: '.$r_row['temperature'].", recipe: \"".$r_row['recipe']."\"},";
     } 
     // remove last comma from each CSV
-    $valAngle         = delLastChar($valAngle);
-    $valTemperature   = delLastChar($valTemperature);
+//    $valAngle         = delLastChar($valAngle);
+//    $valTemperature   = delLastChar($valTemperature);
     return array($valAngle, $valTemperature);
   }
 }    
@@ -131,7 +179,7 @@ function getChartValuesPlato($conn, $iSpindleID='iSpindel000', $timeFrameHours=d
             AND Timestamp >= date_sub(NOW(), INTERVAL ".$timeFrameHours." HOUR) 
             AND Timestamp <= NOW()";
    }  
-   $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, gravity
+   $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, gravity, recipe
                           FROM Data " 
                          .$where 
                          ." ORDER BY Timestamp ASC") or die(mysqli_error($conn));
@@ -149,14 +197,14 @@ function getChartValuesPlato($conn, $iSpindleID='iSpindel000', $timeFrameHours=d
     {
       $jsTime = $r_row['unixtime'] * 1000;
       $valAngle         .= '['.$jsTime.', '.$r_row['angle'].'],';
-      $valTemperature   .= '['.$jsTime.', '.$r_row['temperature'].'],';
-      $valGravity       .= '['.$jsTime.', '.$r_row['gravity'].'],';
+      $valGravity       .= '{ timestamp: '.$jsTime.', value: '.$r_row['gravity'].", recipe: \"".$r_row['recipe']."\"},";
+      $valTemperature   .= '{ timestamp: '.$jsTime.', value: '.$r_row['temperature'].", recipe: \"".$r_row['recipe']."\"},";
     }
 
     // remove last comma from each CSV
-    $valAngle         = delLastChar($valAngle);
-    $valTemperature   = delLastChar($valTemperature);
-    $valGravity       = delLastChar($valGravity);
+//    $valAngle         = delLastChar($valAngle);
+//    $valTemperature   = delLastChar($valTemperature);
+//    $valGravity       = delLastChar($valGravity);
     return array($valAngle, $valTemperature, $valGravity);
   }
 }
@@ -228,7 +276,7 @@ function getChartValuesPlato4($conn, $iSpindleID='iSpindel000', $timeFrameHours=
             AND Timestamp <= NOW()";
    }  
    
-   $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle
+   $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe
                            FROM Data " 
                            .$where 
                           ." ORDER BY Timestamp ASC") or die(mysqli_error($conn));
@@ -264,12 +312,15 @@ function getChartValuesPlato4($conn, $iSpindleID='iSpindel000', $timeFrameHours=
          $dens = $const1 * pow($angle, 2) + $const2 * $angle + $const3;   // complete polynome from database
                          
          $valAngle         .= '['.$jsTime.', '.$angle.'],';
-         $valDens          .= '['.$jsTime.', '.$dens.'],';
-         $valTemperature   .= '['.$jsTime.', '.$r_row['temperature'].'],';
-     }
+         $valDens          .= '{ timestamp: '.$jsTime.', value: '.$dens.", recipe: \"".$r_row['recipe']."\"},";
+         $valTemperature   .= '{ timestamp: '.$jsTime.', value: '.$r_row['temperature'].", recipe: \"".$r_row['recipe']."\"},";
+
+ 
+
+    }
      // remove last comma from each CSV
-     $valAngle         = delLastChar($valAngle);
-     $valTemperature   = delLastChar($valTemperature);
+ //    $valAngle         = delLastChar($valAngle);
+ //    $valTemperature   = delLastChar($valTemperature);
      return array($isCalibrated, $valDens, $valTemperature, $valAngle);
     }
  }
@@ -298,7 +349,7 @@ function getChartValuesPlato4_ma($conn, $iSpindleID='iSpindel000', $timeFrameHou
             AND Data1.Timestamp >= date_sub(NOW(), INTERVAL ".$timeFrameHours." HOUR) 
             AND Data1.Timestamp <= NOW()";
    }  
-   $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data1.Timestamp) as unixtime, Data1.temperature, Data1.angle,
+   $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data1.Timestamp) as unixtime, Data1.temperature, Data1.angle, Data1.recipe,
                            (SELECT SUM(Data2.Angle) / COUNT(Data2.Angle)
 							FROM Data AS Data2
                             WHERE Data2.Name = '".$iSpindleID."' AND "
@@ -341,12 +392,14 @@ function getChartValuesPlato4_ma($conn, $iSpindleID='iSpindel000', $timeFrameHou
          $dens = $const1 * pow($angle, 2) + $const2 * $angle + $const3;   // complete polynome from database
                          
          $valAngle         .= '['.$jsTime.', '.$angle.'],';
-         $valDens          .= '['.$jsTime.', '.$dens.'],';
-         $valTemperature   .= '['.$jsTime.', '.$r_row['temperature'].'],';
+         $valDens          .= '{ timestamp: '.$jsTime.', value: '.$dens.", recipe: \"".$r_row['recipe']."\"},";
+         $valTemperature   .= '{ timestamp: '.$jsTime.', value: '.$r_row['temperature'].", recipe: \"".$r_row['recipe']."\"},";
+
+
      }
      // remove last comma from each CSV
-     $valAngle         = delLastChar($valAngle);
-     $valTemperature   = delLastChar($valTemperature);
+//     $valAngle         = delLastChar($valAngle);
+//     $valTemperature   = delLastChar($valTemperature);
      return array($isCalibrated, $valDens, $valTemperature, $valAngle);
     }
  }

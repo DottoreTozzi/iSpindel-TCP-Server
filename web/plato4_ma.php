@@ -6,6 +6,7 @@
 // days = hours x 24   
 // weeks = days x 7    
 // name = iSpindle name
+// moving = time in minutes for moving average calculation
  
 include_once("include/common_db.php");
 include_once("include/common_db_query.php");
@@ -27,8 +28,13 @@ $tftemp -= $tfweeks * 168;
 $tfdays = floor($tftemp / 24);
 $tftemp -= $tfdays * 24;
 $tfhours = $tftemp;                                
+$minTemp = 0;
+$maxTemp = 30;
+$mindens = 0;
+$maxdens = 20;
                                                    
 list($isCalib, $dens, $temperature, $angle) = getChartValuesPlato4_ma($conn, $_GET['name'], $timeFrame, $_GET['moving'],  $_GET['reset']);
+list($RecipeName, $show) = getCurrentRecipeName($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 
 ?>
 
@@ -44,6 +50,11 @@ list($isCalib, $dens, $temperature, $angle) = getChartValuesPlato4_ma($conn, $_G
   <script src="include/moment-timezone-with-data.js"></script>
 
 <script type="text/javascript">
+
+const chartDens=[<?php echo $dens;?>]
+const chartTemp=[<?php echo $temperature;?>]
+
+
 $(function () 
 {
   var chart;
@@ -71,7 +82,7 @@ $(function ()
             },
             title:
             {
-                text: 'iSpindel: <?php echo $_GET['name'];?>'
+                text: 'iSpindel: <?php echo ($_GET['name']." ".$RecipeName);?>'
             },
             subtitle:
                   { text: ' <?php                                                               
@@ -130,8 +141,8 @@ xAxis:
                     // linkedTo: 0,
                     startOnTick: false,
                     endOnTick: false,
-                    min: -5,
-                    max: 35,
+                    min: 0,
+                    max: 30,
                     gridLineWidth: 0,
                     opposite: true,
                     title: {
@@ -155,9 +166,11 @@ xAxis:
                 formatter: function() 
                 {
                     if(this.series.name == 'Temperatur') {
-                        return '<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y +'°C';
+                        const pointData = chartTemp.find(row => row.timestamp === this.point.x)
+                        return '<b>Sudname: </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y +'°C';
                     } else {
-                        return '<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ Math.round(this.y * 100) / 100 +'%';
+                        const pointData = chartDens.find(row => row.timestamp === this.point.x)
+                        return '<b>Sudname: </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ Math.round(this.y * 100) / 100 +'%';
                     }
                 }
             },  
@@ -174,7 +187,7 @@ xAxis:
                 {
                     name: 'Extrakt',
                     color: '#FF0000',
-                    data: [<?php echo $dens;?>],
+                    data: chartDens.map(row => [row.timestamp, row.value]),
                     marker: 
                     {
                         symbol: 'square',
@@ -194,7 +207,7 @@ xAxis:
                     name: 'Temperatur',
                     yAxis: 1,
                     color: '#0000FF',
-                    data: [<?php echo $temperature;?>],
+                    data: chartTemp.map(row => [row.timestamp, row.value]),
                     marker: 
                         {
                             symbol: 'square',

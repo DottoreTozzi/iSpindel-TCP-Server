@@ -30,7 +30,10 @@ $tfdays = floor($tftemp / 24);
 $tftemp -= $tfdays * 24;
 $tfhours = $tftemp;
 
+// Array angle and temperature contain now also recipe name for each data point which will be displeayed in diagram tooltip
+// Variable RecipeName will be displayed in header depending on selected timeframe
 list($angle, $temperature) = getChartValues($conn, $_GET['name'], $timeFrame, $_GET['reset']);
+list($RecipeName, $show) = getCurrentRecipeName($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 
 ?>
 
@@ -44,10 +47,20 @@ list($angle, $temperature) = getChartValues($conn, $_GET['name'], $timeFrame, $_
   <script src="include/jquery-3.1.1.min.js"></script>
   <script src="include/moment.min.js"></script>
   <script src="include/moment-timezone-with-data.js"></script>
+  <script src="include/highcharts.js"></script>
 
 <script type="text/javascript">
+
+const chartAngle = [<?php echo $angle;?>]
+
+const chartTemp = [<?php echo $temperature;?>]
+
+//console.log(chartAngle)
+//console.log(chartTemp)
+
 $(function () 
 {
+
   var chart;
  
   $(document).ready(function() 
@@ -66,7 +79,7 @@ $(function ()
       },
       title: 
       {
-        text: 'iSpindel: <?php echo $_GET['name'];?>'
+        text: 'iSpindel: <?php echo ($_GET['name']." ".$RecipeName);?>'
       },
       subtitle: 
       { text: ' <?php
@@ -91,6 +104,8 @@ $(function ()
                   echo $timetext;
                 ?>'
       },
+
+
       xAxis: 
       {
 	type: 'datetime',
@@ -151,9 +166,11 @@ $(function ()
         formatter: function() 
         {
 	   if(this.series.name == 'Temperatur') {
-           	return '<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y +'°C';
+           	const pointData = chartTemp.find(row => row.timestamp === this.point.x)
+		return '<b>Sudname: </b>'+ pointData.recipe +'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y +'°C';
 	   } else {
-	   	return '<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y +'°';
+		const pointData = chartAngle.find(row => row.timestamp === this.point.x)
+	   	return '<b>Sudname: </b>'+ pointData.recipe +'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y +'°';
 	   }
         }
       },  
@@ -170,7 +187,7 @@ $(function ()
 	  {
           name: 'Winkel', 
 	  color: '#FF0000',
-          data: [<?php echo $angle;?>],
+	  data: chartAngle.map(row => [row.timestamp, row.value]),
           marker: 
           {
             symbol: 'square',
@@ -190,7 +207,7 @@ $(function ()
           name: 'Temperatur', 
 	  yAxis: 1,
 	  color: '#0000FF',
-          data: [<?php echo $temperature;?>],
+	  data: chartTemp.map(row => [row.timestamp, row.value]),
           marker: 
           {
             symbol: 'square',
@@ -207,6 +224,7 @@ $(function ()
           }    
         
         }
+
       ] //series      
     });
   });  
