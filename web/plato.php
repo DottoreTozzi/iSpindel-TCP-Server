@@ -28,6 +28,7 @@ $tftemp -= $tfdays * 24;
 $tfhours = $tftemp;
 
 list($angle, $temperature, $dens) = getChartValuesPlato($conn, $_GET['name'], $timeFrame, $_GET['reset']);
+list($RecipeName, $show) = getCurrentRecipeName($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 
 ?>
 
@@ -43,6 +44,10 @@ list($angle, $temperature, $dens) = getChartValuesPlato($conn, $_GET['name'], $t
   <script src="include/moment-timezone-with-data.js"></script>
 
 <script type="text/javascript">
+
+const chartDens=[<?php echo $dens;?>]
+const chartTemp=[<?php echo $temperature;?>]
+
 $(function () 
 {
   var chart;
@@ -147,9 +152,11 @@ $(function ()
                 formatter: function() 
                 {
                     if(this.series.name == 'Temperatur') {
-                        return '<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y +'°C';
+                        const pointData = chartTemp.find(row => row.timestamp === this.point.x)
+                        return '<b>Sudname: </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y +'°C';
                     } else {
-                        return '<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ Math.round(this.y * 100) / 100 +'%';
+                        const pointData = chartDens.find(row => row.timestamp === this.point.x)
+                        return '<b>Sudname: </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ Math.round(this.y * 100) / 100 +'%';
                     }
                 }
             },  
@@ -166,7 +173,7 @@ $(function ()
                 {
                     name: 'Extrakt',
                     color: '#FF0000',
-                    data: [<?php echo $dens;?>],
+                    data: chartDens.map(row => [row.timestamp, row.value]),
                     marker: 
                     {
                         symbol: 'square',
@@ -186,7 +193,7 @@ $(function ()
                     name: 'Temperatur',
                     yAxis: 1,
                     color: '#0000FF',
-                    data: [<?php echo $temperature;?>],
+                    data: chartTemp.map(row => [row.timestamp, row.value]),
                     marker: 
                         {
                             symbol: 'square',

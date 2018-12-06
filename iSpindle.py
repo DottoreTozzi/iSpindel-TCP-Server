@@ -1,6 +1,12 @@
 #!/usr/bin/env python2.7
 
 #
+# Version 1.6.1
+# Added functionality to deal with recipe information
+# Spindel is sending data. Script pulls corresponding spindle recipe information from last reset and writes it with current data to database and/or CSV
+# Todo and test: write info to other systems
+# DB Field receipe (charset(64)) required before running new version of this scritp
+#
 # Version: 1.6.0
 # iSpindel Remote Config via JSON TCP response implemented
 # Added CraftBeerPi 3.0 Support (thanks to jlanger)
@@ -178,6 +184,7 @@ def handler(clientsock, addr):
                 angle = jinput['angle']
                 temperature = jinput['temperature']
                 battery = jinput['battery']
+
                 try:
                     gravity = jinput['gravity']
                     interval = jinput['interval']
@@ -251,7 +258,20 @@ def handler(clientsock, addr):
         # We have the complete spindle data now, so let's make it available
         if CSV:
             dbgprint(repr(addr) + ' - writing CSV')
-            try:
+ #           dbgprint(repr(addr) + ' Reading last recipe name for corresponding Spindel' + spindle_name)
+        #   Get the Recipe name from the last reset for the spindel that has sent data
+	    import mysql.connector
+            cnx = mysql.connector.connect(user=SQL_USER, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
+            cur = cnx.cursor()
+            sqlselect="SELECT Data.Recipe FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.Timestamp >= (SELECT max( Data.Timestamp )FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.ResetFlag = true) LIMIT 1;"
+            cur.execute(sqlselect)
+            recipe_names = cur.fetchone()
+            cur.close()
+            cnx.close()
+            recipe = str(recipe_names[0])
+            dbgprint('Recipe Name: Done. ' + recipe )
+
+	    try:
                 filename = OUTPATH + spindle_name + '_' + str(spindle_id) + '.csv'
                 with open(filename, 'a') as csv_file:
                     # this would sort output. But we do not want that...
@@ -270,7 +290,8 @@ def handler(clientsock, addr):
                     outstr += str(gravity) + DELIMITER
                     outstr += user_token + DELIMITER
                     outstr += str(interval) + DELIMITER
-                    outstr += str(rssi)
+                    outstr += str(rssi) + DELIMITER
+		    outstr += recipe
                     outstr += NEWLINE
                     csv_file.writelines(outstr)
                     dbgprint(repr(addr) + ' - CSV data written.')
@@ -278,12 +299,26 @@ def handler(clientsock, addr):
                 dbgprint(repr(addr) + ' CSV Error: ' + str(e))
 
         if SQL:
-            try:
+            dbgprint(repr(addr) + ' Reading last recipe name for corresponding Spindel' + spindle_name)
+            # Get the recipe name from last reset for the spindel that has sent data
+	    import mysql.connector
+            cnx = mysql.connector.connect(user=SQL_USER, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
+            cur = cnx.cursor()
+            sqlselect="SELECT Data.Recipe FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.Timestamp >= (SELECT max( Data.Timestamp )FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.ResetFlag = true) LIMIT 1;"
+            cur.execute(sqlselect)
+            recipe_names = cur.fetchone()
+            cur.close()
+            cnx.close()
+            recipe = str(recipe_names[0])
+	    dbgprint('Recipe Name: Done. ' + recipe )
+
+
+	    try:
                 import mysql.connector
                 dbgprint(repr(addr) + ' - writing to database')
                 # standard field definitions:
-                fieldlist = ['Timestamp', 'Name', 'ID', 'Angle', 'Temperature', 'Battery', 'Gravity']
-                valuelist = [datetime.now(), spindle_name, spindle_id, angle, temperature, battery, gravity]
+                fieldlist = ['Timestamp', 'Name', 'ID', 'Angle', 'Temperature', 'Battery', 'Gravity', 'Recipe']
+                valuelist = [datetime.now(), spindle_name, spindle_id, angle, temperature, battery, gravity, recipe]
 
                 # do we have a user token defined? (Fw > 5.4.x)
                 # this is for later use (public server) but if it exists, let's store it for testing purposes
