@@ -1,6 +1,11 @@
 <?php
-include_once("include/common_db.php");
-include_once("include/common_db_query.php");
+// DB config values will be pulled from differtent location and user can personalize this file: common_db_config.php
+// If file does not exist, values will be pulled from default file
+
+if ((include_once '../config/common_db_config.php') == FALSE){
+       include_once("../config/common_db_default.php");
+     }
+    include_once("include/common_db_query.php");
 
 
 
@@ -12,8 +17,22 @@ if(!isset($_GET['recipe'])) $_GET['recipe'] = ''; else $_GET['recipe'] = $_GET['
 $Name = $_GET['name'];
 $Recipe = $_GET['recipe'];
 
-$q_sql = mysqli_query($conn, "INSERT INTO Data (Timestamp, Name, resetFlag, Recipe)
-                      VALUES (NOW(),'$Name', true, '$Recipe')")
+//depending on mysql config e.g. strivct mode, all values need to be transfered to DB and no empty values are allowed.
+//unique spindle id is pulled from DB and transferred for reset timestamp
+
+$q_sql0 = mysqli_query($conn, "SELECT DISTINCT ID FROM Data WHERE Name = '".$Name."'AND (ID <>'' OR ID <>'0') ORDER BY Timestamp DESC LIMIT 1") or die(mysqli_error($conn));  
+
+if (! $q_sql0){                                                                                                                                                                                                                                   echo "Fehler beim Lesen der ID";                                                                                                                                                                                                          }  
+$valID='0';
+  $rows = mysqli_num_rows($q_sql0);                                                                                                                                                                                                           
+  if ($rows > 0)                                                                                                                                                                                                                              
+  {                                                                                                                                                                                                                                           
+    $r_row = mysqli_fetch_array($q_sql0);                                                                                                                                                                                                     
+    $valID = $r_row['ID'];
+  }     
+
+ $q_sql = mysqli_query($conn, "INSERT INTO Data (Timestamp, Name, ID, Angle, Temperature, Battery, resetFlag, Recipe)
+                      VALUES (NOW(),'$Name', $valID, 0, 0, 0, true, '$Recipe')")
                        or die(mysqli_error($conn));
                        
 if (! $q_sql){
@@ -21,7 +40,10 @@ if (! $q_sql){
 }
 else {
    echo "Reset-Timestamp in Datenbank eingetragen <br>";
+if ($Recipe <>'')
+   {
    echo "Sudname <b>$Recipe</b> in Datenbank eingetragen";
+   }
 }
 ?>
 

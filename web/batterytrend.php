@@ -3,7 +3,7 @@
 ini_set('display_errors', 'On');
 error_reporting(E_ALL | E_STRICT);
 
-// Show the Angle/Temperature chart
+// Show the Voltage / Wifi Signal chart
 // GET Parameters:
 // hours = number of hours before now() to be displayed
 // days = hours x 24
@@ -37,7 +37,7 @@ $tfhours = $tftemp;
 
 // Array angle and temperature contain now also recipe name for each data point which will be displeayed in diagram tooltip
 // Variable RecipeName will be displayed in header depending on selected timeframe
-list($angle, $temperature) = getChartValues($conn, $_GET['name'], $timeFrame, $_GET['reset']);
+list($angle, $temperature,$battery,$RSSI) = getChartValues($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 list($RecipeName, $show) = getCurrentRecipeName($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 
 ?>
@@ -56,12 +56,15 @@ list($RecipeName, $show) = getCurrentRecipeName($conn, $_GET['name'], $timeFrame
 
 <script type="text/javascript">
 
-const chartAngle = [<?php echo $angle;?>]
+const chartBattery = [<?php echo $battery;?>]
 
-const chartTemp = [<?php echo $temperature;?>]
+const chartRSSI = [<?php echo $RSSI;?>]
 
-//console.log(chartAngle)
-//console.log(chartTemp)
+
+
+
+//console.log(chartBattery)
+console.log(chartRSSI)
 
 $(function () 
 {
@@ -88,7 +91,7 @@ $(function ()
       },
       subtitle: 
       { text: ' <?php
-                  $timetext = 'Temperatur und Winkel ';               
+                  $timetext = 'Batteriespannung und WiFi Empfang ';               
                   if($_GET['reset']) 
                   {     
                     $timetext .= 'seit dem letzten Reset: ';
@@ -125,10 +128,10 @@ $(function ()
 	startOnTick: false,
 	endOnTick: false, 
         min: 0,
-	max: 90,
+	max: 5,
 	title: 
         {
-          text: 'Winkel'         
+          text: 'Spannung'         
         },      
 	labels: 
         {
@@ -137,7 +140,7 @@ $(function ()
           y: 16,
           formatter: function() 
           {
-            return this.value +'°'
+            return this.value +'V'
           }
         },
 	showFirstLabel: false
@@ -145,12 +148,12 @@ $(function ()
          // linkedTo: 0,
 	 startOnTick: false,
 	 endOnTick: false,
-	 min: -5,
-	 max: 35,
+	 min: -100,
+	 max: 0,
 	 gridLineWidth: 0,
          opposite: true,
          title: {
-            text: 'Temperatur'
+            text: 'Empfang'
          },
          labels: {
             align: 'right',
@@ -158,7 +161,7 @@ $(function ()
             y: 16,
           formatter: function() 
           {
-            return this.value +'°C'
+            return this.value +'dB'
           }
          },
 	showFirstLabel: false
@@ -170,12 +173,12 @@ $(function ()
 	crosshairs: [true, true],
         formatter: function() 
         {
-	   if(this.series.name == 'Temperatur') {
-           	const pointData = chartTemp.find(row => row.timestamp === this.point.x)
-		return '<b>Sudname: </b>'+ pointData.recipe +'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y +'°C';
+	   if(this.series.name == 'Spannung') {
+           	const pointData = chartBattery.find(row => row.timestamp === this.point.x)
+		return '<b>Sudname: </b>'+ pointData.recipe +'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y +' V';
 	   } else {
-		const pointData = chartAngle.find(row => row.timestamp === this.point.x)
-	   	return '<b>Sudname: </b>'+ pointData.recipe +'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y +'°';
+		const pointData = chartRSSI.find(row => row.timestamp === this.point.x)
+	   	return '<b>Sudname: </b>'+ pointData.recipe +'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y +' dB';
 	   }
         }
       },  
@@ -190,9 +193,9 @@ $(function ()
       series:
       [
 	  {
-          name: 'Winkel', 
+          name: 'Spannung', 
 	  color: '#FF0000',
-	  data: chartAngle.map(row => [row.timestamp, row.value]),
+	  data: chartBattery.map(row => [row.timestamp, row.value]),
           marker: 
           {
             symbol: 'square',
@@ -209,10 +212,10 @@ $(function ()
           }    
           },
 	  {
-          name: 'Temperatur', 
+          name: 'Empfang', 
 	  yAxis: 1,
 	  color: '#0000FF',
-	  data: chartTemp.map(row => [row.timestamp, row.value]),
+	  data: chartRSSI.map(row => [row.timestamp, row.value]),
           marker: 
           {
             symbol: 'square',

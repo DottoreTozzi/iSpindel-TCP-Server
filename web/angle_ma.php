@@ -11,8 +11,13 @@ error_reporting(E_ALL | E_STRICT);
 // name = iSpindle name
 // moving = timeframe for moving average calculation
  
-include_once("include/common_db.php");
-include_once("include/common_db_query.php");
+// DB config values will be pulled from differtent location and user can personalize this file: common_db_config.php
+// If file does not exist, values will be pulled from default file
+
+if ((include_once '../config/common_db_config.php') == FALSE){
+       include_once("../config/common_db_default.php");
+       }
+       include_once("include/common_db_query.php");
 
 // Check GET parameters (for now: Spindle name and Timeframe to display) 
 if(!isset($_GET['hours'])) $_GET['hours'] = 0; else $_GET['hours'] = $_GET['hours'];
@@ -137,7 +142,7 @@ $(function ()
 	 startOnTick: false,
 	 endOnTick: false,
 	 min: -5,
-	 max: 35,
+	 max: 30,
 	 gridLineWidth: 0,
          opposite: true,
          title: {

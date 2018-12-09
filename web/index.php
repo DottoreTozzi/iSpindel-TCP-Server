@@ -15,7 +15,13 @@
     // GET parameter:
     // days = number of days in the past we should look for active iSpindels for
     // default 7 days is configured in include/common_db.php
-    
+    //
+	// December 2018:
+	// Database config parameters wiull be pulled from different directory. User can use personalized config file: common_db_config.php in config directory
+	// If personalized file does not exist, default config will be loaded: common_db_default.php
+	// Added function to display input field for Sudname on this page only if reset_now.php is selected
+	// If Sudname is entered, it is transferred to the database
+	// Added chart to display battery and Wifi strength trend
     
     // Self-called by submit button?
     if (isset($_POST['Go']))
@@ -28,6 +34,7 @@
         $url .="?name=".$_POST["ispindel_name"];
         $url .="&days=".$_POST["days"];
         $url .="&reset=".$_POST["fromreset"];
+        $url .="&recipe=".$_POST["recipename"];
 
         // open the page
         header("Location: ".$url);
@@ -36,7 +43,11 @@
     }
     
     // Called from browser, showing form
-    include_once("include/common_db.php");
+    if ((include_once '../config/common_db_config.php') == FALSE){
+       include_once("../config/common_db_default.php");
+    
+}
+
     
     // "Days Ago parameter set?
     if(!isset($_GET['days'])) $_GET['days'] = 0; else $_GET['days'] = $_GET['days'];
@@ -56,6 +67,14 @@
     <title>RasPySpindel Homepage</title>
     <meta name="Keywords" content="iSpindle, iSpindel, Chart, genericTCP, Select">
     <meta name="Description" content="iSpindle Fermentation Chart Selection Screen">
+
+<script type="text/javascript">
+    function einblenden(){
+        var select = document.getElementById('chart_filename').selectedIndex;
+        if(select == 8 ) document.getElementById('ResetNow').style.display = "block";
+        else document.getElementById('ResetNow').style.display = "none";        
+    }
+</script>
 </head>
 <body bgcolor="#E6E6FA">
 <form name="main" action="<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method="post">
@@ -75,7 +94,7 @@
         </option>
 </select>
 
-<select name = chart_filename>
+<select id="chart_filename" name='chart_filename' onchange="einblenden()">
         <option value="status.php" selected>Status (Batterie, Winkel, Temperatur)</option>
         <option value="battery.php">Batteriezustand</option>
         <option value="wifi.php">Netzwerk Empfangsqualität</option>
@@ -84,7 +103,8 @@
         <option value="angle.php">Tilt und Temperatur</option>
         <option value="angle_ma.php">Tilt und Temperatur, Geglättet</option>
         <option value="plato.php">Extrakt und Temperatur (iSpindel Polynom)</option>
-        <option value="reset_now.php">Gärbeginn Zeitpunkt setzen</option>
+        <option value="reset_now.php">Gärbeginn Zeitpunkt setzen</option>i
+        <option value="batterytrend.php">Verlauf Batteriespannung/WiFi anzeigen</option>	
 </select>
 
 <br />
@@ -102,9 +122,17 @@ Tage Historie
 <br />
 <br />
 
+<div id="ResetNow" style="display: none;">
+<p>Optional Sudnamen eingeben: <input type = "text" name = "recipename" /></p>
+</div>
+
 <input type = "submit" name = "Go" value = "Anzeigen">
 <br />
+
+        
+        
 </form>
+
 </body>
 </html>
 

@@ -1,11 +1,16 @@
 #!/usr/bin/env python2.7
 
 #
+# Version 1.6.2
+# Change of config data handling. ini files will be stored in config directory and user can create iSpindle_config.ini in this directory.
+# If personalized config file is not existing, values from iSpindle_default.ini will be pulled. 
+# Change preserves personalized config data during update
+#
 # Version 1.6.1
 # Added functionality to deal with recipe information
 # Spindel is sending data. Script pulls corresponding spindle recipe information from last reset and writes it with current data to database and/or CSV
 # Todo and test: write info to other systems
-# DB Field receipe (charset(64)) required before running new version of this scritp
+# DB Field receipe (charset(64)) required before running new version of this script
 #
 # Version: 1.6.0
 # iSpindel Remote Config via JSON TCP response implemented
@@ -39,69 +44,82 @@ from datetime import datetime
 import thread
 import json
 import time
+from ConfigParser import ConfigParser
+
+class MyConfigParser(ConfigParser):
+    def get(self, section, option):
+      return ConfigParser.get(self, section, option).replace('\\r\\n', '\r\n')
+
 
 # CONFIG Start
+config = MyConfigParser()	
+
+try:
+ with open('/home/pi/iSpindel-Srv/config/iSpindle_config.ini') as f:
+							config.readfp(f)
+except IOError:
+ config.read('/home/pi/iSpindel-Srv/config/iSpindle_default.ini')
 
 # General
-DEBUG = 0  # Set to 1 to enable debug output on console (usually devs only)
-PORT = 9501  # TCP Port to listen to (to be used in iSpindle config as well)
-HOST = '0.0.0.0'  # Allowed IP range. Leave at 0.0.0.0 to allow connections from anywhere
+DEBUG = config.get('GENERAL', 'DEBUG') # Set to 1 to enable debug output on console (usually devs only)
+PORT = config.getint('GENERAL', 'PORT') # TCP Port to listen to (to be used in iSpindle config as well)
+HOST = config.get('GENERAL', 'HOST')  # Allowed IP range. Leave at 0.0.0.0 to allow connections from anywhere
 
 # CSV
-CSV = 0  # Set to 1 if you want CSV (text file) output
-OUTPATH = '/home/pi/iSpindel/csv/'  # CSV output file path; filename will be name_id.csv
-DELIMITER = ';'  # CSV delimiter (normally use ; for Excel)
-NEWLINE = '\r\n'  # newline (\r\n for windows clients)
-DATETIME = 1  # Leave this at 1 to include Excel compatible timestamp in CSV
+CSV = config.get('CSV', 'CSV')  # Set to 1 if you want CSV (text file) output
+OUTPATH = config.get('CSV', 'OUTPATH')  # CSV output file path; filename will be name_id.csv
+DELIMITER = config.get('CSV', 'DELIMITER')  # CSV delimiter (normally use ; for Excel)
+NEWLINE =  config.get('CSV', 'NEWLINE')  # newline (\r\n for windows clients)
+DATETIME = config.getint('CSV', 'DATETIME')  # Leave this at 1 to include Excel compatible timestamp in CSV
 
 # MySQL
-SQL = 1  # 1 to enable output to MySQL database
-SQL_HOST = '127.0.0.1'  # Database host name (default: localhost - 127.0.0.1 loopback interface)
-SQL_DB = 'iSpindle'  # Database name
-SQL_TABLE = 'Data'  # Table name
-SQL_USER = 'iSpindle'  # DB user
-SQL_PASSWORD = 'ohyeah'  # DB user's password (change this)
+SQL = config.getint('MYSQL', 'SQL')  # 1 to enable output to MySQL database
+SQL_HOST = config.get('MYSQL', 'SQL_HOST')  # Database host name (default: localhost - 127.0.0.1 loopback interface)
+SQL_DB = config.get('MYSQL', 'SQL_DB')  # Database name
+SQL_TABLE = config.get('MYSQL', 'SQL_TABLE')  # Table name
+SQL_USER = config.get('MYSQL', 'SQL_USER')  # DB user
+SQL_PASSWORD = config.get('MYSQL', 'SQL_PASSWORD')  # DB user's password (change this)
+SQL_PORT = config.getint('MYSQL', 'SQL_PORT')
 
 # Ubidots (using existing account)
-UBIDOTS = 0  # 1 to enable output to ubidots
-UBI_USE_ISPINDLE_TOKEN = 1  # 1 to use "token" field in iSpindle config (overrides UBI_TOKEN)
-UBI_TOKEN = '******************************'  # global ubidots token, see manual or ubidots.com
+UBIDOTS = config.getint('UBIDOTS', 'UBIDOTS')  # 1 to enable output to ubidots
+UBI_USE_ISPINDLE_TOKEN = config.get('UBIDOTS', 'UBI_USE_ISPINDLE_TOKEN')  # 1 to use "token" field in iSpindle config (overrides UBI_TOKEN)
+UBI_TOKEN = config.get('UBIDOTS', 'UBI_TOKEN')  # global ubidots token, see manual or ubidots.com
 
 # Forward to public server or other relay (i.e. another instance of this script)
-FORWARD = 0
-# FORWARDADDR = 'ispindle.de'
-# FORWARDPORT = 9501
-FORWARDADDR = '192.168.2.21'
-FORWARDPORT = 9501
+FORWARD = config.getint('FORWARD', 'FORWARD')
+FORWARDADDR = config.get('FORWARD', 'FORWARDADDR')
+FORWARDPORT =  config.getint('FORWARD', 'FORWARDPORT')
+
 
 # Fermentrack
-FERMENTRACK = 0
-FERM_USE_ISPINDLE_TOKEN = 1
-FERMENTRACKADDR = '192.168.10.164'
-FERMENTRACK_TOKEN = 'mytoken'
-FERMENTRACKPORT = 80
+FERMENTRACK =  config.getint('FERMENTRACK', 'FERMENTRACK')
+FERM_USE_ISPINDLE_TOKEN = config.get('FERMENTRACK', 'FERM_USE_ISPINDLE_TOKEN')
+FERMENTRACKADDR = config.get('FERMENTRACK', 'FERMENTRACKADDR')
+FERMENTRACK_TOKEN = config.get('FERMENTRACK', 'FERMENTRACK_TOKEN')
+FERMENTRACKPORT = config.getint('FERMENTRACK', 'FERMENTRACKPORT')
 
 # BREWPILESS
-BREWPILESS = 0
-BREWPILESSADDR = '192.168.0.102:80'
+BREWPILESS = config.getint('BREWPILESS', 'BREWPILESS')
+BREWPILESSADDR = config.get('BREWPILESS', 'BREWPILESSADDR')
 
 # Forward to CraftBeerPi3 iSpindel Addon
-CRAFTBEERPI3 = 0
-CRAFTBEERPI3ADDR = 'localhost:5000'
+CRAFTBEERPI3 = config.getint('CRAFTBEERPI3', 'CRAFTBEERPI3')
+CRAFTBEERPI3ADDR = config.get('CRAFTBEERPI3', 'CRAFTBEERPI3ADDR')
 # if this is true the raw angle will be sent to CBPI3 instead of
 # the gravity value. Use this if you want to configure the
 # polynome from within CBPI3.
 # Otherwise leave this 0 and just use "tilt" in CBPI3
-CRAFTBEERPI3_SEND_ANGLE = 0
+CRAFTBEERPI3_SEND_ANGLE = config.getint('CRAFTBEERPI3', 'CRAFTBEERPI3_SEND_ANGLE')
 
 # iSpindle Remote Config?
 # If this is enabled, we'll send iSpindle config JSON as TCP reply.
 # Before using this, make sure your database is up-to-date. See README and INSTALL.
 # This feature is still in testing but should already work reliably.
-REMOTECONFIG = 0
+REMOTECONFIG = config.getint('REMOTECONFIG', 'REMOTECONFIG')
 
 # ADVANCED
-ENABLE_ADDCOLS = 0  # Enable dynamic columns (do not use this unless you're a developer)
+ENABLE_ADDCOLS = config.getint('ADVANCED', 'ENABLE_ADDCOLS')  # Enable dynamic columns (do not use this unless you're a developer)
 # CONFIG End
 
 ACK = chr(6)  # ASCII ACK (Acknowledge)
@@ -124,7 +142,7 @@ def readConfig():
         dbgprint('Preparing iSpindel config data...')
         try:
             import mysql.connector
-            cnx = mysql.connector.connect(user=SQL_USER, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
+            cnx = mysql.connector.connect(user=SQL_USER, port=SQL_PORT, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
             cur = cnx.cursor()
             cur.execute("SELECT * FROM Config WHERE NOT Sent;")
             ispindles = cur.fetchall()
@@ -139,6 +157,7 @@ def readConfig():
                 dInterval[sId] = i[1]   # Interval
                 dToken[sId] = str(i[2]) # Token
                 dPoly[sId] = str(i[3])  # Polynomial
+
             cur.close()
             cnx.close()
             dbgprint('Config data: Done. ' + str(len(lConfigIDs)) + " config change(s) to submit.")
@@ -246,7 +265,7 @@ def handler(clientsock, addr):
         # update sent status in config table
         import mysql.connector
         dbgprint(repr(addr) + ' - marking db config data as sent.')
-        cnx = mysql.connector.connect(user=SQL_USER, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
+        cnx = mysql.connector.connect(user=SQL_USER,  port=SQL_PORT, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
         cur = cnx.cursor()
         sql = 'UPDATE Config SET Sent=True WHERE ID=' + str(spindle_id) + ';'
         cur.execute(sql)
@@ -261,7 +280,7 @@ def handler(clientsock, addr):
  #           dbgprint(repr(addr) + ' Reading last recipe name for corresponding Spindel' + spindle_name)
         #   Get the Recipe name from the last reset for the spindel that has sent data
 	    import mysql.connector
-            cnx = mysql.connector.connect(user=SQL_USER, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
+            cnx = mysql.connector.connect(user=SQL_USER,  port=SQL_PORT, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
             cur = cnx.cursor()
             sqlselect="SELECT Data.Recipe FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.Timestamp >= (SELECT max( Data.Timestamp )FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.ResetFlag = true) LIMIT 1;"
             cur.execute(sqlselect)
@@ -302,7 +321,7 @@ def handler(clientsock, addr):
             dbgprint(repr(addr) + ' Reading last recipe name for corresponding Spindel' + spindle_name)
             # Get the recipe name from last reset for the spindel that has sent data
 	    import mysql.connector
-            cnx = mysql.connector.connect(user=SQL_USER, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
+            cnx = mysql.connector.connect(user=SQL_USER,  port=SQL_PORT, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
             cur = cnx.cursor()
             sqlselect="SELECT Data.Recipe FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.Timestamp >= (SELECT max( Data.Timestamp )FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.ResetFlag = true) LIMIT 1;"
             cur.execute(sqlselect)
@@ -335,7 +354,7 @@ def handler(clientsock, addr):
                     valuelist.append(rssi)
 
                 # establish database connection
-                cnx = mysql.connector.connect(user=SQL_USER, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
+                cnx = mysql.connector.connect(user=SQL_USER,  port=SQL_PORT, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
                 cur = cnx.cursor()
 
                 # add extra columns dynamically?
@@ -470,6 +489,7 @@ def handler(clientsock, addr):
                     'gravity': gravity,
                     'token': user_token,
                     'interval': interval,
+                    'recipe': recipe,
                     'RSSI': rssi
                 }
                 out = json.dumps(outdata)
