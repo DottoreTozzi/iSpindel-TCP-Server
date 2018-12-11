@@ -1,6 +1,9 @@
 #!/usr/bin/env python2.7
 
 #
+# 1.6.1.1
+# Added Exception Handlers for CSV and SQL Recipe Lookup
+#
 # Version 1.6.1
 # Added functionality to deal with recipe information
 # Spindel is sending data. Script pulls corresponding spindle recipe information from last reset and writes it with current data to database and/or CSV
@@ -257,19 +260,23 @@ def handler(clientsock, addr):
     if success:
         # We have the complete spindle data now, so let's make it available
         if CSV:
-            dbgprint(repr(addr) + ' - writing CSV')
- #           dbgprint(repr(addr) + ' Reading last recipe name for corresponding Spindel' + spindle_name)
-        #   Get the Recipe name from the last reset for the spindel that has sent data
-	    import mysql.connector
-            cnx = mysql.connector.connect(user=SQL_USER, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
-            cur = cnx.cursor()
-            sqlselect="SELECT Data.Recipe FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.Timestamp >= (SELECT max( Data.Timestamp )FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.ResetFlag = true) LIMIT 1;"
-            cur.execute(sqlselect)
-            recipe_names = cur.fetchone()
-            cur.close()
-            cnx.close()
-            recipe = str(recipe_names[0])
-            dbgprint('Recipe Name: Done. ' + recipe )
+	    dbgprint(repr(addr) + ' - writing CSV')
+	    recipe = 'n/a'
+	    try:
+		#   dbgprint(repr(addr) + ' Reading last recipe name for corresponding Spindel' + spindle_name)
+		#   Get the Recipe name from the last reset for the spindel that has sent data
+		    import mysql.connector
+		    cnx = mysql.connector.connect(user=SQL_USER, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
+		    cur = cnx.cursor()
+		    sqlselect="SELECT Data.Recipe FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.Timestamp >= (SELECT max( Data.Timestamp )FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.ResetFlag = true) LIMIT 1;"
+		    cur.execute(sqlselect)
+		    recipe_names = cur.fetchone()
+		    cur.close()
+		    cnx.close()
+		    recipe = str(recipe_names[0])
+		    dbgprint('Recipe Name: Done. ' + recipe )
+	    except Exception as e:
+		dbgprint(repr(addr) + ' Recipe Name not found - CSV Error: ' + str(e))
 
 	    try:
                 filename = OUTPATH + spindle_name + '_' + str(spindle_id) + '.csv'
@@ -299,19 +306,22 @@ def handler(clientsock, addr):
                 dbgprint(repr(addr) + ' CSV Error: ' + str(e))
 
         if SQL:
-            dbgprint(repr(addr) + ' Reading last recipe name for corresponding Spindel' + spindle_name)
-            # Get the recipe name from last reset for the spindel that has sent data
-	    import mysql.connector
-            cnx = mysql.connector.connect(user=SQL_USER, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
-            cur = cnx.cursor()
-            sqlselect="SELECT Data.Recipe FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.Timestamp >= (SELECT max( Data.Timestamp )FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.ResetFlag = true) LIMIT 1;"
-            cur.execute(sqlselect)
-            recipe_names = cur.fetchone()
-            cur.close()
-            cnx.close()
-            recipe = str(recipe_names[0])
-	    dbgprint('Recipe Name: Done. ' + recipe )
-
+	    recipe = 'n/a'
+	    try:
+		dbgprint(repr(addr) + ' Reading last recipe name for corresponding Spindel' + spindle_name)
+		# Get the recipe name from last reset for the spindel that has sent data
+		import mysql.connector
+		cnx = mysql.connector.connect(user=SQL_USER, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
+		cur = cnx.cursor()
+		sqlselect="SELECT Data.Recipe FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.Timestamp >= (SELECT max( Data.Timestamp )FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.ResetFlag = true) LIMIT 1;"
+		cur.execute(sqlselect)
+		recipe_names = cur.fetchone()
+		cur.close()
+		cnx.close()
+		recipe = str(recipe_names[0])
+		dbgprint('Recipe Name: Done. ' + recipe )
+	    except Exception as e:
+		dbgprint(repr(addr) + ' Recipe Name not found - CSV Error: ' + str(e))
 
 	    try:
                 import mysql.connector
