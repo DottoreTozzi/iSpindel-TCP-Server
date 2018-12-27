@@ -95,7 +95,7 @@ error_reporting(E_ALL | E_STRICT);
 <h1>RasPySpindel</h1>
 <h3>Diagramm Auswahl <?php echo($daysago)?> Tage</h3>
 
-<select id="ispindel_name" name = 'ispindel_name' onchange="checkdate()">
+<select id="ispindel_name" name = 'ispindel_name'>
         <?php
             while($row = mysqli_fetch_assoc($result) )
             {
@@ -109,7 +109,7 @@ error_reporting(E_ALL | E_STRICT);
 </select>
 
 
-<select id="chart_filename" name='chart_filename'>
+<select id="chart_filename" name='chart_filename' onchange="einblenden()">
         <option value="status.php" selected>Status (Batterie, Winkel, Temperatur)</option>
         <option value="battery.php">Batteriezustand</option>
         <option value="wifi.php">Netzwerk Empfangsqualität</option>
@@ -118,7 +118,7 @@ error_reporting(E_ALL | E_STRICT);
         <option value="angle.php">Tilt und Temperatur</option>
         <option value="angle_ma.php">Tilt und Temperatur, Geglättet</option>
         <option value="plato.php">Extrakt und Temperatur (iSpindel Polynom)</option>
-        <option value="reset_now.php">Gärbeginn Zeitpunkt setzen</option>i
+        <option value="reset_now.php">Gärbeginn Zeitpunkt setzen</option>
         <option value="batterytrend.php">Verlauf Batteriespannung/WiFi anzeigen</option>	
         <option value="calibration.php">Spindel im TCP Server Kalibrieren</option>
 </select>
