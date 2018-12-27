@@ -1,4 +1,7 @@
 <?php
+
+ini_set('display_errors', 'On');
+error_reporting(E_ALL | E_STRICT);
     
     // Landing page (Homepage) for RasPySpindel Project
     // Selecting chart, iSpindel name, timeframe and other parameters here
@@ -24,17 +27,23 @@
 	// Added chart to display battery and Wifi strength trend
     
     // Self-called by submit button?
+
+
     if (isset($_POST['Go']))
     {
+
         // construct url
         // establish path by the current URL used to invoke this page
         $url="http://";
         $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
         $url .= $_POST["chart_filename"];
         $url .="?name=".$_POST["ispindel_name"];
-        $url .="&days=".$_POST["days"];
-        $url .="&reset=".$_POST["fromreset"];
-        $url .="&recipe=".$_POST["recipename"];
+        if ($_POST["fromreset"]<>'1'){
+        $url .="&days=".$_POST["days"];}
+        if ($_POST["fromreset"]<>'0'){
+	$url .="&reset=".$_POST["fromreset"];}
+        if ($_POST["recipename"]<>''){
+        $url .="&recipe=".$_POST["recipename"];}
 
         // open the page
         header("Location: ".$url);
@@ -47,17 +56,18 @@
        include_once("../config/common_db_default.php");
     
 }
+ include_once("include/common_db_query.php");
 
-    
+   
     // "Days Ago parameter set?
     if(!isset($_GET['days'])) $_GET['days'] = 0; else $_GET['days'] = $_GET['days'];
     $daysago = $_GET['days'];
     if($daysago == 0) $daysago = defaultDaysAgo;
     
-    // query database for available (active) iSpindels
-    $sql_q = "SELECT DISTINCT Name FROM Data
-        WHERE Timestamp > date_sub(NOW(), INTERVAL ".$daysago." DAY)
-        ORDER BY Name";
+
+    $sql_q = "SELECT max(Timestamp), Name FROM Data GROUP BY Name";
+
+
     $result=mysqli_query($conn, $sql_q) or die(mysqli_error($conn));
 ?>
 
@@ -68,12 +78,16 @@
     <meta name="Keywords" content="iSpindle, iSpindel, Chart, genericTCP, Select">
     <meta name="Description" content="iSpindle Fermentation Chart Selection Screen">
 
+    <meta name="Keywords" content="iSpindle, iSpindel, Chart, genericTCP, Select">
+    <meta name="Description" content="iSpindle Fermentation Chart Selection Screen">
+
 <script type="text/javascript">
     function einblenden(){
         var select = document.getElementById('chart_filename').selectedIndex;
         if(select == 8 ) document.getElementById('ResetNow').style.display = "block";
         else document.getElementById('ResetNow').style.display = "none";        
     }
+
 </script>
 </head>
 <body bgcolor="#E6E6FA">
@@ -81,7 +95,7 @@
 <h1>RasPySpindel</h1>
 <h3>Diagramm Auswahl <?php echo($daysago)?> Tage</h3>
 
-<select name = ispindel_name>
+<select id="ispindel_name" name = 'ispindel_name' onchange="checkdate()">
         <?php
             while($row = mysqli_fetch_assoc($result) )
             {
@@ -94,7 +108,8 @@
         </option>
 </select>
 
-<select id="chart_filename" name='chart_filename' onchange="einblenden()">
+
+<select id="chart_filename" name='chart_filename'>
         <option value="status.php" selected>Status (Batterie, Winkel, Temperatur)</option>
         <option value="battery.php">Batteriezustand</option>
         <option value="wifi.php">Netzwerk Empfangsqualität</option>
@@ -105,6 +120,7 @@
         <option value="plato.php">Extrakt und Temperatur (iSpindel Polynom)</option>
         <option value="reset_now.php">Gärbeginn Zeitpunkt setzen</option>i
         <option value="batterytrend.php">Verlauf Batteriespannung/WiFi anzeigen</option>	
+        <option value="calibration.php">Spindel im TCP Server Kalibrieren</option>
 </select>
 
 <br />
@@ -123,16 +139,13 @@ Tage Historie
 <br />
 
 <div id="ResetNow" style="display: none;">
-<p>Optional Sudnamen eingeben: <input type = "text" name = "recipename" /></p>
+<p>Optional Sudnamen eingeben:
+<input type = "text" name = "recipename" /> </p>
 </div>
 
 <input type = "submit" name = "Go" value = "Anzeigen">
-<br />
 
-        
+<br />
         
 </form>
-
-</body>
-</html>
 

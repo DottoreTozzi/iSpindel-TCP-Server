@@ -1,15 +1,6 @@
 # iSpindel Generic TCP Server
 #### (iSpindle.py Version 1.6.0)
 
-**New (09.12.2018)**
-Update of the landing page: if reset is selected, an input field pops up where the recipenam can be entered. This name will be written to the database and is shown in the diagrams.
-Optimized SQL selects for moving average calculation in case a newer SQL sever version is being used. This reduces CPU usage significantly. If older SQL server is used, old calculation is used.
-Config values will be stored in separate directory under /home/pi/iSpindel-Srv/config . Default files are available (*_default.php /.ini)
-These files can be copied to (*_config.php /.ini) in the same folder and personalized. In case of an update, personalzied files won't be overwritten.
-Server is trying to read personalized files first. If they cannot be found, default files will be used.
-Additional diagram that shows battery and RSSI trend. Can be selected in landing page.
-SQL Server Port can be configured in config files. Default is 3306.
-
 **New (15.10.2018)**
 Moving Average Diagrams (thanks to mrhyde).
 Also introducing the long-awaited "landing page", index.php.

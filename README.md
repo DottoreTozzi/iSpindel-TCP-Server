@@ -1,15 +1,7 @@
 # iSpindel Generic TCP Server
-#### (iSpindle.py Version 1.6.2)
+#### (iSpindle.py Version 1.6.0)
 
 [English Version](README_en.md)
-**Neu (09.12.2018)**
-Update der Landing Page: Bei Auswaähl von Setzen des Gärzeitpunkts wird automatisch ein Input Feld zur Eingabe des Sudnamens sichtbar. Dieser wir dann in die Datenbank geschrieben und den Diagrammen angezeigt.
-Optimierung der SQL selects zur Berechnung des Moving Averages. Bei verwendung von neueren SQL server versionen beschleunigt das die Berechnung. Bei älteren Versionen wird die bisherige berechnung verwendet.
-Config Werte werden nun in einem separaten Verzeichnis unter /home/pi/iSpindel-Srv/config abgespeichert. Dort sind default files (*_default.php /.ini) abgelegt. 
-Diese können noch einmal als (*_config.php /.ini) gespeichert werden. Dort kann die Konfiguration personalisiert werden. Bei einem update werden diese Files nicht überschrieben.
-Der Server sucht zunächst nach den individualisierten files. Findet er diese nicht, greift er auf die default files zurück.
-Zusätzliches Diagram, welches Batteriespannung und Wifi Signal als Trend zeigt. Dieses kann auf der Landing page ausgewählt werden.
-Port für SQL server kann konfiguriert werden. Default ist 3306.
 
 **Neu (15.10.2018)**
 Neue Diagramme: Moving Average (Glättung für angle.php und plato4.php, konfigurierbar)

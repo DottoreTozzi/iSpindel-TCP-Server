@@ -1,14 +1,6 @@
 # Installation Guide for Raspbian 
 ### Step-by-Step
 
-### Update to Version 1.6.1+
-In case you update to 1.6.1 or a more recent version you need to adapt tha database and add a column Recipe in the Data Table.
-
-		mysql -u iSpindle -p
-        (Password if unchanged: ohyeah)
-		USE iSpindle;
-		ALTER TABLE Data ADD Recipe VARCHAR(64);
-		quit;
 
 ### Update to 1.6.0, Firmware 6.0.1 und above:
      

@@ -40,6 +40,17 @@ $tfhours = $tftemp;
 list($angle, $temperature) = getChartValues($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 list($RecipeName, $show) = getCurrentRecipeName($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 
+$Header=$_GET['name'].' '.$RecipeName;
+
+if (!$_GET['reset'])
+{
+ $DataAvailable=isDataAvailable($conn, $_GET['name'], $timeFrame);
+  if($DataAvailable[0]=='0')
+  {
+   $Header='Keine Daten von '.$_GET['name'].' in diesem Zeitraum. Bitte noch weitere '.$DataAvailable[1].' Tage zurückgehen';
+  }  
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -60,6 +71,8 @@ const chartAngle = [<?php echo $angle;?>]
 
 const chartTemp = [<?php echo $temperature;?>]
 
+
+
 //console.log(chartAngle)
 //console.log(chartTemp)
 
@@ -67,6 +80,7 @@ $(function ()
 {
 
   var chart;
+
  
   $(document).ready(function() 
   { 
@@ -84,7 +98,7 @@ $(function ()
       },
       title: 
       {
-        text: 'iSpindel: <?php echo ($_GET['name']." ".$RecipeName);?>'
+         text: 'iSpindel: <?php echo $Header;?>'
       },
       subtitle: 
       { text: ' <?php
@@ -172,10 +186,10 @@ $(function ()
         {
 	   if(this.series.name == 'Temperatur') {
            	const pointData = chartTemp.find(row => row.timestamp === this.point.x)
-		return '<b>Sudname: </b>'+ pointData.recipe +'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y +'°C';
+		return '<b>Sudname: </b>'+ pointData.recipe +'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y.toFixed(2) +'°C';
 	   } else {
 		const pointData = chartAngle.find(row => row.timestamp === this.point.x)
-	   	return '<b>Sudname: </b>'+ pointData.recipe +'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y +'°';
+	   	return '<b>Sudname: </b>'+ pointData.recipe +'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y.toFixed(2) +'°';
 	   }
         }
       },  

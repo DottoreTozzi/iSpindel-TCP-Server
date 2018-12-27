@@ -5,15 +5,7 @@
 
 ### Interim Release: Debian/Raspbian Stretch
 
-### Update auf Version 1.6.1 und höher
-Beim update auf 1.6.1 von einer älteren Version muss die Datenbank angepasst werden und die Spallte Recipe in der Tabelle Data erstellt werden.
 
-		mysql -u iSpindle -p
-        (Password if unchanged: ohyeah)
-		USE iSpindle;
-		ALTER TABLE Data ADD Recipe VARCHAR(64);
-		quit;
-		
 ### Update auf Version 1.6.0, Firmware 6.0.1 und höher:
      
 Bei Einsatz einer älteren Version muss die Datenbank angepasst werden, wenn die "Remote Configuration" der iSpindel genutzt werden soll.

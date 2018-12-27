@@ -1,10 +1,17 @@
 #!/usr/bin/env python2.7
 
+# Version 1.6.3
+# Added function to send emails automatically
+# this file calls a file sendmail.py which has also to be placed in /usr/local/bin
+# Routine is running as thread and should not conflict with iSpindle.py
 #
 # Version 1.6.2
 # Change of config data handling. ini files will be stored in config directory and user can create iSpindle_config.ini in this directory.
 # If personalized config file is not existing, values from iSpindle_default.ini will be pulled. 
 # Change preserves personalized config data during update
+#
+# 1.6.1.1
+# Added Exception Handlers for CSV and SQL Recipe Lookup
 #
 # Version 1.6.1
 # Added functionality to deal with recipe information
@@ -45,6 +52,7 @@ import thread
 import json
 import time
 from ConfigParser import ConfigParser
+import os
 
 class MyConfigParser(ConfigParser):
     def get(self, section, option):
@@ -276,19 +284,23 @@ def handler(clientsock, addr):
     if success:
         # We have the complete spindle data now, so let's make it available
         if CSV:
-            dbgprint(repr(addr) + ' - writing CSV')
- #           dbgprint(repr(addr) + ' Reading last recipe name for corresponding Spindel' + spindle_name)
-        #   Get the Recipe name from the last reset for the spindel that has sent data
-	    import mysql.connector
-            cnx = mysql.connector.connect(user=SQL_USER,  port=SQL_PORT, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
-            cur = cnx.cursor()
-            sqlselect="SELECT Data.Recipe FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.Timestamp >= (SELECT max( Data.Timestamp )FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.ResetFlag = true) LIMIT 1;"
-            cur.execute(sqlselect)
-            recipe_names = cur.fetchone()
-            cur.close()
-            cnx.close()
-            recipe = str(recipe_names[0])
-            dbgprint('Recipe Name: Done. ' + recipe )
+	    dbgprint(repr(addr) + ' - writing CSV')
+	    recipe = 'n/a'
+	    try:
+		#   dbgprint(repr(addr) + ' Reading last recipe name for corresponding Spindel' + spindle_name)
+		#   Get the Recipe name from the last reset for the spindel that has sent data
+		    import mysql.connector
+		    cnx = mysql.connector.connect(user=SQL_USER, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
+		    cur = cnx.cursor()
+		    sqlselect="SELECT Data.Recipe FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.Timestamp >= (SELECT max( Data.Timestamp )FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.ResetFlag = true) LIMIT 1;"
+		    cur.execute(sqlselect)
+		    recipe_names = cur.fetchone()
+		    cur.close()
+		    cnx.close()
+		    recipe = str(recipe_names[0])
+		    dbgprint('Recipe Name: Done. ' + recipe )
+	    except Exception as e:
+		dbgprint(repr(addr) + ' Recipe Name not found - CSV Error: ' + str(e))
 
 	    try:
                 filename = OUTPATH + spindle_name + '_' + str(spindle_id) + '.csv'
@@ -318,19 +330,22 @@ def handler(clientsock, addr):
                 dbgprint(repr(addr) + ' CSV Error: ' + str(e))
 
         if SQL:
-            dbgprint(repr(addr) + ' Reading last recipe name for corresponding Spindel' + spindle_name)
-            # Get the recipe name from last reset for the spindel that has sent data
-	    import mysql.connector
-            cnx = mysql.connector.connect(user=SQL_USER,  port=SQL_PORT, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
-            cur = cnx.cursor()
-            sqlselect="SELECT Data.Recipe FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.Timestamp >= (SELECT max( Data.Timestamp )FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.ResetFlag = true) LIMIT 1;"
-            cur.execute(sqlselect)
-            recipe_names = cur.fetchone()
-            cur.close()
-            cnx.close()
-            recipe = str(recipe_names[0])
-	    dbgprint('Recipe Name: Done. ' + recipe )
-
+	    recipe = 'n/a'
+	    try:
+		dbgprint(repr(addr) + ' Reading last recipe name for corresponding Spindel' + spindle_name)
+		# Get the recipe name from last reset for the spindel that has sent data
+		import mysql.connector
+		cnx = mysql.connector.connect(user=SQL_USER, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
+		cur = cnx.cursor()
+		sqlselect="SELECT Data.Recipe FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.Timestamp >= (SELECT max( Data.Timestamp )FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.ResetFlag = true) LIMIT 1;"
+		cur.execute(sqlselect)
+		recipe_names = cur.fetchone()
+		cur.close()
+		cnx.close()
+		recipe = str(recipe_names[0])
+		dbgprint('Recipe Name: Done. ' + recipe )
+	    except Exception as e:
+		dbgprint(repr(addr) + ' Recipe Name not found - CSV Error: ' + str(e))
 
 	    try:
                 import mysql.connector
@@ -541,6 +556,11 @@ def handler(clientsock, addr):
 
         readConfig()
 
+def sendmail():
+    try:
+        os.system('/usr/local/bin/sendmail.py')
+    except Exception as e:
+        dbgprint(e) 
 
 def main():
     ADDR = (HOST, PORT)
@@ -554,6 +574,8 @@ def main():
         clientsock, addr = serversock.accept()
         dbgprint('...connected from: ' + str(addr))
         thread.start_new_thread(handler, (clientsock, addr))
+        thread.start_new_thread(sendmail, ())
 
 if __name__ == "__main__":
     main()
+

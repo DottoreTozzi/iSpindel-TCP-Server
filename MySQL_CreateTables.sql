@@ -10,7 +10,6 @@ CREATE TABLE `Data` (
 	`UserToken` varchar(64) COLLATE ascii_bin,
 	`Interval` int,
 	`RSSI` int,
-	`Recipe` varchar(64),
 	PRIMARY KEY (`Timestamp`, `Name`, `ID`)
 	) 
 ENGINE=InnoDB DEFAULT CHARSET=ascii 
