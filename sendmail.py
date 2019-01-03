@@ -12,7 +12,6 @@ from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 from ConfigParser import ConfigParser
 import datetime
-import os
 
 class MyConfigParser(ConfigParser):
     def get(self, section, option):
@@ -68,35 +67,36 @@ def get_config_from_sql(section, parameter):
         dbgprint(e)
 
 # retrieve email settings from Database
-fromaddr = get_config_from_sql('EMAIL','fromaddr')
+fromaddr = get_config_from_sql('EMAIL','FROMADDR')
 if fromaddr == '':
     dbgprint('Please enter fromaddr to settings SQL table')
     quit()
-toaddr = get_config_from_sql('EMAIL','toaddr')
+toaddr = get_config_from_sql('EMAIL','TOADDR')
 if toaddr == '':
     dbgprint('Please enter toaddr to settings SQL table')
     quit()
-passwd = get_config_from_sql('EMAIL','passwd')
+passwd = get_config_from_sql('EMAIL','PASSWD')
 if passwd == '':
     dbgprint('Please enter Email passwd to settings SQL table')
     quit()
-smtpserver = get_config_from_sql('EMAIL','smtpserver')
+smtpserver = get_config_from_sql('EMAIL','SMTPSERVER')
 if smtpserver == '':
     dbgprint('Please enter smptserver to settings SQL table')
     quit()
-smtpport = int(get_config_from_sql('EMAIL','smtpport'))
+smtpport = int(get_config_from_sql('EMAIL','SMTPPORT'))
 if smtpport == '':
     dbgprint('Please enter smtpport to settings SQL table')
     quit()
 
 
 # Retrieve alarsettings from Database
-enablealarmlow = bool(get_config_from_sql('EMAIL','EnableAlarmLow'))
-alarmlow = float(get_config_from_sql('EMAIL','AlarmLow'))
-alarmdelta = 0.5 #config.get('ALARMSETTINGS', 'ALARMDELTA')
-enablestatus = bool(get_config_from_sql('EMAIL','EnableStatus'))
-timestatus = int(get_config_from_sql('EMAIL','TimeStatus'))
-timeframestatus = int(get_config_from_sql('EMAIL','TimeFrameStatus'))
+enablealarmlow = bool(get_config_from_sql('EMAIL','ENABLEALARMLOW'))
+alarmlow = float(get_config_from_sql('EMAIL','ALARMLOW'))
+enablealarmdelta = bool(get_config_from_sql('EMAIL', 'ENABLE_ALARMDELTA'))
+alarmdelta = float(get_config_from_sql('EMAIL', 'ALARMDELTA'))
+enablestatus = bool(get_config_from_sql('EMAIL','ENABLESTATUS'))
+timestatus = int(get_config_from_sql('EMAIL','TIMESTATUS'))
+timeframestatus = int(get_config_from_sql('EMAIL','TIMEFRAMESTATUS'))
 
 # get current date and time to check against alarmsettings
 currentdate = datetime.datetime.now()
@@ -175,9 +175,27 @@ def sendemail(subject, body):
     except Exception as e:
         dbgprint(e)
 
-# Function to get Spindel ata from 24 hrs ago and calculate plato differences (stil work in progress)
-def get_24hrs_data():
-    SQLSELECT_24HRS = 'SELECT * FROM Data WHERE Name = iSpindel000 AND Timestamp > DATE_SUB("2018-12-08", INTERVAL 24 HOUR) limit 1 '
+# Function to get Spindel data from x hrs ago to calculate plato differences (stil work in progress)
+def get_data_hours_ago(iSpindleID, lasttime, hours):
+    sqlselect = 'SELECT angle, Gravity FROM Data WHERE ID = %s AND Timestamp > DATE_SUB("%s", INTERVAL %s HOUR) limit 1 ' %(iSpindleID, lasttime, hours)
+    try:
+        import mysql.connector
+        cnx = mysql.connector.connect(
+            user=SQL_USER,  port=SQL_PORT, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
+        cur = cnx.cursor()
+        cur.execute(sqlselect)
+        dataset = cur.fetchall()
+        if len(dataset) > 0:
+            for i in dataset:
+                angle = i[0]
+        cur.close()
+        cnx.close()
+        return angle
+    except Exception as e:
+        dbgprint(e)
+
+
+
 
 # Function to calculate gravity (Plato) from  angle for submitted spindelID
 def calculate_plato_from_calibration(iSpindleID, Angle):
@@ -253,6 +271,10 @@ dName = {}
 dlasttime = {}
 dlasttemp = {}
 dlastangle = {}
+d24hangle = {}
+d12hangle = {}
+d24hgravity = {}
+d12hgravity = {}
 dlasttimetrue = {}
 dbattery = {}
 dRecipe = {}
@@ -272,6 +294,10 @@ try:
     dlasttime.clear()
     dlasttemp.clear()
     dlastangle.clear()
+    d24hangle.clear()
+    d12hangle.clear()
+    d24hgravity.clear()
+    d12hgravity.clear()
     dName.clear()
     dbattery.clear()
     dlasttimetrue.clear()
@@ -287,6 +313,13 @@ try:
         dlasttime[sID] = i[0]  # timestamp of latest dataset for sID
 # calculate difference between last dataset and now
         difference = currentdate - dlasttime[sID]
+        if difference.days >= 1:
+            d24hangle[sID] = get_data_hours_ago(sID, dlasttime[sID], 24)
+            d24hgravity[sID] = calculate_plato_from_calibration(
+                sID, d24hangle[sID]) # calculated gravity (from TCP server calibration)
+            d12hangle[sID] = get_data_hours_ago(sID, dlasttime[sID], 12)
+            d12hgravity[sID] = calculate_plato_from_calibration(
+                sID, d12hangle[sID]) # calculated gravity (from TCP server calibration)
 # if difference is within defined timeframe (days) from settings.
 # true flag for available data is set globally and for corresponding spindel
         if difference.days <= timeframestatus:
@@ -321,13 +354,19 @@ try:
                         if dlasttimetrue[lSpindleID[i]] == 1:
                             if dgravity[lSpindleID[i]] == 'N/A':
                                 Gravity = 'Not Calibrated'
+                                D24hGravity = 'Not Calibrated'
+                                D12hGravity = 'Not Calibrated'
                             else:
                                 Gravity = str(round(dgravity[lSpindleID[i]],2)) 
+                                D24hGravity = str(round(dgravity[lSpindleID[i]]-d24hgravity[lSpindleID[i]],2))
+                                D12hGravity = str(round(dgravity[lSpindleID[i]]-d12hgravity[lSpindleID[i]],2))
                             Content += '<b>'+str(dName[lSpindleID[i]]) + \
                                 '<br/>Date:</b> ' + str(dlasttime[lSpindleID[i]]) + \
                                 '<br/><b>ID:</b> ' + str(lSpindleID[i]) + \
                                 '<br/><b>Angle:</b> ' + str(round(dlastangle[lSpindleID[i]], 2)) + \
                                 '<br/><b>Calculated Plato:</b> ' + Gravity + \
+                                '<br/><b>Delta Plato letzte 24h:</b> ' + D24hGravity + \
+                                '<br/><b>Delta Plato letzte 12h:</b> ' + D12hGravity + \
                                 '<br/><b>Temperature:</b> ' + str(round(dlasttemp[lSpindleID[i]], 2)) + \
                                 '<br/><b>Battery:</b> ' + str(round(dbattery[lSpindleID[i]], 2)) + \
                                 '<br/><b>Sudname:</b> ' + \

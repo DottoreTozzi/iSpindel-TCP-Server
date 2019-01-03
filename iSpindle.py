@@ -52,7 +52,6 @@ import thread
 import json
 import time
 from ConfigParser import ConfigParser
-import os
 
 class MyConfigParser(ConfigParser):
     def get(self, section, option):
@@ -70,15 +69,14 @@ except IOError:
 
 # General
 DEBUG = config.get('GENERAL', 'DEBUG') # Set to 1 to enable debug output on console (usually devs only)
-PORT = config.getint('GENERAL', 'PORT') # TCP Port to listen to (to be used in iSpindle config as well)
-HOST = config.get('GENERAL', 'HOST')  # Allowed IP range. Leave at 0.0.0.0 to allow connections from anywhere
+DELAY = config.getint('GENERAL','DELAY') # Some systems dont start automatically and need a delay (seconds)
 
-# CSV
-CSV = config.get('CSV', 'CSV')  # Set to 1 if you want CSV (text file) output
-OUTPATH = config.get('CSV', 'OUTPATH')  # CSV output file path; filename will be name_id.csv
-DELIMITER = config.get('CSV', 'DELIMITER')  # CSV delimiter (normally use ; for Excel)
-NEWLINE =  config.get('CSV', 'NEWLINE')  # newline (\r\n for windows clients)
-DATETIME = config.getint('CSV', 'DATETIME')  # Leave this at 1 to include Excel compatible timestamp in CSV
+
+def dbgprint(s):
+    if DEBUG: print(str(s))
+
+dbgprint("Waiing " + str(DELAY) + " seconds for system to be ready")
+time.sleep(DELAY)
 
 # MySQL
 SQL = config.getint('MYSQL', 'SQL')  # 1 to enable output to MySQL database
@@ -89,45 +87,77 @@ SQL_USER = config.get('MYSQL', 'SQL_USER')  # DB user
 SQL_PASSWORD = config.get('MYSQL', 'SQL_PASSWORD')  # DB user's password (change this)
 SQL_PORT = config.getint('MYSQL', 'SQL_PORT')
 
+# Function to retrieve config values from SQL database
+def get_config_from_sql(section, parameter):
+    try:
+        import mysql.connector
+        cnx = mysql.connector.connect(
+            user=SQL_USER,  port=SQL_PORT, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
+        cur = cnx.cursor()
+        sqlselect = "SELECT Value FROM Settings WHERE Section = '%s' and Parameter = '%s';" %(section, parameter)
+        cur.execute(sqlselect)
+        sqlparameters = cur.fetchall()
+        if len(sqlparameters) > 0:
+            for i in sqlparameters:
+                sqlparameter = i[0]
+            return sqlparameter.replace('\\r\\n', '\r\n')
+        else:
+            return ''
+        cur.close()
+        cnx.close()
+    except Exception as e:
+        dbgprint(e)
+
+#GENERAL
+PORT = int(get_config_from_sql('GENERAL', 'PORT')) # TCP Port to listen to (to be used in iSpindle config as well)
+HOST = get_config_from_sql('GENERAL', 'HOST')  # Allowed IP range. Leave at 0.0.0.0 to allow connections from anywhere
+
+# CSV
+CSV = bool(get_config_from_sql('CSV', 'ENABLE_CSV'))  # Set to 1 if you want CSV (text file) output
+OUTPATH = get_config_from_sql('CSV', 'OUTPATH')  # CSV output file path; filename will be name_id.csv
+DELIMITER = get_config_from_sql('CSV', 'DELIMITER')  # CSV delimiter (normally use ; for Excel)
+NEWLINE =  get_config_from_sql('CSV', 'NEWLINE')  # newline (\r\n for windows clients)
+DATETIME = int(get_config_from_sql('CSV', 'DATETIME'))  # Leave this at 1 to include Excel compatible timestamp in CSV
+
 # Ubidots (using existing account)
-UBIDOTS = config.getint('UBIDOTS', 'UBIDOTS')  # 1 to enable output to ubidots
-UBI_USE_ISPINDLE_TOKEN = config.get('UBIDOTS', 'UBI_USE_ISPINDLE_TOKEN')  # 1 to use "token" field in iSpindle config (overrides UBI_TOKEN)
-UBI_TOKEN = config.get('UBIDOTS', 'UBI_TOKEN')  # global ubidots token, see manual or ubidots.com
+UBIDOTS = int(get_config_from_sql('UBIDOTS', 'ENABLE_UBIDOTS'))  # 1 to enable output to ubidots
+UBI_USE_ISPINDLE_TOKEN = get_config_from_sql('UBIDOTS', 'UBI_USE_ISPINDLE_TOKEN')  # 1 to use "token" field in iSpindle config (overrides UBI_TOKEN)
+UBI_TOKEN = get_config_from_sql('UBIDOTS', 'UBI_TOKEN')  # global ubidots token, see manual or ubidots.com
 
 # Forward to public server or other relay (i.e. another instance of this script)
-FORWARD = config.getint('FORWARD', 'FORWARD')
-FORWARDADDR = config.get('FORWARD', 'FORWARDADDR')
-FORWARDPORT =  config.getint('FORWARD', 'FORWARDPORT')
+FORWARD = int(get_config_from_sql('FORWARD', 'ENABLE_FORWARD'))
+FORWARDADDR = get_config_from_sql('FORWARD', 'FORWARDADDR')
+FORWARDPORT =  int(get_config_from_sql('FORWARD', 'FORWARDPORT'))
 
 
 # Fermentrack
-FERMENTRACK =  config.getint('FERMENTRACK', 'FERMENTRACK')
-FERM_USE_ISPINDLE_TOKEN = config.get('FERMENTRACK', 'FERM_USE_ISPINDLE_TOKEN')
-FERMENTRACKADDR = config.get('FERMENTRACK', 'FERMENTRACKADDR')
-FERMENTRACK_TOKEN = config.get('FERMENTRACK', 'FERMENTRACK_TOKEN')
-FERMENTRACKPORT = config.getint('FERMENTRACK', 'FERMENTRACKPORT')
+FERMENTRACK =  int(get_config_from_sql('FERMENTRACK', 'ENABLE_FERMENTRACK'))
+FERM_USE_ISPINDLE_TOKEN = get_config_from_sql('FERMENTRACK', 'FERM_USE_ISPINDLE_TOKEN')
+FERMENTRACKADDR = get_config_from_sql('FERMENTRACK', 'FERMENTRACKADDR')
+FERMENTRACK_TOKEN = get_config_from_sql('FERMENTRACK', 'FERMENTRACK_TOKEN')
+FERMENTRACKPORT = int(get_config_from_sql('FERMENTRACK', 'FERMENTRACKPORT'))
 
 # BREWPILESS
-BREWPILESS = config.getint('BREWPILESS', 'BREWPILESS')
-BREWPILESSADDR = config.get('BREWPILESS', 'BREWPILESSADDR')
+BREWPILESS = int(get_config_from_sql('BREWPILESS', 'ENABLE_BREWPILESS'))
+BREWPILESSADDR = get_config_from_sql('BREWPILESS', 'BREWPILESSADDR')
 
 # Forward to CraftBeerPi3 iSpindel Addon
-CRAFTBEERPI3 = config.getint('CRAFTBEERPI3', 'CRAFTBEERPI3')
-CRAFTBEERPI3ADDR = config.get('CRAFTBEERPI3', 'CRAFTBEERPI3ADDR')
+CRAFTBEERPI3 = int(get_config_from_sql('CRAFTBEERPI3', 'ENABLE_CRAFTBEERPI3'))
+CRAFTBEERPI3ADDR = get_config_from_sql('CRAFTBEERPI3', 'CRAFTBEERPI3ADDR')
 # if this is true the raw angle will be sent to CBPI3 instead of
 # the gravity value. Use this if you want to configure the
 # polynome from within CBPI3.
 # Otherwise leave this 0 and just use "tilt" in CBPI3
-CRAFTBEERPI3_SEND_ANGLE = config.getint('CRAFTBEERPI3', 'CRAFTBEERPI3_SEND_ANGLE')
+CRAFTBEERPI3_SEND_ANGLE = int(get_config_from_sql('CRAFTBEERPI3', 'CRAFTBEERPI3_SEND_ANGLE'))
 
 # iSpindle Remote Config?
 # If this is enabled, we'll send iSpindle config JSON as TCP reply.
 # Before using this, make sure your database is up-to-date. See README and INSTALL.
 # This feature is still in testing but should already work reliably.
-REMOTECONFIG = config.getint('REMOTECONFIG', 'REMOTECONFIG')
+REMOTECONFIG = int(get_config_from_sql('REMOTECONFIG', 'ENABLE_REMOTECONFIG'))
 
 # ADVANCED
-ENABLE_ADDCOLS = config.getint('ADVANCED', 'ENABLE_ADDCOLS')  # Enable dynamic columns (do not use this unless you're a developer)
+ENABLE_ADDCOLS = int(get_config_from_sql('ADVANCED', 'ENABLE_ADDCOLS'))  # Enable dynamic columns (do not use this unless you're a developer)
 # CONFIG End
 
 ACK = chr(6)  # ASCII ACK (Acknowledge)
@@ -290,7 +320,7 @@ def handler(clientsock, addr):
 		#   dbgprint(repr(addr) + ' Reading last recipe name for corresponding Spindel' + spindle_name)
 		#   Get the Recipe name from the last reset for the spindel that has sent data
 		    import mysql.connector
-		    cnx = mysql.connector.connect(user=SQL_USER, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
+		    cnx = mysql.connector.connect(user=SQL_USER, port=SQL_PORT, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
 		    cur = cnx.cursor()
 		    sqlselect="SELECT Data.Recipe FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.Timestamp >= (SELECT max( Data.Timestamp )FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.ResetFlag = true) LIMIT 1;"
 		    cur.execute(sqlselect)
@@ -335,7 +365,7 @@ def handler(clientsock, addr):
 		dbgprint(repr(addr) + ' Reading last recipe name for corresponding Spindel' + spindle_name)
 		# Get the recipe name from last reset for the spindel that has sent data
 		import mysql.connector
-		cnx = mysql.connector.connect(user=SQL_USER, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
+		cnx = mysql.connector.connect(user=SQL_USER, port=SQL_PORT, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
 		cur = cnx.cursor()
 		sqlselect="SELECT Data.Recipe FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.Timestamp >= (SELECT max( Data.Timestamp )FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.ResetFlag = true) LIMIT 1;"
 		cur.execute(sqlselect)

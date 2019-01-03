@@ -22,6 +22,9 @@ if ((include_once '../config/common_db_config.php') == FALSE){
 
 include_once("include/common_db_query.php");
 
+if(!isset($_GET['section'])) $_GET['section'] = '0'; else $_GET['section'] = $_GET['section'];
+
+$current_section=$_GET['section'];
 
 if (isset($_POST['Stop']))
     {
@@ -35,7 +38,9 @@ if (isset($_POST['Stop']))
 
 if (isset($_POST['Go']))
     {
-        $sql_q = "SELECT * FROM Settings WHERE Description_DE <> ''";
+        $current_section = $_POST['current_section'];
+        $current_id = $_POST['current_id'];
+        $sql_q = "SELECT * FROM Settings WHERE Description_DE <> '' AND Section = '" . $current_section . "' ORDER BY Parameter";
         $result=mysqli_query($conn, $sql_q) or die(mysqli_error($conn));
         while($row = mysqli_fetch_assoc($result) ) {
             $section = $row['Section'];
@@ -50,19 +55,26 @@ if (isset($_POST['Go']))
         unset($result, $sql_q);
         $url="http://";
         $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
-        $url .= "settings.php";
+        $url .= "settings.php?section=".$current_id;
         // open the page
         header("Location: ".$url);
-        // exit;
     }
 
-
+    $sql_language = mysqli_query($conn, "SELECT value FROM Settings WHERE Section = 'GENERAL' AND Parameter = 'LANGUAGE'") or die(mysqli_error($conn));
+    $LANGUAGE = mysqli_fetch_array($sql_language);
+    $DESCRIPTION = "Description_".$LANGUAGE[0]; 
+   
     $sql_q = "SELECT * FROM Settings WHERE Description_DE <> '' ORDER BY Section, Parameter";
+
     $result=mysqli_query($conn, $sql_q) or die(mysqli_error($conn));
 
     $sql_q1 = "SELECT DISTINCT Section FROM Settings WHERE Description_DE <> ''";
-    $result1=mysqli_query($conn, $sql_q1) or die(mysqli_error($conn));
-
+    $result1 = mysqli_query($conn, $sql_q1) or die(mysqli_error($conn));
+    
+    $sections = array(); 
+    while($row_s = mysqli_fetch_assoc($result1) ) {
+    $sections[] = $row_s['Section'];
+    }
 
 ?>
 
@@ -74,67 +86,76 @@ if (isset($_POST['Go']))
     <meta name="Description" content="iSpindle Fermentation Chart Selection Screen">
 
 <script type="text/javascript">
-    function einblenden() {
-        var select = document.getElementById('chart_filename').selectedIndex;
-        if (select == 8) {
-            document.getElementById('ResetNow').style.display = "block";
-        } else {
-            document.getElementById('ResetNow').style.display = "none";
-        }
-    }
-
     function target_popup(form) {
         window.alert('Aktualisiere Settings in Datenbank');
     }
 
+    function reload_page() {
+        var section = document.getElementById('section_name').selectedIndex;
+        var variable = '?section='.concat(section);
+        var url = "http://";
+        var server = window.location.hostname;
+        var path = window.location.pathname;
+        var full_path = url.concat(server).concat(path).concat(variable);
+        window.open(full_path,"_self");
+    }
 </script>
-</head>
 
+</head>
 <body bgcolor="#E6E6FA">
+<form name="main" action="<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method="post">
 <h1>RasPySpindel</h1>
 <h3>Settings Section Auswahl</h3>
-<form name="main" action="<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method="post">
 
-
-<!-- Preparation for later selection of sectionswise change of settings
-<select id="section_name" name = 'section_name'>
+<p>Section:
+<select id = 'section_name' name = 'section_name' onchange="reload_page(this)">
         <?php
-            echo'<option value="" selected disabled hidden>Choose here</option>';
-            while($row_s = mysqli_fetch_assoc($result1)) {
-                echo'<option value = "' . $row_s['Section'] .'" >';
-                echo($row_s['Section']);
-                echo"</option>";
+            $i = 0;
+            $max = count ($sections);
+            while($i < $max ) {
+                if ($i <> $_GET['section']) {
+                    echo'<option value = "' . $sections[$i].'" name = "' . $sections[$i].'">';
+                    echo($sections[$i]);
+                    echo"</option>\n";
+                }
+                else {
+                    echo'<option value = "' . $sections[$i] .'" selected name = "' . $sections[$i].'">';
+                    echo($sections[$i]);
+                    echo"</option>\n";
+                }
+            $i = ++$i;
             }
         ?>
 </select>
--->
+</p>
 
+<?php 
 
-<table border="0">
-<tr>
-<td><b>Section</b></td>
-<td><b>Parameter</b></td>
-<td><b>Value</b></td>
-<td><b>Beschreibung</b></td>
-</tr>
-<?php
+if ($_GET['section']<>''){ 
+
+echo "<table border='0'>";
+echo "<tr>";
+echo "<td><b>Parameter</b></td>";
+echo "<td><b>Value</b></td>";
+echo "<td><b>Beschreibung</b></td>";
+echo "</tr>";
     $InputWidth = 80;
     while($row = mysqli_fetch_assoc($result) ) {
+        if ($row['Section'] == $sections[$_GET['section']]){
         echo "<tr>";
-        echo "<td>" . $row['Section'] . "</td>";
         echo "<td>" . $row['Parameter'] . "</td>";
-        echo "<td><input type='text' name = '" . $row['Section'] . "_" . $row['Parameter'] . "' size='" . $InputWidth . "' value='" . $row['value']  . "'></td>";
-        echo "<td>" . $row['Description_DE'] . "</td>";
+        echo "<td><input type='text' name = '" . $row['Section'] . "_" . $row['Parameter'] . "' size='" . $InputWidth . "' required='required' value='" . $row['value']  . "'></td>";
+        echo "<td>" . htmlentities($row[$DESCRIPTION], ENT_COMPAT,'ISO-8859-1', true) . "</td>";
         echo "</tr>\n";
-    }
+    }}
+echo "</table>";
+}
 ?>
-</table>
 
 <br />
 <br />
-
-<div id="ResetNow" style="display: none;">
-</div>
+<input type = "hidden" name="current_section" value="<?php echo $sections[$_GET['section']]; ?>">
+<input type = "hidden" name="current_id" value="<?php echo $_GET['section']; ?>">
 
 <input type = "submit" name = "Go" value = "In DB schreiben" onclick="target_popup(this)">
 <input type = "submit" name = "Stop" value = "Abbrechen">

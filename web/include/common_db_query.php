@@ -25,10 +25,10 @@ Function getcurrentrecipe rewritten: Recipe Name will be only returned if reset=
 Return of variables changed for all functions that return x/y diagram data. Recipe name is added in array and returned to php script
 
  */
-
 // Function to write iSpindel Server settings back to sql database. Function is used by settings.php
 function UpdateSettings($conn, $Section, $Parameter, $value)
 {
+    $value= str_replace('\\', '\\\\', $value);
     $q_sql = mysqli_query($conn, "UPDATE Settings SET value = '" . $value . "' WHERE Section = '" . $Section . "' AND Parameter = '" . $Parameter . "'") or die(mysqli_error($conn));
     return 1;
 }
@@ -415,6 +415,85 @@ function getChartValuesPlato4($conn, $iSpindleID = 'iSpindel000', $timeFrameHour
         );
     }
 }
+
+function getChartValuesPlato4_delta($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $movingtime = 720, $reset = defaultReset)
+{
+    $Interval = (getCurrentInterval($conn, $iSpindleID));
+    $Rows = round($movingtime / ($Interval / 60));
+    
+    $isCalibrated = 0; // is there a calbration record for this iSpindle?
+    $valAngle = '';
+    $valTemperature = '';
+    $valDens = '';
+    $const1 = 0;
+    $const2 = 0;
+    $const3 = 0;
+    // get unique hardware ID for calibration
+    $u_sql = mysqli_query($conn, "SELECT ID FROM Data WHERE Name = '" . $iSpindleID . "' ORDER BY Timestamp DESC LIMIT 1") or die(mysqli_error($conn));
+    $rowsID = mysqli_num_rows($u_sql);
+        if ($rowsID > 0) {
+            // try to get calibration for iSpindle hardware ID
+            $r_id = mysqli_fetch_array($u_sql);
+            $uniqueID = $r_id['ID'];
+            $f_sql = mysqli_query($conn, "SELECT const1, const2, const3 FROM Calibration WHERE ID = '$uniqueID' ") or die(mysqli_error($conn));
+            $rows_cal = mysqli_num_rows($f_sql);
+            if ($rows_cal > 0) {
+                $isCalibrated = 1;
+                $r_cal = mysqli_fetch_array($f_sql);
+                $const1 = $r_cal['const1'];
+                $const2 = $r_cal['const2'];
+                $const3 = $r_cal['const3'];
+            }
+        }
+
+    if ($reset) {
+        $where = "WHERE Name = '" . $iSpindleID . "'
+            AND Timestamp >= (Select max(Timestamp) FROM Data  WHERE ResetFlag = true AND Name = '" . $iSpindleID . "')";
+    } else {
+        $where = "WHERE Name = '" . $iSpindleID . "'
+            AND Timestamp >= date_sub(NOW(), INTERVAL " . $timeFrameHours . " HOUR)
+            AND Timestamp <= NOW()";
+    }
+
+         $p_sql = mysqli_query($conn, "SET @x:=0") or die(mysqli_error($conn));
+         $q_sql = mysqli_query($conn, "SELECT * 
+                                       FROM (SELECT (@x:=@x+1) AS x, 
+                                       UNIX_TIMESTAMP(mt.Timestamp) as unixtime, 
+                                       mt.name, 
+                                       mt.recipe, 
+                                       mt.temperature, 
+                                       mt.angle, 
+                                       mt.Angle*mt.Angle*" . $const1 . " + mt.Angle*" . $const2 . " + " . $const3 . " AS Calc_Plato, 
+                                       mt.Angle*mt.Angle*" . $const1 . "+mt.Angle*" . $const2 . "+" . $const3 . " - lag(mt.Angle*mt.Angle*" . $const1 . "+mt.Angle*" . $const2 . "+" . $const3 . ", " . $Rows . ") 
+                                       OVER (ORDER BY mt.Timestamp) DeltaPlato 
+                                       FROM Data mt " .$where . " order by Timestamp) t WHERE x MOD " . $Rows . " = 0") or die(mysqli_error($conn));
+
+
+
+    // retrieve number of rows
+    $rows = mysqli_num_rows($q_sql);
+        while ($r_row = mysqli_fetch_array($q_sql)) {
+            $jsTime = $r_row['unixtime'] * 1000;
+            $angle = $r_row['angle'];
+            $Ddens = $r_row['DeltaPlato'];
+            if ($Ddens == '') {
+                $Ddens= 0;
+            }
+            $valAngle .= '[' . $jsTime . ', ' . $angle . '],';
+            $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $Ddens . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
+
+        }
+        return array(
+            $isCalibrated,
+            $valDens,
+            $valTemperature,
+            $valAngle
+        );
+}
+
+
+
 
 // Get calibrated values from database for selected spindle, between now and [number of hours] ago
 // Old Method for Firmware before 5.x

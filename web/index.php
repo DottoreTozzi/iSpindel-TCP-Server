@@ -63,7 +63,18 @@ error_reporting(E_ALL | E_STRICT);
     if(!isset($_GET['days'])) $_GET['days'] = 0; else $_GET['days'] = $_GET['days'];
     $daysago = $_GET['days'];
     if($daysago == 0) $daysago = defaultDaysAgo;
-    
+    $pids=''; 
+     
+    $running=false;
+    if (file_exists( "/var/run/ispindle-srv.pid" )) {
+        $pid= (shell_exec("cat /var/run/ispindle-srv.pid"));
+        $running = posix_getpgid(intval($pid));
+    }
+    if ($running) {
+        $iSpindleServerRunning = "TCP Server is running with PID: " . $pid;
+    } else {
+        $iSpindleServerRunning = "Warning: TCP Server is not running";
+    }
 
     $sql_q = "SELECT max(Timestamp), Name FROM Data GROUP BY Name";
 
@@ -118,9 +129,11 @@ error_reporting(E_ALL | E_STRICT);
         <option value="angle.php">Tilt und Temperatur</option>
         <option value="angle_ma.php">Tilt und Temperatur, Geglättet</option>
         <option value="plato.php">Extrakt und Temperatur (iSpindel Polynom)</option>
-        <option value="reset_now.php">Gärbeginn Zeitpunkt setzen</option>
-        <option value="batterytrend.php">Verlauf Batteriespannung/WiFi anzeigen</option>	
+        <option value="reset_now.php">Gärbeginn Zeitpunkt setzen</option>>
+        <option value="plato4_delta.php">Aenderung (Delta) Extrakt innerhalb 12 Stunden Anzeigen</option>	
+        <option value="batterytrend.php">Verlauf Batteriespannung/WiFi anzeigen</option>
         <option value="calibration.php">Spindel im TCP Server Kalibrieren</option>
+        <option value="settings.php">TCP Server Settings in Datenbank anpassen</option>
 </select>
 
 <br />
@@ -146,6 +159,9 @@ Tage Historie
 <input type = "submit" name = "Go" value = "Anzeigen">
 
 <br />
+
+<br/> <?php echo($iSpindleServerRunning)?> <br/>
+
         
 </form>
 
