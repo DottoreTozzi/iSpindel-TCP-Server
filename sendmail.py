@@ -12,6 +12,7 @@ from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 from ConfigParser import ConfigParser
 import datetime
+import os
 
 class MyConfigParser(ConfigParser):
     def get(self, section, option):
@@ -194,9 +195,6 @@ def get_data_hours_ago(iSpindleID, lasttime, hours):
     except Exception as e:
         dbgprint(e)
 
-
-
-
 # Function to calculate gravity (Plato) from  angle for submitted spindelID
 def calculate_plato_from_calibration(iSpindleID, Angle):
     calc_gravity = 'N/A'
@@ -338,14 +336,17 @@ try:
 
 # if at least one of the spindles has actual data
     if spindeldataavailable == 1:
+        dbgprint('Spindledata available')
 # if daily status is enabled
         if enablestatus:
+            dbgprint('Try to send status email')
 # if time is in defined interval around set values from database
             if currenttime >= datetime.time(timestatus-1, 45) and currenttime < datetime.time(timestatus, 15):
                 exists = check_mail_sent('SentStatus', '1')
                 if exists:
                     dbgprint('Status for %s has been already sent' %(currentdate.strftime("%Y-%m-%d")))
                 else:
+                    dbgprint('Prepare Email content for status email')
                     Content = '<b>Letzter Datensatz innerhalb der letzten ' + \
                         str(timeframestatus) + \
                         ' Tage wurde fuer folgende Spindel(n) gefunden:</b><br/><br/>'
@@ -358,27 +359,30 @@ try:
                                 D12hGravity = 'Not Calibrated'
                             else:
                                 Gravity = str(round(dgravity[lSpindleID[i]],2)) 
-                                D24hGravity = str(round(dgravity[lSpindleID[i]]-d24hgravity[lSpindleID[i]],2))
-                                D12hGravity = str(round(dgravity[lSpindleID[i]]-d12hgravity[lSpindleID[i]],2))
+                                D24hGravity = 'TBD'
+                                D12hGravity = 'TBD'
+#                                D24hGravity = str(round(dgravity[lSpindleID[i]]-d24hgravity[lSpindleID[i]],2))
+#                                D12hGravity = str(round(dgravity[lSpindleID[i]]-d12hgravity[lSpindleID[i]],2))
+                                dbgprint(dgravity[lSpindleID[i]])
+                                dbgprint(lSpindleID[i])
                             Content += '<b>'+str(dName[lSpindleID[i]]) + \
-                                '<br/>Date:</b> ' + str(dlasttime[lSpindleID[i]]) + \
-                                '<br/><b>ID:</b> ' + str(lSpindleID[i]) + \
-                                '<br/><b>Angle:</b> ' + str(round(dlastangle[lSpindleID[i]], 2)) + \
-                                '<br/><b>Calculated Plato:</b> ' + Gravity + \
-                                '<br/><b>Delta Plato letzte 24h:</b> ' + D24hGravity + \
-                                '<br/><b>Delta Plato letzte 12h:</b> ' + D12hGravity + \
-                                '<br/><b>Temperature:</b> ' + str(round(dlasttemp[lSpindleID[i]], 2)) + \
-                                '<br/><b>Battery:</b> ' + str(round(dbattery[lSpindleID[i]], 2)) + \
-                                '<br/><b>Sudname:</b> ' + \
-                                str(dRecipe[lSpindleID[i]]) + '<br/><br/>'
-                            dbgprint('Last Data for following Spindel found: ' + str(dName[lSpindleID[i]]) +
-                                 ' [ID]: ' + str(lSpindleID[i]) +
-                                 ' Angle: ' + str(dlastangle[lSpindleID[i]]) +
-                                 ' Date: ' + str(dlasttime[lSpindleID[i]]) +
-                                 ' Temperature: ' + str(dlasttemp[lSpindleID[i]]))
+                            '<br/>Date:</b> ' + str(dlasttime[lSpindleID[i]]) + \
+                            '<br/><b>ID:</b> ' + str(lSpindleID[i]) + \
+                            '<br/><b>Angle:</b> ' + str(round(dlastangle[lSpindleID[i]], 2)) + \
+                            '<br/><b>Calculated Plato:</b> ' + Gravity + \
+                            '<br/><b>Delta Plato letzte 24h:</b> ' + D24hGravity + \
+                            '<br/><b>Delta Plato letzte 12h:</b> ' + D12hGravity + \
+                            '<br/><b>Temperature:</b> ' + str(round(dlasttemp[lSpindleID[i]], 2)) + \
+                            '<br/><b>Battery:</b> ' + str(round(dbattery[lSpindleID[i]], 2)) + \
+                            '<br/><b>Sudname:</b> ' + \
+                            str(dRecipe[lSpindleID[i]]) + '<br/><br/>'
+                            dbgprint('Last Data for following Spindel found: ' + str(dName[lSpindleID[i]]) + \
+                            ' [ID]: ' + str(lSpindleID[i]) + \
+                            ' Angle: ' + str(dlastangle[lSpindleID[i]]) + \
+                            ' Date: ' + str(dlasttime[lSpindleID[i]]) + \
+                            ' Temperature: ' + str(dlasttemp[lSpindleID[i]]))
                         else:
-                            dbgprint('Data for Spindel ' + str(
-                                dName[lSpindleID[i]]) + ' is older than ' + str(timeframestatus) + ' days')
+                            dbgprint('Data for Spindel ' + str(dName[lSpindleID[i]]) + ' is older than ' + str(timeframestatus) + ' days')
                         i += 1
 
                     subject = "Status Email von iSpindel-TCP-Server"
