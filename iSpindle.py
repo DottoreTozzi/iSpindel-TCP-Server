@@ -1,9 +1,9 @@
 #!/usr/bin/env python2.7
-
 # Version 1.6.3
 # Added function to send emails automatically
 # this file calls a file sendmail.py which has also to be placed in /usr/local/bin
 # Routine is running as thread and should not conflict with iSpindle.py
+# Most Settings are now retireved from SQL Database and some (SQL from ini file)
 #
 # Version 1.6.2
 # Change of config data handling. ini files will be stored in config directory and user can create iSpindle_config.ini in this directory.
@@ -71,14 +71,9 @@ except IOError:
 
 # General
 DEBUG = config.get('GENERAL', 'DEBUG') # Set to 1 to enable debug output on console (usually devs only)
-DELAY = config.getint('GENERAL','DELAY') # Some systems dont start automatically and need a delay (seconds)
-
 
 def dbgprint(s):
     if DEBUG: print(str(s))
-
-dbgprint("Waiing " + str(DELAY) + " seconds for system to be ready")
-time.sleep(DELAY)
 
 # MySQL
 SQL = config.getint('MYSQL', 'SQL')  # 1 to enable output to MySQL database
@@ -88,6 +83,27 @@ SQL_TABLE = config.get('MYSQL', 'SQL_TABLE')  # Table name
 SQL_USER = config.get('MYSQL', 'SQL_USER')  # DB user
 SQL_PASSWORD = config.get('MYSQL', 'SQL_PASSWORD')  # DB user's password (change this)
 SQL_PORT = config.getint('MYSQL', 'SQL_PORT')
+
+# Ceck and wait until database is available
+check = False
+while check == False:
+    try:
+        import mysql.connector
+        cnx = mysql.connector.connect(
+            user=SQL_USER,  port=SQL_PORT, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
+        cur = cnx.cursor()
+        sqlselect = "SELECT VERSION()"
+        cur.execute(sqlselect)
+        results = cur.fetchone()
+        ver = results[0]
+        if (ver is None):
+            time.sleep(1)
+            check = False
+        else:
+            break
+    except:
+        time.sleep(1)
+        check = False
 
 # Function to retrieve config values from SQL database
 def get_config_from_sql(section, parameter):

@@ -63,8 +63,9 @@ error_reporting(E_ALL | E_STRICT);
     if(!isset($_GET['days'])) $_GET['days'] = 0; else $_GET['days'] = $_GET['days'];
     $daysago = $_GET['days'];
     if($daysago == 0) $daysago = defaultDaysAgo;
-    $pids=''; 
-     
+    
+	// Check if iSpindle.py is running
+	$pids=''; 
     $running=false;
     if (file_exists( "/var/run/ispindle-srv.pid" )) {
         $pid= (shell_exec("cat /var/run/ispindle-srv.pid"));

@@ -456,7 +456,7 @@ function getChartValuesPlato4_delta($conn, $iSpindleID = 'iSpindel000', $timeFra
     }
 
          $p_sql = mysqli_query($conn, "SET @x:=0") or die(mysqli_error($conn));
-         $q_sql = mysqli_query($conn, "SELECT * 
+         if($q_sql = mysqli_query($conn, "SELECT * 
                                        FROM (SELECT (@x:=@x+1) AS x, 
                                        UNIX_TIMESTAMP(mt.Timestamp) as unixtime, 
                                        mt.name, 
@@ -466,30 +466,33 @@ function getChartValuesPlato4_delta($conn, $iSpindleID = 'iSpindel000', $timeFra
                                        mt.Angle*mt.Angle*" . $const1 . " + mt.Angle*" . $const2 . " + " . $const3 . " AS Calc_Plato, 
                                        mt.Angle*mt.Angle*" . $const1 . "+mt.Angle*" . $const2 . "+" . $const3 . " - lag(mt.Angle*mt.Angle*" . $const1 . "+mt.Angle*" . $const2 . "+" . $const3 . ", " . $Rows . ") 
                                        OVER (ORDER BY mt.Timestamp) DeltaPlato 
-                                       FROM Data mt " .$where . " order by Timestamp) t WHERE x MOD " . $Rows . " = 0") or die(mysqli_error($conn));
+                                       FROM Data mt " .$where . " order by Timestamp) t WHERE x MOD " . $Rows . " = 0"))
+         {
 
-
-
-    // retrieve number of rows
-    $rows = mysqli_num_rows($q_sql);
-        while ($r_row = mysqli_fetch_array($q_sql)) {
-            $jsTime = $r_row['unixtime'] * 1000;
-            $angle = $r_row['angle'];
-            $Ddens = $r_row['DeltaPlato'];
-            if ($Ddens == '') {
-                $Ddens= 0;
-            }
-            $valAngle .= '[' . $jsTime . ', ' . $angle . '],';
-            $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $Ddens . ", recipe: \"" . $r_row['recipe'] . "\"},";
-            $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
-
-        }
-        return array(
-            $isCalibrated,
-            $valDens,
-            $valTemperature,
-            $valAngle
-        );
+         // retrieve number of rows
+         $rows = mysqli_num_rows($q_sql);
+         while ($r_row = mysqli_fetch_array($q_sql)) {
+             $jsTime = $r_row['unixtime'] * 1000;
+             $angle = $r_row['angle'];
+             $Ddens = $r_row['DeltaPlato'];
+             if ($Ddens == '') {
+                 $Ddens= 0;
+             }
+             $valAngle .= '[' . $jsTime . ', ' . $angle . '],';
+             $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $Ddens . ", recipe: \"" . $r_row['recipe'] . "\"},";
+             $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
+             }
+         return array(
+             $isCalibrated,
+             $valDens,
+             $valTemperature,
+             $valAngle
+         );
+         }
+         else {
+             echo "Select for this diagram is using 'SQL Windows functions'. Your Database does not ssem to support it. If you want to use these functions you need to upgrade to a newer version of your SQL installation";
+             exit;
+         }
 }
 
 
