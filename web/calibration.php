@@ -30,6 +30,16 @@ if ((include_once '../config/common_db_config.php') == FALSE){
         if (!$calibrate_now){
             echo 'Fehler beim Schreiben der Daten an die Datenbank';
             exit;
+           }
+        else
+            {
+            $url="http://";
+            $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
+            $url .= "calibration.php";
+            $url .= "?name=" . $_POST["Name"]; 
+            // open the page
+            header("Location: ".$url);
+
         }
  
     }
