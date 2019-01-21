@@ -309,9 +309,14 @@ try:
         lSpindleID.append(id)
         dlasttimetrue[sID] = 0
         dlasttime[sID] = i[0]  # timestamp of latest dataset for sID
-# calculate difference between last dataset and now
+        dlastreset[sID] = timestamp_reset_spindle(sID)
+# calculate difference between last reset and now
         difference = currentdate - dlasttime[sID]
-        if difference.days >= 1:
+        time_since_last_reset = currentdate - dlastreset[sID]
+        d24hgravity[sID]='N/A'
+        d12hgravity[sID]='N/A'
+        if time_since_last_reset.days >= 1:
+            dbgprint(sID)
             d24hangle[sID] = get_data_hours_ago(sID, dlasttime[sID], 24)
             d24hgravity[sID] = calculate_plato_from_calibration(
                 sID, d24hangle[sID]) # calculated gravity (from TCP server calibration)
@@ -326,7 +331,6 @@ try:
             dlastangle[sID] = i[4]  # angle from latest dataset of sID
             dgravity[sID] = calculate_plato_from_calibration(
                 sID, dlastangle[sID]) # calculated gravity (from TCP server calibration)
-            dlastreset[sID] = timestamp_reset_spindle(sID)
         dlasttemp[sID] = i[5]  # temperature
         dName[sID] = i[2] # Spindelname
         dbattery[sID] = i[6] # batteryvoltage
@@ -359,12 +363,12 @@ try:
                                 D12hGravity = 'Not Calibrated'
                             else:
                                 Gravity = str(round(dgravity[lSpindleID[i]],2)) 
-                                D24hGravity = 'TBD'
-                                D12hGravity = 'TBD'
-#                                D24hGravity = str(round(dgravity[lSpindleID[i]]-d24hgravity[lSpindleID[i]],2))
-#                                D12hGravity = str(round(dgravity[lSpindleID[i]]-d12hgravity[lSpindleID[i]],2))
-                                dbgprint(dgravity[lSpindleID[i]])
-                                dbgprint(lSpindleID[i])
+                                if (d24hgravity[lSpindleID[i]]<>'N/A'):
+                                    D24hGravity = str(round(dgravity[lSpindleID[i]]-d24hgravity[lSpindleID[i]],2))
+                                    D12hGravity = str(round(dgravity[lSpindleID[i]]-d12hgravity[lSpindleID[i]],2))
+                                else:
+                                   D24hGravity = 'N/A'
+                                   D12hGravity = 'N/A' 
                             Content += '<b>'+str(dName[lSpindleID[i]]) + \
                             '<br/>Date:</b> ' + str(dlasttime[lSpindleID[i]]) + \
                             '<br/><b>ID:</b> ' + str(lSpindleID[i]) + \

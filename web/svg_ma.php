@@ -38,10 +38,10 @@ $maxTemp = 30;
 $mindens = 0;
 $maxdens = 20;
                                                    
-list($isCalib, $dens, $temperature, $angle) = getChartValuesPlato4_ma($conn, $_GET['name'], $timeFrame, $_GET['moving'],  $_GET['reset']);
+list($isCalib, $SVG, $temperature, $angle) = getChartValuesSVG_ma($conn, $_GET['name'], $_GET['moving']);
 list($RecipeName, $show) = getCurrentRecipeName($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 
-$file = "plato4_ma";
+$file = "svg_ma";
 $recipe_name = get_field_from_sql($conn,'diagram',"recipe_name");
 $first_y = get_field_from_sql($conn,$file,"first_y");
 $second_y = get_field_from_sql($conn,$file,"second_y");
@@ -55,7 +55,6 @@ $header_no_data_1 = get_field_from_sql($conn,'diagram',"header_no_data_1");
 $header_no_data_2 = get_field_from_sql($conn,'diagram',"header_no_data_2");
 $header_no_data_3 = get_field_from_sql($conn,'diagram',"header_no_data_3");
 $not_calibrated = get_field_from_sql($conn,'diagram',"not_calibrated");
-
 
 $Header=$_GET['name'].' | ' . $recipe_name .' ' . $RecipeName;
 
@@ -71,7 +70,6 @@ if (!$_GET['reset'])
 
 ?>
 
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -85,7 +83,7 @@ if (!$_GET['reset'])
 
 <script type="text/javascript">
 
-const chartDens=[<?php echo $dens;?>]
+const chartSVG=[<?php echo $SVG;?>]
 const chartTemp=[<?php echo $temperature;?>]
 const recipe_name=[<?php echo "'".$recipe_name."'";?>]
 const first_y=[<?php echo "'".$first_y."'";?>]
@@ -139,7 +137,6 @@ $(function ()
                   }
                   $timetext .= $tfhours . ' ' . $subheader_hours;
                   echo $timetext;
-
                 ?>'                        
       },                                                                
 xAxis:
@@ -156,7 +153,7 @@ xAxis:
                     startOnTick: false,
                     endOnTick: false,
                     min: 0,
-                    max: 20,
+                    max: 100,
                     title:
                     {
                         text: first_y
@@ -168,7 +165,7 @@ xAxis:
                         y: 16,
                         formatter: function()
                         {
-                            return this.value + '°P'
+                            return this.value + '%'
                         }
                     },
                     showFirstLabel: false
@@ -200,11 +197,11 @@ xAxis:
                 crosshairs: [true, true],
                 formatter: function() 
                 {
-                    if(this.series.name == second_y) {
+                    if(this.series.name == first_y) {
                         const pointData = chartTemp.find(row => row.timestamp === this.point.x)
-                        return '<b>' + recipe_name+ ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y.toFixed(2) +'°C';
+                        return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y.toFixed(2) +'°C';
                     } else {
-                        const pointData = chartDens.find(row => row.timestamp === this.point.x)
+                        const pointData = chartSVG.find(row => row.timestamp === this.point.x)
                         return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y.toFixed(2) +'%';
                     }
                 }
@@ -222,7 +219,7 @@ xAxis:
                 {
                     name: first_y,
                     color: '#FF0000',
-                    data: chartDens.map(row => [row.timestamp, row.value]),
+                    data: chartSVG.map(row => [row.timestamp, row.value]),
                     marker: 
                     {
                         symbol: 'square',

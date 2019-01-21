@@ -17,6 +17,10 @@ if(!isset($_GET['name'])) $_GET['name'] = 'iSpindel000'; else $_GET['name'] = $_
 
 list($time, $temperature, $angle, $battery, $interval, $rssi) = getCurrentValues2($conn, $_GET['name']);
 
+$file = "wifi";
+$header = get_field_from_sql($conn,$file,"header");
+
+
 ?>
 
 <!DOCTYPE html>
@@ -48,7 +52,7 @@ $(function ()
       },
       title: 
       {
-        text: 'Aktuelle WiFi Empfangsqualität: <?php echo $_GET['name'];?>'
+        text: '<?php echo $header;?> <?php echo $_GET['name'];?>'
       },
 
       pane: {

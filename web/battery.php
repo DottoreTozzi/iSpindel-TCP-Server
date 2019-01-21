@@ -16,6 +16,10 @@ if ((include_once '../config/common_db_config.php') == FALSE){
 if(!isset($_GET['name'])) $_GET['name'] = 'iSpindel000'; else $_GET['name'] = $_GET['name'];
 
 list($time, $temperature, $angle, $battery) = getCurrentValues($conn, $_GET['name']);
+$file = "battery";
+$header_battery = get_field_from_sql($conn,$file,"header_battery");
+$diagram_battery = get_field_from_sql($conn,$file,"diagram_battery");
+
 
 ?>
 
@@ -48,7 +52,7 @@ $(function ()
       },
       title: 
       {
-        text: 'Aktueller Ladezustand: <?php echo $_GET['name'];?>'
+        text: '<?php echo $header_battery;?> <?php echo $_GET['name'];?>'
       },
 
       pane: {
@@ -105,7 +109,7 @@ $(function ()
             rotation: 'auto'
         },
         title: {
-            text: 'Volt'
+            text: '<?php echo $diagram_battery;?>'
         },
         plotBands: [{
             from: 3.5,

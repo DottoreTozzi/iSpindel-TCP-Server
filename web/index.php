@@ -50,6 +50,20 @@ error_reporting(E_ALL | E_STRICT);
         unset($result, $sql_q);
         exit;
     }
+
+    if (isset($_POST['Set']))
+    {
+
+        // establish path by the current URL used to invoke this page
+        $url="http://";
+        $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
+        $url .= 'settings.php';
+        // open the page
+        header("Location: ".$url);
+        unset($result, $sql_q);
+        exit;
+    }
+
     
     // Called from browser, showing form
     if ((include_once '../config/common_db_config.php') == FALSE){
@@ -58,38 +72,62 @@ error_reporting(E_ALL | E_STRICT);
 }
  include_once("include/common_db_query.php");
 
-   
+    $file = "index";
+    $chart_filename_01 = get_field_from_sql($conn,$file,"chart_filename_01");
+    $chart_filename_02 = get_field_from_sql($conn,$file,"chart_filename_02");
+    $chart_filename_03 = get_field_from_sql($conn,$file,"chart_filename_03");
+    $chart_filename_04 = get_field_from_sql($conn,$file,"chart_filename_04");
+    $chart_filename_05 = get_field_from_sql($conn,$file,"chart_filename_05");
+    $chart_filename_06 = get_field_from_sql($conn,$file,"chart_filename_06");
+    $chart_filename_07 = get_field_from_sql($conn,$file,"chart_filename_07");
+    $chart_filename_08 = get_field_from_sql($conn,$file,"chart_filename_08");
+    $chart_filename_09 = get_field_from_sql($conn,$file,"chart_filename_09");
+    $chart_filename_10 = get_field_from_sql($conn,$file,"chart_filename_10");
+    $chart_filename_11 = get_field_from_sql($conn,$file,"chart_filename_11");
+    $chart_filename_12 = get_field_from_sql($conn,$file,"chart_filename_12");
+    $chart_filename_13 = get_field_from_sql($conn,$file,"chart_filename_13");
+    $show_diagram = get_field_from_sql($conn,$file,"show_diagram");
+    $server_settings = get_field_from_sql($conn,$file,"server_settings");
+    $server_running = get_field_from_sql($conn,$file,"server_running");
+    $server_not_running = get_field_from_sql($conn,$file,"server_not_running");
+    $reset_flag = get_field_from_sql($conn,$file,"reset_flag");
+    $diagram_selection = get_field_from_sql($conn,$file,"diagram_selection");
+    $recipe_name = get_field_from_sql($conn,$file,"recipe_name");
+    $days_history = get_field_from_sql($conn,$file,"days_history");
+    $or = get_field_from_sql($conn,$file,"or");
+    
+  
     // "Days Ago parameter set?
     if(!isset($_GET['days'])) $_GET['days'] = 0; else $_GET['days'] = $_GET['days'];
     $daysago = $_GET['days'];
     if($daysago == 0) $daysago = defaultDaysAgo;
-    
-	// Check if iSpindle.py is running
-	$pids=''; 
+
+
+    $pids=''; 
     $running=false;
     if (file_exists( "/var/run/ispindle-srv.pid" )) {
         $pid= (shell_exec("cat /var/run/ispindle-srv.pid"));
         $running = posix_getpgid(intval($pid));
     }
     if ($running) {
-        $iSpindleServerRunning = "TCP Server is running with PID: " . $pid;
+        $iSpindleServerRunning = $server_running . $pid;
     } else {
-        $iSpindleServerRunning = "Warning: TCP Server is not running";
+        $iSpindleServerRunning = $server_not_running;
     }
 
     $sql_q = "SELECT max(Timestamp), Name FROM Data GROUP BY Name";
 
 
     $result=mysqli_query($conn, $sql_q) or die(mysqli_error($conn));
+
+
+ 
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
     <title>RasPySpindel Homepage</title>
-    <meta name="Keywords" content="iSpindle, iSpindel, Chart, genericTCP, Select">
-    <meta name="Description" content="iSpindle Fermentation Chart Selection Screen">
-
     <meta name="Keywords" content="iSpindle, iSpindel, Chart, genericTCP, Select">
     <meta name="Description" content="iSpindle Fermentation Chart Selection Screen">
 
@@ -105,7 +143,7 @@ error_reporting(E_ALL | E_STRICT);
 <body bgcolor="#E6E6FA">
 <form name="main" action="<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method="post">
 <h1>RasPySpindel</h1>
-<h3>Diagramm Auswahl <?php echo($daysago)?> Tage</h3>
+<h3><?php echo($diagram_selection .' '. $daysago)?></h3>
 
 <select id="ispindel_name" name = 'ispindel_name'>
         <?php
@@ -121,20 +159,20 @@ error_reporting(E_ALL | E_STRICT);
 </select>
 
 
-<select id="chart_filename" name='chart_filename' onchange="einblenden()">
-        <option value="status.php" selected>Status (Batterie, Winkel, Temperatur)</option>
-        <option value="battery.php">Batteriezustand</option>
-        <option value="wifi.php">Netzwerk Empfangsqualität</option>
-        <option value="plato4.php">Extrakt und Temperatur (RasPySpindel)</option>
-        <option value="plato4_ma.php">Extrakt und Temperatur (RasPySpindel), Geglättet</option>
-        <option value="angle.php">Tilt und Temperatur</option>
-        <option value="angle_ma.php">Tilt und Temperatur, Geglättet</option>
-        <option value="plato.php">Extrakt und Temperatur (iSpindel Polynom)</option>
-        <option value="reset_now.php">Gärbeginn Zeitpunkt setzen</option>>
-        <option value="plato4_delta.php">Aenderung (Delta) Extrakt innerhalb 12 Stunden Anzeigen</option>	
-        <option value="batterytrend.php">Verlauf Batteriespannung/WiFi anzeigen</option>
-        <option value="calibration.php">Spindel im TCP Server Kalibrieren</option>
-        <option value="settings.php">TCP Server Settings in Datenbank anpassen</option>
+<select id="chart_filename" name='chart_filename' onchange="einblenden()">;
+        <option value="status.php" selected><?php echo $chart_filename_01 ?></option>
+        <option value="battery.php"><?php echo $chart_filename_02 ?></option>
+        <option value="wifi.php"><?php echo $chart_filename_03 ?></option>
+        <option value="plato4.php"><?php echo $chart_filename_04 ?></option>
+        <option value="plato4_ma.php"><?php echo $chart_filename_05 ?></option>
+        <option value="angle.php"><?php echo $chart_filename_06 ?></option>
+        <option value="angle_ma.php"><?php echo $chart_filename_07 ?></option>
+        <option value="plato.php"><?php echo $chart_filename_08 ?></option>
+        <option value="reset_now.php"><?php echo $chart_filename_09 ?></option>>
+        <option value="svg_ma.php"><?php echo $chart_filename_10 ?></option>
+        <option value="plato4_delta.php"><?php echo $chart_filename_11 ?></option>	
+        <option value="batterytrend.php"><?php echo $chart_filename_12 ?></option>
+        <option value="calibration.php"><?php echo $chart_filename_13 ?></option>
 </select>
 
 <br />
@@ -143,21 +181,22 @@ error_reporting(E_ALL | E_STRICT);
 <!-- "hidden" checkbox to make sure we have a response here and not just send "null" -->
 <input type = "hidden" name="fromreset" value="0">
 <input type = "checkbox" name="fromreset" value="1">
-Daten seit zuletzt gesetztem "Reset" Flag
+<?php echo($reset_flag)?>
 
 <br />
-oder:
+<?php echo($or)?>
 <input type = "number" name = "days" min = "1" max = "365" step = "1" value = "<?php echo($daysago)?>">
-Tage Historie
+<?php echo($days_history)?>
 <br />
 <br />
 
 <div id="ResetNow" style="display: none;">
-<p>Optional Sudnamen eingeben:
+<p><?php echo($recipe_name)?>
 <input type = "text" name = "recipename" /> </p>
 </div>
 
-<input type = "submit" name = "Go" value = "Anzeigen">
+<input type = "submit" name = "Go" value = "<?php echo($show_diagram)?>">
+<input type = "submit" name = "Set" value = "<?php echo($server_settings)?>">
 
 <br />
 

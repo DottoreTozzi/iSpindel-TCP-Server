@@ -37,14 +37,30 @@ $tfhours = $tftemp;
 list($isCalib, $dens, $temperature, $angle) = getChartValuesPlato4_delta($conn, $_GET['name'], $timeFrame, $_GET['moving'], $_GET['reset']);
 list($RecipeName, $show) = getCurrentRecipeName($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 
-$Header=$_GET['name'].' '.$RecipeName;
+$file = "plato4_delta";
+$recipe_name = get_field_from_sql($conn,'diagram',"recipe_name");
+$first_y = get_field_from_sql($conn,$file,"first_y");
+$second_y = get_field_from_sql($conn,$file,"second_y");
+$x_axis = get_field_from_sql($conn,$file,"x_axis");
+$subheader = get_field_from_sql($conn,$file,"timetext");
+$subheader_reset = get_field_from_sql($conn,$file,"timetext_reset");
+$subheader_weeks = get_field_from_sql($conn,'diagram',"timetext_weeks");
+$subheader_days = get_field_from_sql($conn,'diagram',"timetext_days");
+$subheader_hours = get_field_from_sql($conn,'diagram',"timetext_hours");
+$header_no_data_1 = get_field_from_sql($conn,'diagram',"header_no_data_1");
+$header_no_data_2 = get_field_from_sql($conn,'diagram',"header_no_data_2");
+$header_no_data_3 = get_field_from_sql($conn,'diagram',"header_no_data_3");
+$not_calibrated = get_field_from_sql($conn,'diagram',"not_calibrated");
+
+$Header=$_GET['name'].' | ' . $recipe_name .' ' . $RecipeName;
+
 
 if (!$_GET['reset'])
 {
  $DataAvailable=isDataAvailable($conn, $_GET['name'], $timeFrame);
   if($DataAvailable[0]=='0')
   {
-   $Header='Keine Daten von '.$_GET['name'].' in diesem Zeitraum. Bitte noch weitere '.$DataAvailable[1].' Tage zurückgehen';
+   $Header=$header_no_data_1 . ' ' . $_GET['name']. ' ' . $header_no_data_2 . ' ' .$DataAvailable[1]. ' ' . $header_no_data_3;
   }
 }
 
@@ -65,6 +81,10 @@ if (!$_GET['reset'])
 
 const chartDens=[<?php echo $dens;?>]
 const chartTemp=[<?php echo $temperature;?>]
+const recipe_name=[<?php echo "'".$recipe_name."'";?>]
+const first_y=[<?php echo "'".$first_y."'";?>]
+const second_y=[<?php echo "'".$second_y."'";?>]
+const x_axis=[<?php echo "'".$x_axis."'";?>]
 
 $(function () 
 {
@@ -75,7 +95,7 @@ $(function ()
                     
     if ('<?php echo $isCalib;?>' == '0')
     {
-        document.write('<h2>iSpindel \'<?php echo $_GET['name'];?>\' ist nicht kalibriert.</h2>');
+        document.write('<h2>iSpindel \'<?php echo $_GET['name'] . ' ' . $not_calibrated;?>\'</h2>');
     }
     else
     {
@@ -97,24 +117,20 @@ $(function ()
             },
             subtitle:
                   { text: ' <?php                                                               
-                  $timetext = 'Temperatur und Extraktgehalt ';                             
-                  if($_GET['reset'])                                        
-                  {                                                         
-                    $timetext .= 'seit dem letzten Reset: ';                
-                  }             
-                  else          
-                        {     
-                    $timetext .= 'der letzten ';
-                  }     
-                  if($tfweeks != 0)                
-                  {                                
-                    $timetext .= $tfweeks . ' Woche(n), ';                                      
-                  }                                                                           
-                  if($tfdays != 0)                                                            
+                  $timetext = $subheader . ' ';
+                  if($_GET['reset'])
                   {
-                    $timetext .= $tfdays . ' Tag(e), ';
+                    $timetext = $subheader_reset . ' ';
                   }
-                  $timetext .= $tfhours . ' Stunde(n).';
+                  if($tfweeks != 0)
+                  {
+                    $timetext .= $tfweeks . ' ' . $subheader_weeks;
+                  }
+                  if($tfdays != 0)
+                  {
+                    $timetext .= $tfdays . ' ' . $subheader_days;
+                  }
+                  $timetext .= $tfhours . ' ' . $subheader_hours;
                   echo $timetext;
                 ?>'                        
       },                                                                
@@ -124,7 +140,7 @@ xAxis:
                 gridLineWidth: 1,
                 title:
             {
-                text: 'Uhrzeit'
+                text: x_axis
             }
             },
             yAxis: [
@@ -135,7 +151,7 @@ xAxis:
                     max: 4,
                     title:
                     {
-                        text: 'Delta Extrakt %w/w'
+                        text: first_y
                     },
                     labels:
                     {
@@ -157,7 +173,7 @@ xAxis:
                     gridLineWidth: 0,
                     opposite: true,
                     title: {
-                        text: 'Temperatur'
+                        text: second_y
                     },
                     labels: {
                         align: 'right',
@@ -176,12 +192,12 @@ xAxis:
                 crosshairs: [true, true],
                 formatter: function() 
                 {
-                    if(this.series.name == 'Temperatur') {
+                    if(this.series.name == second_y) {
 			const pointData = chartTemp.find(row => row.timestamp === this.point.x)
-                        return '<b>Sudname: </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y.toFixed(2) +'°C';
+                        return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y.toFixed(2) +'°C';
                     } else {
 			const pointData = chartDens.find(row => row.timestamp === this.point.x)
-                        return '<b>Sudname: </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y.toFixed(2) +'%';
+                        return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y.toFixed(2) +'%';
                     }
                 }
             },  
@@ -196,7 +212,7 @@ xAxis:
             series:
             [
                 {
-                    name: 'Extrakt',
+                    name: first_y,
                     color: '#FF0000',
                     data: chartDens.map(row => [row.timestamp, row.value]),
                     marker: 
@@ -215,7 +231,7 @@ xAxis:
                     }
                 },
                 {
-                    name: 'Temperatur',
+                    name: second_y,
                     yAxis: 1,
                     color: '#0000FF',
                     data: chartTemp.map(row => [row.timestamp, row.value]),
