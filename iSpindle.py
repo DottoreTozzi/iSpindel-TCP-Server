@@ -84,6 +84,13 @@ FERMENTRACKADDR = '192.168.10.164'
 FERMENTRACK_TOKEN = 'mytoken'
 FERMENTRACKPORT = 80
 
+# Brewspy
+BREWSPY = 0
+SPY_USE_ISPINDLE_TOKEN = 1
+BREWSPYADDR = 'brew-spy.com'
+BREWSPY_TOKEN = 'mytoken'
+BREWSPYPORT = 80
+
 # BREWPILESS
 BREWPILESS = 0
 BREWPILESSADDR = '192.168.0.102:80'
@@ -528,6 +535,37 @@ def handler(clientsock, addr):
                         dbgprint(repr(addr) + ' - received: ' + response.read())
             except Exception as e:
                 dbgprint(repr(addr) + ' Fermentrack Error: ' + str(e))
+
+        if BREWSPY:
+            try:
+                if SPY_USE_ISPINDLE_TOKEN:
+                    token = user_token
+                else:
+                    token = BREWSPY_TOKEN
+                if token != '':
+                    if token[:1] != '*':
+                        dbgprint(repr(addr) + ' - sending to brewspy')
+                        import urllib2
+                        outdata = {
+                            "ID": spindle_id,
+                            "angle": angle,
+                            "battery": battery,
+                            "gravity": gravity,
+                            "name": spindle_name,
+                            "temperature": temperature,
+                            "token": token
+                        }
+                        out = json.dumps(outdata)
+                        dbgprint(repr(addr) + ' - sending: ' + out)
+                        url = 'http://' + BREWSPYADDR + ':' + str(BREWSPYPORT) + '/api/ispindel/'
+                        dbgprint(repr(addr) + ' to : ' + url)
+                        req = urllib2.Request(url)
+                        req.add_header('Content-Type', 'application/json')
+                        req.add_header('User-Agent', spindle_name)
+                        response = urllib2.urlopen(req, out)
+                        dbgprint(repr(addr) + ' - received: ' + response.read())
+            except Exception as e:
+                dbgprint(repr(addr) + ' Brewspy Error: ' + str(e))
 
         readConfig()
 
