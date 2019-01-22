@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: db
--- Erstellungszeit: 21. Jan 2019 um 17:41
+-- Erstellungszeit: 22. Jan 2019 um 07:02
 -- Server-Version: 10.3.11-MariaDB-1:10.3.11+maria~bionic
 -- PHP-Version: 7.2.8
 
@@ -57,6 +57,14 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`) VALU
 ('batterytrend', 'timetext', 'Batteriespannung und WiFi Signal der letzten', 'Battery voltage and WiFi reception of the last '),
 ('batterytrend', 'timetext_reset', 'Batteriespannung und WiFi Signal seit dem letzten Reset: ', 'Battery voltage and WiFi reception since last reset: '),
 ('batterytrend', 'x_axis', 'Datum / Uhrzeit', 'Date / Time'),
+('calibration', 'constant1', 'Konstante 1:', 'Constant 1:'),
+('calibration', 'constant2', 'Konstante 2:', 'Constant 2:'),
+('calibration', 'constant3', 'Konstante 3:', 'Constant 3:'),
+('calibration', 'enter_constants', 'Konstanten eingeben:', 'Please enter constants:'),
+('calibration', 'header', 'Aktualisieren der Kalibrierung für:', 'Update calibration for:'),
+('calibration', 'send', 'Kalibrierung an DB senden', 'Send calibration to database'),
+('calibration', 'stop', 'Zurück', 'Go back'),
+('calibration', 'window_alert_update', 'Kalibrierung an Datenbank gesendet!', 'Calibration was send to database!'),
 ('diagram', 'header_no_data_1', 'Keine Daten von', 'No data from'),
 ('diagram', 'header_no_data_2', 'in diesem Zeitraum. Bitte noch weitere', 'from this timeframe. Please go'),
 ('diagram', 'header_no_data_3', 'Tage zurueckgehen.', 'more days back.'),
@@ -107,6 +115,12 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`) VALU
 ('plato4_ma', 'timetext', 'Temperatur und Extraktgehalt der letzten', 'Temperature and extract of the last '),
 ('plato4_ma', 'timetext_reset', 'Temperatur und Extraktgehalt seit dem letzten Reset: ', 'Temperature and extract since last reset: '),
 ('plato4_ma', 'x_axis', 'Datum / Uhrzeit', 'Date / Time'),
+('settings', 'description', 'Beschreibung', 'Description'),
+('settings', 'problem', 'Probleme beim Schreiben der Settings', 'Problem with writing settings'),
+('settings', 'select_section', 'Section Auswahl', 'Select Section'),
+('settings', 'send', 'Settings in DB schreiben', 'Send settings to database'),
+('settings', 'stop', 'Zurück', 'Go back'),
+('settings', 'window_alert_update', 'Settings aktualisiert!', 'Settings were updated!'),
 ('status', 'diagram_angle', 'Grad', 'Degree'),
 ('status', 'diagram_battery', 'Volt', 'Voltage'),
 ('status', 'diagram_temperature', '°', '°'),

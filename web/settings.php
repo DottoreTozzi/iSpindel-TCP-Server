@@ -22,6 +22,16 @@ if ((include_once '../config/common_db_config.php') == FALSE){
 
 include_once("include/common_db_query.php");
 
+$file = "settings";
+$window_alert_update = get_field_from_sql($conn,$file,"window_alert_update");
+$select_section = get_field_from_sql($conn,$file,"select_section");
+$header = get_field_from_sql($conn,$file,"header");
+$send = get_field_from_sql($conn,$file,"send");
+$stop = get_field_from_sql($conn,$file,"stop");
+$description = get_field_from_sql($conn,$file,"description");
+$problem = get_field_from_sql($conn,$file,"problem");
+
+
 if(!isset($_GET['section'])) $_GET['section'] = '0'; else $_GET['section'] = $_GET['section'];
 
 $current_section=$_GET['section'];
@@ -48,7 +58,7 @@ if (isset($_POST['Go']))
             $value = $_POST[$row['Section'] . "_" . $row['Parameter']];
             $Update=UpdateSettings($conn, $section, $parameter, $value);
             if(!$Update) {
-                echo"Probleme beim Schreiben der Settings " . $section . ": " . $parameter . ": " . $value;
+                echo $problem . " " . $section . ": " . $parameter . ": " . $value;
                 exit;
             }
         }
@@ -81,13 +91,13 @@ if (isset($_POST['Go']))
 <!DOCTYPE html>
 <html>
 <head>
-    <title>RasPySpindel Homepage</title>
+    <title>RasPySpindel Settings</title>
     <meta name="Keywords" content="iSpindle, iSpindel, Chart, genericTCP, Select">
     <meta name="Description" content="iSpindle Fermentation Chart Selection Screen">
 
 <script type="text/javascript">
     function target_popup(form) {
-        window.alert('Aktualisiere Settings in Datenbank');
+        window.alert('<?php echo $window_alert_update; ?>');
     }
 
     function reload_page() {
@@ -104,8 +114,8 @@ if (isset($_POST['Go']))
 </head>
 <body bgcolor="#E6E6FA">
 <form name="main" action="<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method="post">
-<h1>RasPySpindel</h1>
-<h3>Settings Section Auswahl</h3>
+<h1>RasPySpindel Settings</h1>
+<h3><?php echo $select_section; ?></h3>
 
 <p>Section:
 <select id = 'section_name' name = 'section_name' onchange="reload_page(this)">
@@ -137,7 +147,7 @@ echo "<table border='0'>";
 echo "<tr>";
 echo "<td><b>Parameter</b></td>";
 echo "<td><b>Value</b></td>";
-echo "<td><b>Beschreibung</b></td>";
+echo "<td><b>$description</b></td>";
 echo "</tr>";
     $InputWidth = 80;
     while($row = mysqli_fetch_assoc($result) ) {
@@ -157,8 +167,8 @@ echo "</table>";
 <input type = "hidden" name="current_section" value="<?php echo $sections[$_GET['section']]; ?>">
 <input type = "hidden" name="current_id" value="<?php echo $_GET['section']; ?>">
 
-<input type = "submit" name = "Go" value = "In DB schreiben" onclick="target_popup(this)">
-<input type = "submit" name = "Stop" value = "Abbrechen">
+<input type = "submit" name = "Go" value = "<?php echo $send; ?>" onclick="target_popup(this)">
+<input type = "submit" name = "Stop" value = "<?php echo $stop; ?>">
 
 <br />
         

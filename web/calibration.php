@@ -52,6 +52,17 @@ $iSpindleID = $_GET['name'];
 
 $valCalib = getSpindleCalibration($conn, $iSpindleID );
 
+$file = "calibration";
+$window_alert_update = get_field_from_sql($conn,$file,"window_alert_update");
+$enter_constants = get_field_from_sql($conn,$file,"enter_constants");
+$constant1 = get_field_from_sql($conn,$file,"constant1");
+$constant2 = get_field_from_sql($conn,$file,"constant2");
+$constant3 = get_field_from_sql($conn,$file,"constant3");
+$header = get_field_from_sql($conn,$file,"header");
+$send = get_field_from_sql($conn,$file,"send");
+$stop = get_field_from_sql($conn,$file,"stop");
+ 
+
 ?>
 
 <!DOCTYPE html>
@@ -64,7 +75,7 @@ $valCalib = getSpindleCalibration($conn, $iSpindleID );
 
 <script type="text/javascript">
     function target_popup(form) {
-        window.alert('Aktualisiere Kalibrierung in Datenbank');
+        window.alert('<?php echo $window_alert_update; ?>');
     }
 </script>
 
@@ -72,7 +83,7 @@ $valCalib = getSpindleCalibration($conn, $iSpindleID );
 
 <body bgcolor="#E6E6FA">
 <form name="main" action="<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method="post">
-<h1>Kalibrierung fuer Spindel: <?php echo $iSpindleID."_".$valCalib[4] ?></h1>
+<h1><?php echo $header.' '.$iSpindleID."_".$valCalib[4] ?></h1>
 
 <div id="Calibrate">
 <?php
@@ -90,11 +101,11 @@ $const3=$valCalib[3];
 }
 ?>
 
-<p><b>Konstanten eingeben :</b><br/>
+<p><b><?php echo $enter_constants ?></b><br/>
 <br/>
-Konstante 1: <input type = "number" name = "const1" step = "0.000000001" value = <?php echo $const1 ?> />
-Konstante 2: <input type = "number" name = "const2" step = "0.000000001" value = <?php echo $const2 ?> />
-Konstante 3: <input type = "number" name = "const3" step = "0.000000001" value = <?php echo $const3 ?> />
+<?php echo $constant1 ?> <input type = "number" name = "const1" step = "0.000000001" value = <?php echo $const1 ?> />
+<?php echo $constant2 ?> <input type = "number" name = "const2" step = "0.000000001" value = <?php echo $const2 ?> />
+<?php echo $constant3 ?> <input type = "number" name = "const3" step = "0.000000001" value = <?php echo $const3 ?> />
 <input type = "hidden" name="Is_Calib" value= <?php echo $valCalib[0] ?>>
 <input type = "hidden" name="ID" value= <?php echo $valCalib[4] ?>>
 <input type = "hidden" name="Name" value= <?php echo $iSpindleID ?>>
@@ -103,6 +114,6 @@ Konstante 3: <input type = "number" name = "const3" step = "0.000000001" value =
 </p>
 </div>
 
-<input type = "submit" name = "Go" value = "Kalibrierung an DB senden" onclick="target_popup(this)">
-<input type = "submit" name = "Stop" value = "Abbrechen">
+<input type = "submit" name = "Go" value = "<?php echo $send ?>" onclick="target_popup(this)">
+<input type = "submit" name = "Stop" value = "<?php echo $stop ?>">
 <br />
