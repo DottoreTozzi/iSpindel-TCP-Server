@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: db
--- Erstellungszeit: 22. Jan 2019 um 07:02
+-- Erstellungszeit: 23. Jan 2019 um 16:27
 -- Server-Version: 10.3.11-MariaDB-1:10.3.11+maria~bionic
 -- PHP-Version: 7.2.8
 
@@ -67,7 +67,7 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`) VALU
 ('calibration', 'window_alert_update', 'Kalibrierung an Datenbank gesendet!', 'Calibration was send to database!'),
 ('diagram', 'header_no_data_1', 'Keine Daten von', 'No data from'),
 ('diagram', 'header_no_data_2', 'in diesem Zeitraum. Bitte noch weitere', 'from this timeframe. Please go'),
-('diagram', 'header_no_data_3', 'Tage zurueckgehen.', 'more days back.'),
+('diagram', 'header_no_data_3', 'Tage zurückgehen.', 'more days back.'),
 ('diagram', 'not_calibrated', 'ist nicht kalibriert.', 'is not calibrated.'),
 ('diagram', 'recipe_name', 'Sudname:', 'Recipe:'),
 ('diagram', 'timetext_days', 'Tag(e), ', 'day(s), '),
@@ -110,11 +110,15 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`) VALU
 ('plato4_delta', 'timetext', 'Temperatur und Delta Extraktgehalt der letzten', 'Temperature and delta extract of the last '),
 ('plato4_delta', 'timetext_reset', 'Temperatur und Delta Extraktgehalt seit dem letzten Reset: ', 'Temperature and delta extract since last reset: '),
 ('plato4_delta', 'x_axis', 'Datum / Uhrzeit', 'Date / Time'),
-('plato4_ma', 'first_y', 'Extrakt % w/w (geglaettet)', 'Extract % w/w (moving average)'),
+('plato4_ma', 'first_y', 'Extrakt % w/w (geglättet)', 'Extract % w/w (moving average)'),
 ('plato4_ma', 'second_y', 'Temperatur', 'Temperature'),
 ('plato4_ma', 'timetext', 'Temperatur und Extraktgehalt der letzten', 'Temperature and extract of the last '),
 ('plato4_ma', 'timetext_reset', 'Temperatur und Extraktgehalt seit dem letzten Reset: ', 'Temperature and extract since last reset: '),
 ('plato4_ma', 'x_axis', 'Datum / Uhrzeit', 'Date / Time'),
+('reset_now', 'error_read_id', 'Fehler beim Lesen der Spindel ID', 'Cannot read Spindle ID from Database'),
+('reset_now', 'error_write', 'Fehler beim Insert', 'Cannot insert reset into Database'),
+('reset_now', 'recipe_written', 'Sudname in Datenbank eingetragen:', 'Recipe name added to database:'),
+('reset_now', 'reset_written', 'Reset-Timestamp in Datenbank eingetragen', 'Reset-Timestamp added to database'),
 ('settings', 'description', 'Beschreibung', 'Description'),
 ('settings', 'problem', 'Probleme beim Schreiben der Settings', 'Problem with writing settings'),
 ('settings', 'select_section', 'Section Auswahl', 'Select Section'),
@@ -127,12 +131,12 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`) VALU
 ('status', 'header_angle', 'Winkel', 'Angle'),
 ('status', 'header_battery', 'Akku', 'Battery'),
 ('status', 'header_temperature', 'Temperatur', 'Temperature'),
-('svg_ma', 'first_y', 'Scheinbarer Vergaerungsgrad %', 'Apparent attentuation %'),
+('svg_ma', 'first_y', 'Scheinbarer Vergärungsgrad %', 'Apparent attentuation %'),
 ('svg_ma', 'second_y', 'Temperatur', 'Temperature'),
-('svg_ma', 'timetext', 'Temperatur und scheinbarer Vergaerungsgrad der letzten', 'Temperature and extract of the last '),
-('svg_ma', 'timetext_reset', 'Temperatur und scheinbarer Vergaerungsgrad seit dem letzten Reset: ', 'Temperature and apparent attenuation since last reset: '),
+('svg_ma', 'timetext', 'Temperatur und scheinbarer Vergärungsgrad der letzten', 'Temperature and extract of the last '),
+('svg_ma', 'timetext_reset', 'Temperatur und scheinbarer Vergärungsgrad seit dem letzten Reset: ', 'Temperature and apparent attenuation since last reset: '),
 ('svg_ma', 'x_axis', 'Datum / Uhrzeit', 'Date / Time'),
-('wifi', 'header', 'Aktuelle WiFi Empfangsqualitaet: ', 'Current Wifi reception: ');
+('wifi', 'header', 'Aktuelle WiFi Empfangsqualität:', 'Current Wifi reception: ');
 
 --
 -- Indizes der exportierten Tabellen

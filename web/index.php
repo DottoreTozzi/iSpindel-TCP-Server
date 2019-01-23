@@ -130,6 +130,7 @@ error_reporting(E_ALL | E_STRICT);
     <title>RasPySpindel Homepage</title>
     <meta name="Keywords" content="iSpindle, iSpindel, Chart, genericTCP, Select">
     <meta name="Description" content="iSpindle Fermentation Chart Selection Screen">
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8"> 
 
 <script type="text/javascript">
     function einblenden(){

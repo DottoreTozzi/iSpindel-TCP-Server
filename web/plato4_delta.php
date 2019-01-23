@@ -52,7 +52,12 @@ $header_no_data_2 = get_field_from_sql($conn,'diagram',"header_no_data_2");
 $header_no_data_3 = get_field_from_sql($conn,'diagram',"header_no_data_3");
 $not_calibrated = get_field_from_sql($conn,'diagram',"not_calibrated");
 
-$Header=$_GET['name'].' | ' . $recipe_name .' ' . $RecipeName;
+if ($RecipeName <> '') {
+    $Header=$_GET['name'].' | ' . $recipe_name .' ' . $RecipeName;
+    }
+else {
+    $Header=$_GET['name'];
+    }
 
 
 if (!$_GET['reset'])

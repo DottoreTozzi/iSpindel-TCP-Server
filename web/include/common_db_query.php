@@ -28,6 +28,7 @@ Return of variables changed for all functions that return x/y diagram data. Reci
 
 function get_field_from_sql($conn, $file, $field)
 {
+    mysqli_set_charset($conn, "utf8");
     $sql_language = mysqli_query($conn, "SELECT value FROM Settings WHERE Section = 'GENERAL' AND Parameter = 'LANGUAGE'") or die(mysqli_error($conn));
     $LANGUAGE = mysqli_fetch_array($sql_language);
     $DESCRIPTION = "Description_".$LANGUAGE[0];
@@ -40,7 +41,7 @@ function get_field_from_sql($conn, $file, $field)
         if ($return_value == '') {
             $return_value = 'No description in your Language. Please Edit Strings table.';
             }
-        return htmlentities($return_value, ENT_COMPAT,'ISO-8859-1', true);
+        return $return_value;
         }
     else {
         return 'No Parameter in Database';

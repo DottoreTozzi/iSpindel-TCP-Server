@@ -19,7 +19,7 @@ list($time, $temperature, $angle, $battery, $interval, $rssi) = getCurrentValues
 
 $file = "wifi";
 $header = get_field_from_sql($conn,$file,"header");
-
+$header = $header . ' ' . $_GET['name'];
 
 ?>
 
@@ -28,11 +28,14 @@ $header = get_field_from_sql($conn,$file,"header");
 <head>
   <title>iSpindle Current Data</title>
   <meta http-equiv="refresh" content="120">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" /> 
   <meta name="Keywords" content="iSpindle, iSpindel, status, current, genericTCP">
   <meta name="Description" content="iSpindle Current Status">
   <script src="include/jquery-3.1.1.min.js"></script>
+  <script type="text/javascript">
 
-<script type="text/javascript">
+
+
 $(function () 
 {
   var chart_battery;
@@ -52,7 +55,7 @@ $(function ()
       },
       title: 
       {
-        text: '<?php echo $header;?> <?php echo $_GET['name'];?>'
+        text: '<?php echo $header;?>'
       },
 
       pane: {

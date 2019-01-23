@@ -56,7 +56,12 @@ $header_no_data_2 = get_field_from_sql($conn,'diagram',"header_no_data_2");
 $header_no_data_3 = get_field_from_sql($conn,'diagram',"header_no_data_3");
 $not_calibrated = get_field_from_sql($conn,'diagram',"not_calibrated");
 
-$Header=$_GET['name'].' | ' . $recipe_name .' ' . $RecipeName;
+if ($RecipeName <> '') {
+    $Header=$_GET['name'].' | ' . $recipe_name .' ' . $RecipeName;
+    }
+else {
+    $Header=$_GET['name'];
+    }
 
 
 if (!$_GET['reset'])
@@ -197,7 +202,7 @@ xAxis:
                 crosshairs: [true, true],
                 formatter: function() 
                 {
-                    if(this.series.name == first_y) {
+                    if(this.series.name == second_y) {
                         const pointData = chartTemp.find(row => row.timestamp === this.point.x)
                         return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y.toFixed(2) +'°C';
                     } else {

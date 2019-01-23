@@ -17,12 +17,21 @@ if(!isset($_GET['recipe'])) $_GET['recipe'] = ''; else $_GET['recipe'] = $_GET['
 $Name = $_GET['name'];
 $Recipe = $_GET['recipe'];
 
+
+$file = "reset_now";
+$error_read_id = get_field_from_sql($conn,$file,"error_read_id");
+$enter_write = get_field_from_sql($conn,$file,"error_write");
+$reset_written = get_field_from_sql($conn,$file,"reset_written");
+$recipe_written = get_field_from_sql($conn,$file,"recipe_written");
+
+
+
 //depending on mysql config e.g. strivct mode, all values need to be transfered to DB and no empty values are allowed.
 //unique spindle id is pulled from DB and transferred for reset timestamp
 
 $q_sql0 = mysqli_query($conn, "SELECT DISTINCT ID FROM Data WHERE Name = '".$Name."'AND (ID <>'' OR ID <>'0') ORDER BY Timestamp DESC LIMIT 1") or die(mysqli_error($conn));  
 
-if (! $q_sql0){                                                                                                                                                                                                                                   echo "Fehler beim Lesen der ID";                                                                                                                                                                                                          }  
+if (! $q_sql0){                                                                                                                                                                                                                                   echo $error_read_id;                                                                                                                                                                                                          }  
 $valID='0';
   $rows = mysqli_num_rows($q_sql0);                                                                                                                                                                                                           
   if ($rows > 0)                                                                                                                                                                                                                              
@@ -36,13 +45,13 @@ $valID='0';
                        or die(mysqli_error($conn));
                        
 if (! $q_sql){
-   echo "Fehler beim Insert";
+   echo $error_write;
 }
 else {
-   echo "Reset-Timestamp in Datenbank eingetragen <br>";
+   echo $reset_written . " <br>";
 if ($Recipe <>'')
    {
-   echo "Sudname <b>$Recipe</b> in Datenbank eingetragen";
+   echo $recipe_written . " <b>" . $Recipe . "</b>";
    }
 }
 ?>

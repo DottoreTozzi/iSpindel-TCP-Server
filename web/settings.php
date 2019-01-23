@@ -51,6 +51,7 @@ if (isset($_POST['Go']))
         $current_section = $_POST['current_section'];
         $current_id = $_POST['current_id'];
         $sql_q = "SELECT * FROM Settings WHERE Description_DE <> '' AND Section = '" . $current_section . "' ORDER BY Parameter";
+        mysqli_set_charset($conn, "utf8");
         $result=mysqli_query($conn, $sql_q) or die(mysqli_error($conn));
         while($row = mysqli_fetch_assoc($result) ) {
             $section = $row['Section'];
@@ -69,16 +70,17 @@ if (isset($_POST['Go']))
         // open the page
         header("Location: ".$url);
     }
-
+    mysqli_set_charset($conn, "utf8");
     $sql_language = mysqli_query($conn, "SELECT value FROM Settings WHERE Section = 'GENERAL' AND Parameter = 'LANGUAGE'") or die(mysqli_error($conn));
     $LANGUAGE = mysqli_fetch_array($sql_language);
     $DESCRIPTION = "Description_".$LANGUAGE[0]; 
    
     $sql_q = "SELECT * FROM Settings WHERE Description_DE <> '' ORDER BY Section, Parameter";
-
+    mysqli_set_charset($conn, "utf8");
     $result=mysqli_query($conn, $sql_q) or die(mysqli_error($conn));
 
     $sql_q1 = "SELECT DISTINCT Section FROM Settings WHERE Description_DE <> ''";
+    mysqli_set_charset($conn, "utf8");
     $result1 = mysqli_query($conn, $sql_q1) or die(mysqli_error($conn));
     
     $sections = array(); 
@@ -155,7 +157,7 @@ echo "</tr>";
         echo "<tr>";
         echo "<td>" . $row['Parameter'] . "</td>";
         echo "<td><input type='text' name = '" . $row['Section'] . "_" . $row['Parameter'] . "' size='" . $InputWidth . "' required='required' value='" . $row['value']  . "'></td>";
-        echo "<td>" . htmlentities($row[$DESCRIPTION], ENT_COMPAT,'ISO-8859-1', true) . "</td>";
+        echo "<td>" . $row[$DESCRIPTION] . "</td>";
         echo "</tr>\n";
     }}
 echo "</table>";
