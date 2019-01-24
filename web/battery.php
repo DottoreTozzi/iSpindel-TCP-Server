@@ -16,6 +16,8 @@ if ((include_once '../config/common_db_config.php') == FALSE){
 if(!isset($_GET['name'])) $_GET['name'] = 'iSpindel000'; else $_GET['name'] = $_GET['name'];
 
 list($time, $temperature, $angle, $battery) = getCurrentValues($conn, $_GET['name']);
+
+// Get fields from database in language selected in settings
 $file = "battery";
 $header_battery = get_field_from_sql($conn,$file,"header_battery");
 $diagram_battery = get_field_from_sql($conn,$file,"diagram_battery");

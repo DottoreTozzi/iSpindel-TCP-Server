@@ -24,13 +24,29 @@ Nov 16 2018
 Function getcurrentrecipe rewritten: Recipe Name will be only returned if reset= true or timeframe < timeframe of last reset
 Return of variables changed for all functions that return x/y diagram data. Recipe name is added in array and returned to php script
 
+Jan 24 2019
+- Function added to update TCP Server settings in Database
+- Added ability to read field description from sql database for diefferent languages. can be easily expanded for more languages
+- Function to write calibration data back to databses added which is used by calibration.php. Usercan send calibration data through frontend and does not need to open phpadmin
+
  */
+
+// get despription fields from strings table in database.
+// Language setting from settings database is used to return field in corresponding language
+// e.e. Language = DE --> Description_DE column is selected
+// can be extended w/o change of php code. to add for instance french, add column Description_FR to settings and strings tables.
+// Add desriptions and set LANGUAGE in settings Database to FR
+// File is the file which is calling the function (has to be also used in the strings table)
+// field is the field for hich the description will be returned 
 
 function get_field_from_sql($conn, $file, $field)
 {
+// set connection to utf-8 to display characters like umlauts correctly    
     mysqli_set_charset($conn, "utf8");
+// query to get language setting
     $sql_language = mysqli_query($conn, "SELECT value FROM Settings WHERE Section = 'GENERAL' AND Parameter = 'LANGUAGE'") or die(mysqli_error($conn));
     $LANGUAGE = mysqli_fetch_array($sql_language);
+// choose corresponding description column for selected language
     $DESCRIPTION = "Description_".$LANGUAGE[0];
     $q_sql = "SELECT " . $DESCRIPTION . " FROM Strings WHERE File = '" . $file. "' and Field = '" . $field . "'";
     $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
@@ -51,6 +67,7 @@ function get_field_from_sql($conn, $file, $field)
 // Function to write iSpindel Server settings back to sql database. Function is used by settings.php
 function UpdateSettings($conn, $Section, $Parameter, $value)
 {
+// added to wite newline for csv file correctly to database    
     $value= str_replace('\\', '\\\\', $value);
     $q_sql = mysqli_query($conn, "UPDATE Settings SET value = '" . $value . "' WHERE Section = '" . $Section . "' AND Parameter = '" . $Parameter . "'") or die(mysqli_error($conn));
     return 1;
@@ -81,6 +98,7 @@ function isDataAvailable($conn, $iSpindleID, $Timeframehours)
 // Used in calibration.php Values for corresponding SpindleID will be either updated (if already in database) or added to table calibration in SQL database
 function setSpindleCalibration($conn, $ID, $Calibrated, $const1, $const2, $const3)
 {
+// if spindle is calibrated, fields only need to be updated. If not, we need to insert a new row to the calibration database
     if ($Calibrated) {
         $q_sql = mysqli_query($conn, "UPDATE Calibration SET const1 = '" . $const1 . "', const2 = '" . $const2 . "', const3 = '" . $const3 . "' WHERE ID = '" . $ID . "'") or die(mysqli_error($conn));
     } else {
@@ -184,7 +202,9 @@ function getCurrentRecipeName($conn, $iSpindleID = 'iSpindel000', $timeFrameHour
     }
 }
 
-// Get values from database for selected spindle, between now and timeframe in hours ago                                                                                                                                                      
+// Get calaculate initial gravity from database after last reset. First two hours after last reset will be used. 
+// This can be used to calculate apparent attenuation in svg_ma.php
+
 function getInitialGravity($conn, $iSpindleID = 'iSpindel000')
 {
     $isCalibrated = 0; // is there a calbration record for this iSpindle?
@@ -230,6 +250,7 @@ function getInitialGravity($conn, $iSpindleID = 'iSpindel000')
     }
 }
 
+// Get values from database for selected spindle, between now and timeframe in hours ago  
 function getChartValues($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $reset = defaultReset)
 {
     if ($reset) {

@@ -20,15 +20,17 @@ error_reporting(E_ALL | E_STRICT);
     // default 7 days is configured in include/common_db.php
     //
 	// December 2018:
-	// Database config parameters wiull be pulled from different directory. User can use personalized config file: common_db_config.php in config directory
+	// Database config parameters will be pulled from different directory. User can use personalized config file: common_db_config.php in config directory
 	// If personalized file does not exist, default config will be loaded: common_db_default.php
 	// Added function to display input field for Sudname on this page only if reset_now.php is selected
 	// If Sudname is entered, it is transferred to the database
 	// Added chart to display battery and Wifi strength trend
-    
+    //
+    // January 2019
+    // Added chart for apparent attenuation and delta trend for plato4
+    // Added support for different languages. Fields stroed in strings table in databse
+
     // Self-called by submit button?
-
-
     if (isset($_POST['Go']))
     {
 
@@ -51,6 +53,9 @@ error_reporting(E_ALL | E_STRICT);
         exit;
     }
 
+// Self-called by settings button
+// calls php script to change TCP-Server settings
+
     if (isset($_POST['Set']))
     {
 
@@ -65,13 +70,15 @@ error_reporting(E_ALL | E_STRICT);
     }
 
     
-    // Called from browser, showing form
+    // Loads personal config file for db connection details. If not found, default file will be used
     if ((include_once '../config/common_db_config.php') == FALSE){
        include_once("../config/common_db_default.php");
     
-}
- include_once("include/common_db_query.php");
+    }
+//  Loads db query functions
+include_once("include/common_db_query.php");
 
+// sql queries to get language dependent fields to be displayed
     $file = "index";
     $chart_filename_01 = get_field_from_sql($conn,$file,"chart_filename_01");
     $chart_filename_02 = get_field_from_sql($conn,$file,"chart_filename_02");
@@ -102,7 +109,7 @@ error_reporting(E_ALL | E_STRICT);
     $daysago = $_GET['days'];
     if($daysago == 0) $daysago = defaultDaysAgo;
 
-
+// get information if TCP server is running
     $pids=''; 
     $running=false;
     if (file_exists( "/var/run/ispindle-srv.pid" )) {
@@ -115,12 +122,9 @@ error_reporting(E_ALL | E_STRICT);
         $iSpindleServerRunning = $server_not_running;
     }
 
+// get all spindle names to be displayed in form
     $sql_q = "SELECT max(Timestamp), Name FROM Data GROUP BY Name";
-
-
     $result=mysqli_query($conn, $sql_q) or die(mysqli_error($conn));
-
-
  
 ?>
 
@@ -133,19 +137,21 @@ error_reporting(E_ALL | E_STRICT);
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8"> 
 
 <script type="text/javascript">
+// Function to hide or display elements. Used for recipe name. Only displayed if reset_now is selected in options
     function einblenden(){
         var select = document.getElementById('chart_filename').selectedIndex;
         if(select == 8 ) document.getElementById('ResetNow').style.display = "block";
         else document.getElementById('ResetNow').style.display = "none";        
     }
-
 </script>
+
 </head>
 <body bgcolor="#E6E6FA">
 <form name="main" action="<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method="post">
 <h1>RasPySpindel</h1>
 <h3><?php echo($diagram_selection .' '. $daysago)?></h3>
 
+<!-- select options for spindle names -->
 <select id="ispindel_name" name = 'ispindel_name'>
         <?php
             while($row = mysqli_fetch_assoc($result) )
@@ -159,7 +165,7 @@ error_reporting(E_ALL | E_STRICT);
         </option>
 </select>
 
-
+<!-- select options for diagrams to be loaded -->
 <select id="chart_filename" name='chart_filename' onchange="einblenden()">;
         <option value="status.php" selected><?php echo $chart_filename_01 ?></option>
         <option value="battery.php"><?php echo $chart_filename_02 ?></option>
@@ -205,4 +211,3 @@ error_reporting(E_ALL | E_STRICT);
 
         
 </form>
-

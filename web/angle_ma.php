@@ -10,7 +10,11 @@ error_reporting(E_ALL | E_STRICT);
 // weeks = days x 7
 // name = iSpindle name
 // moving = timeframe for moving average calculation
- 
+//
+// January 2019
+// Added support for different languages stored in strings table in database 
+
+
 // DB config values will be pulled from differtent location and user can personalize this file: common_db_config.php
 // If file does not exist, values will be pulled from default file
 
@@ -42,6 +46,7 @@ $tfhours = $tftemp;
 list($angle, $temperature) = getChartValues_ma($conn, $_GET['name'], $timeFrame, $_GET['moving'], $_GET['reset']);
 list($RecipeName, $show) = getCurrentRecipeName($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 
+// Get fields from database in language selected in settings
 $file = "angle_ma";
 $recipe_name = get_field_from_sql($conn,'diagram',"recipe_name");
 $first_y = get_field_from_sql($conn,$file,"first_y");
@@ -56,22 +61,38 @@ $header_no_data_1 = get_field_from_sql($conn,'diagram',"header_no_data_1");
 $header_no_data_2 = get_field_from_sql($conn,'diagram',"header_no_data_2");
 $header_no_data_3 = get_field_from_sql($conn,'diagram',"header_no_data_3");
 
+// define header displayed in diagram depending on value for recipe
 if ($RecipeName <> '') {
     $Header=$_GET['name'].' | ' . $recipe_name .' ' . $RecipeName;
     }
 else {
-    $Header=$_GET['name'];
+    $Header='iSpindel: ' . $_GET['name'];
     }
 
 
+// Header will show, that there is no data available, and displays timeframe user needs to go back to see data in diagram
 if (!$_GET['reset'])
 {
  $DataAvailable=isDataAvailable($conn, $_GET['name'], $timeFrame);
   if($DataAvailable[0]=='0')
   {
-   $Header=$header_no_data_1 . ' ' . $_GET['name']. ' ' . $header_no_data_2 . ' ' .$DataAvailable[1]. ' ' . $header_no_data_3;
+   $Header='iSpindel: ' . $header_no_data_1 . ' ' . $_GET['name']. ' ' . $header_no_data_2 . ' ' .$DataAvailable[1]. ' ' . $header_no_data_3;
   }
 }
+
+// define subheader to be displayed in diagram
+$timetext = $subheader . ' ';
+if($_GET['reset']) {
+    $timetext = $subheader_reset . ' ';
+    }
+if($tfweeks != 0) {
+    $timetext .= $tfweeks . ' ' . $subheader_weeks;
+    }
+if($tfdays != 0) {
+    $timetext .= $tfdays . ' ' . $subheader_days;
+    }
+$timetext .= $tfhours . ' ' . $subheader_hours;
+
 
 ?>
 
@@ -88,13 +109,16 @@ if (!$_GET['reset'])
 
 <script type="text/javascript">
 
+// define constants for data in chart. Allows for mor than two variables. Recipe information is included here and can be displayed in tooltip
 const chartAngle = [<?php echo $angle;?>]
 const chartTemp = [<?php echo $temperature;?>]
+// define constants to be displayed in diagram -> no php code needed in chart
 const recipe_name=[<?php echo "'".$recipe_name."'";?>]
 const first_y=[<?php echo "'".$first_y."'";?>]
 const second_y=[<?php echo "'".$second_y."'";?>]
 const x_axis=[<?php echo "'".$x_axis."'";?>]
-
+const chart_header=[<?php echo "'" . $Header . "'";?>]
+const chart_subheader=[<?php echo "'" . $timetext . "'";?>]
 
 $(function () 
 {
@@ -116,27 +140,10 @@ $(function ()
       },
       title: 
       {
-        text: 'iSpindel: <?php echo $Header;?>'
+        text: chart_header
       },
       subtitle: 
-      { text: ' <?php
-                  $timetext = $subheader . ' ';
-                  if($_GET['reset'])
-                  {
-                    $timetext = $subheader_reset . ' ';
-                  }
-                  if($tfweeks != 0)
-                  {
-                    $timetext .= $tfweeks . ' ' . $subheader_weeks;
-                  }
-                  if($tfdays != 0)
-                  {
-                    $timetext .= $tfdays . ' ' . $subheader_days;
-                  }
-                  $timetext .= $tfhours . ' ' . $subheader_hours;
-                  echo $timetext;
-
-                ?>'
+      { text: chart_subheader
       },
       xAxis: 
       {

@@ -6,7 +6,9 @@ if ((include_once '../config/common_db_config.php') == FALSE){
        include_once("../config/common_db_default.php");
      }
     include_once("include/common_db_query.php");
-    if (isset($_POST['Stop']))
+
+//go back to index page if back button is selected    
+if (isset($_POST['Stop']))
     {
         $url="http://";
         $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
@@ -16,7 +18,8 @@ if ((include_once '../config/common_db_config.php') == FALSE){
 
     }
 
-    if (isset($_POST['Go']))
+// if send button is selected send calibration values to database and reload page
+if (isset($_POST['Go']))
     {
         $valconst1= $_POST["const1"];
         $valconst2= $_POST["const2"];
@@ -44,14 +47,16 @@ if ((include_once '../config/common_db_config.php') == FALSE){
  
     }
 
-// Check GET parametersi
+// Check GET parameters
 // Added parameter recipe to set recipe name at reset point. Recipe nam will be displayed in diagrams as header and in tooltip
 if(!isset($_GET['name'])) $_GET['name'] = 'iSpindel000'; else $_GET['name'] = $_GET['name'];
 
 $iSpindleID = $_GET['name'];
 
+//get current calibration values for iSpindelID
 $valCalib = getSpindleCalibration($conn, $iSpindleID );
 
+// Get fields from database in language selected in settings
 $file = "calibration";
 $window_alert_update = get_field_from_sql($conn,$file,"window_alert_update");
 $enter_constants = get_field_from_sql($conn,$file,"enter_constants");
@@ -106,6 +111,8 @@ $const3=$valCalib[3];
 <?php echo $constant1 ?> <input type = "number" name = "const1" step = "0.000000001" value = <?php echo $const1 ?> />
 <?php echo $constant2 ?> <input type = "number" name = "const2" step = "0.000000001" value = <?php echo $const2 ?> />
 <?php echo $constant3 ?> <input type = "number" name = "const3" step = "0.000000001" value = <?php echo $const3 ?> />
+
+<!-- hidden fields. Information required to write back calibration data for corresponding spindel-->
 <input type = "hidden" name="Is_Calib" value= <?php echo $valCalib[0] ?>>
 <input type = "hidden" name="ID" value= <?php echo $valCalib[4] ?>>
 <input type = "hidden" name="Name" value= <?php echo $iSpindleID ?>>

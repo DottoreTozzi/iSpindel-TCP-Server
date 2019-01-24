@@ -3,6 +3,10 @@
 // Show battery status as a chart
 // GET Parameters:
 // name = iSpindle name
+//
+// January 2019
+// Added support for differnet languages that are pulled from strings table in database
+
 
 // DB config values will be pulled from differtent location and user can personalize this file: common_db_config.php
 // If file does not exist, values will be pulled from default file
@@ -17,6 +21,8 @@ if(!isset($_GET['name'])) $_GET['name'] = 'iSpindel000'; else $_GET['name'] = $_
 
 list($time, $temperature, $angle, $battery) = getCurrentValues($conn, $_GET['name']);
 
+
+// get description for fields in corresponding language
 $file = "status";
 $header_battery = get_field_from_sql($conn,$file,"header_battery");
 $header_temperature = get_field_from_sql($conn,$file,"header_temperature");
@@ -41,8 +47,6 @@ $diagram_angle = get_field_from_sql($conn,$file,"diagram_angle");
 const dia_battery=[<?php echo "'".$diagram_battery."'";?>]
 const dia_temperature=[<?php echo "'".$diagram_temperature."'";?>]
 const dia_angle=[<?php echo "'".$diagram_angle."'";?>]
-
-
 
 $(function () 
 {

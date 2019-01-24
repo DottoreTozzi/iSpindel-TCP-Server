@@ -17,6 +17,7 @@ if(!isset($_GET['name'])) $_GET['name'] = 'iSpindel000'; else $_GET['name'] = $_
 
 list($time, $temperature, $angle, $battery, $interval, $rssi) = getCurrentValues2($conn, $_GET['name']);
 
+// Get fields from database in language selected in settings
 $file = "wifi";
 $header = get_field_from_sql($conn,$file,"header");
 $header = $header . ' ' . $_GET['name'];
