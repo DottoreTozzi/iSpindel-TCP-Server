@@ -49,6 +49,8 @@ $subheader_hours = get_field_from_sql($conn,'diagram',"timetext_hours");
 $header_no_data_1 = get_field_from_sql($conn,'diagram',"header_no_data_1");
 $header_no_data_2 = get_field_from_sql($conn,'diagram',"header_no_data_2");
 $header_no_data_3 = get_field_from_sql($conn,'diagram',"header_no_data_3");
+$tooltip_at = get_field_from_sql($conn,'diagram',"tooltip_at");
+$tooltip_time = get_field_from_sql($conn,'diagram',"tooltip_time");
 
 // define header displayed in diagram depending on value for recipe
 if ($RecipeName <> '') {
@@ -107,6 +109,8 @@ const second_y=[<?php echo "'".$second_y."'";?>]
 const x_axis=[<?php echo "'".$x_axis."'";?>]
 const chart_header=[<?php echo "'" . $Header . "'";?>]
 const chart_subheader=[<?php echo "'" . $timetext . "'";?>]
+const tooltip_at=[<?php echo "'".$tooltip_at."'";?>]
+const tooltip_time=[<?php echo "'".$tooltip_time."'";?>]
 
 $(function () 
 {
@@ -193,10 +197,10 @@ $(function ()
                 {
                     if(this.series.name == second_y) {
                         const pointData = chartTemp.find(row => row.timestamp === this.point.x)
-                        return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y.toFixed(2) +'°C';
+                        return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x)) + ' ' + tooltip_time + ' ' + this.y.toFixed(2) +'°C';
                     } else {
                         const pointData = chartDens.find(row => row.timestamp === this.point.x)
-                        return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y.toFixed(2) +'%';
+                        return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x))  + ' ' + tooltip_time + ' ' + this.y.toFixed(2) +'%';
                     }
                 }
             },  

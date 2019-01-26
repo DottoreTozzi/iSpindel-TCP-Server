@@ -669,30 +669,36 @@ function getChartValuesPlato4_ma($conn, $iSpindleID = 'iSpindel000', $timeFrameH
     }
 }
 
+// calculate apparent attenuation and alcohol by volume over time
+// formulars were taken from http://fabier.de/biercalcs.html and https://brauerei.mueggelland.de/refracto.html
+// only available with start from last reset
 function getChartValuesSVG_ma($conn, $iSpindleID = 'iSpindel000', $movingtime)
 {
     $isCalibrated = 0; // is there a calbration record for this iSpindle?
     $valAngle = '';
     $valTemperature = '';
     $valSVG = '';
+    $valABV = '';
     $const1 = 0;
     $const2 = 0;
     $const3 = 0;
     $where_ma = '';
 
+// get current interval for spindel to derive required rows for calculation if initial gravity
     $Interval = (getCurrentInterval($conn, $iSpindleID));
     $Rows = round($movingtime / ($Interval / 60));
     list($isCalibrated, $InitialGravity) = (getInitialGravity($conn, $iSpindleID));
 
-        $where = "Data.Timestamp >= (Select max(Timestamp) FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.ResetFlag = true)";
+// use moving average when retrieving data from database
+        $where = "Data.Timestamp > (Select max(Timestamp) FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.ResetFlag = true)";
         $where_oldDB = "WHERE Data1.Name = '" . $iSpindleID . "'
-                                                AND Data1.Timestamp >= (Select max(Timestamp) FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.ResetFlag = true)";
-        $where_ma = "Data2.Timestamp >= (Select max(Data2.Timestamp) FROM Data AS Data2  WHERE Data2.ResetFlag = true AND Data2.Name = '" . $iSpindleID . "') AND";
-
+                                                AND Data1.Timestamp > (Select max(Timestamp) FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.ResetFlag = true)";
+        $where_ma = "Data2.Timestamp > (Select max(Data2.Timestamp) FROM Data AS Data2  WHERE Data2.ResetFlag = true AND Data2.Name = '" . $iSpindleID . "') AND";
+// test if windows functions are working (way faster but only available in newer SQL installations)
     if (!$q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data.Timestamp) as unixtime, Data.temperature, Data.angle, Data.recipe,
                                 AVG(Data.Angle) OVER (ORDER BY Data.Timestamp ASC ROWS " . $Rows . " PRECEDING) AS mv_angle
                                 FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND " . $where)) {
-
+// if winows finctions are not working, use 'manual' calculation of moving average
         $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data1.Timestamp) as unixtime, Data1.temperature, Data1.angle, Data1.recipe,
                                 (SELECT SUM(Data2.Angle) / COUNT(Data2.Angle)
                                                                 FROM Data AS Data2
@@ -725,13 +731,21 @@ function getChartValuesSVG_ma($conn, $iSpindleID = 'iSpindel000', $movingtime)
         while ($r_row = mysqli_fetch_array($q_sql)) {
             $jsTime = $r_row['unixtime'] * 1000;
             $angle = $r_row['mv_angle'];
+            // calulcation aparent density based on calibration data
             $dens = $const1 * pow($angle, 2) + $const2 * $angle + $const3; // complete polynome from database
+            // real density differs fro aparent density
+            $real_dens = 0.1808 * $InitialGravity + 0.8192 * $dens;
+            // calculte apparent attenuation
             $SVG = ($InitialGravity-$dens)*100/$InitialGravity;   
-
+            // calculate alcohol by weigth and by volume (fabbier calcfabbier calc for link see above)
+            $alcohol_by_weight = ( 100 * ($real_dens - $InitialGravity) / (1.0665 * $InitialGravity - 206.65));
+            $alcohol_by_volume = ($alcohol_by_weight / 0.795);
+            // append values to csv list
             $valAngle .= '[' . $jsTime . ', ' . $angle . '],';
             $valSVG .= '{ timestamp: ' . $jsTime . ', value: ' . $SVG . ", recipe: \"" . $r_row['recipe'] . "\"},";
             $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
-
+            $valABV .= '{ timestamp: ' . $jsTime . ', value: ' . $alcohol_by_volume . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            
 
         }
 
@@ -739,7 +753,8 @@ function getChartValuesSVG_ma($conn, $iSpindleID = 'iSpindel000', $movingtime)
             $isCalibrated,
             $valSVG,
             $valTemperature,
-            $valAngle
+            $valAngle,
+            $valABV
         );
     }
 }

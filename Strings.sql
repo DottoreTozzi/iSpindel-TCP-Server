@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: db
--- Erstellungszeit: 23. Jan 2019 um 16:27
+-- Erstellungszeit: 26. Jan 2019 um 16:33
 -- Server-Version: 10.3.11-MariaDB-1:10.3.11+maria~bionic
 -- PHP-Version: 7.2.8
 
@@ -73,6 +73,8 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`) VALU
 ('diagram', 'timetext_days', 'Tag(e), ', 'day(s), '),
 ('diagram', 'timetext_hours', 'Stunde(n).', 'Hour(s).'),
 ('diagram', 'timetext_weeks', 'Woche(n), ', 'Week(s), '),
+('diagram', 'tooltip_at', 'um', 'at'),
+('diagram', 'tooltip_time', 'Uhr:', ':'),
 ('index', 'chart_filename_01', 'Status (Batterie, Winkel, Temperatur)', 'Show Status (Battery, Angle, Temperature)'),
 ('index', 'chart_filename_02', 'Batteriezustand', 'Show Battery Condition'),
 ('index', 'chart_filename_03', 'Netzwerk Empfangsqualität', 'Show WiFi quality'),
@@ -131,8 +133,9 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`) VALU
 ('status', 'header_angle', 'Winkel', 'Angle'),
 ('status', 'header_battery', 'Akku', 'Battery'),
 ('status', 'header_temperature', 'Temperatur', 'Temperature'),
-('svg_ma', 'first_y', 'Scheinbarer Vergärungsgrad %', 'Apparent attentuation %'),
+('svg_ma', 'first_y', 'Scheinbarer Vergärungsgrad (%)', 'Apparent attentuation (%)'),
 ('svg_ma', 'second_y', 'Temperatur', 'Temperature'),
+('svg_ma', 'third_y', 'Alkohol (Vol. %)', 'ABV (%)'),
 ('svg_ma', 'timetext', 'Temperatur und scheinbarer Vergärungsgrad der letzten', 'Temperature and extract of the last '),
 ('svg_ma', 'timetext_reset', 'Temperatur und scheinbarer Vergärungsgrad seit dem letzten Reset: ', 'Temperature and apparent attenuation since last reset: '),
 ('svg_ma', 'x_axis', 'Datum / Uhrzeit', 'Date / Time'),

@@ -38,7 +38,7 @@ $maxTemp = 30;
 $mindens = 0;
 $maxdens = 20;
                                                    
-list($isCalib, $SVG, $temperature, $angle) = getChartValuesSVG_ma($conn, $_GET['name'], $_GET['moving']);
+list($isCalib, $SVG, $temperature, $angle, $ABV) = getChartValuesSVG_ma($conn, $_GET['name'], $_GET['moving']);
 list($RecipeName, $show) = getCurrentRecipeName($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 
 // Get fields from database in language selected in settings
@@ -56,6 +56,11 @@ $header_no_data_1 = get_field_from_sql($conn,'diagram',"header_no_data_1");
 $header_no_data_2 = get_field_from_sql($conn,'diagram',"header_no_data_2");
 $header_no_data_3 = get_field_from_sql($conn,'diagram',"header_no_data_3");
 $not_calibrated = get_field_from_sql($conn,'diagram',"not_calibrated");
+$tooltip_at = get_field_from_sql($conn,'diagram',"tooltip_at");
+$tooltip_time = get_field_from_sql($conn,'diagram',"tooltip_time");
+$third_y = get_field_from_sql($conn,$file,"third_y");
+
+
 
 // define header displayed in diagram depending on value for recipe
 if ($RecipeName <> '') {
@@ -107,13 +112,17 @@ $timetext .= $tfhours . ' ' . $subheader_hours;
 // define constants for data in chart. Allows for mor than two variables. Recipe information is included here and can be displayed in tooltip
 const chartSVG=[<?php echo $SVG;?>]
 const chartTemp=[<?php echo $temperature;?>]
+const chartABV=[<?php echo $ABV;?>]
 // define constants to be displayed in diagram -> no php code needed in chart
 const recipe_name=[<?php echo "'".$recipe_name."'";?>]
 const first_y=[<?php echo "'".$first_y."'";?>]
 const second_y=[<?php echo "'".$second_y."'";?>]
+const third_y=[<?php echo "'".$third_y."'";?>]
 const x_axis=[<?php echo "'".$x_axis."'";?>]
 const chart_header=[<?php echo "'" . $Header . "'";?>]
 const chart_subheader=[<?php echo "'" . $timetext . "'";?>]
+const tooltip_at=[<?php echo "'".$tooltip_at."'";?>]
+const tooltip_time=[<?php echo "'".$tooltip_time."'";?>]
 
 $(function () 
 {
@@ -166,18 +175,15 @@ $(function ()
                     title:
                     {
                         text: first_y
-                    },
+                    }, 
                     labels:
                     {
-                        align: 'left',
-                        x: 3,
-                        y: 16,
                         formatter: function()
                         {
                             return this.value + '%'
                         }
                     },
-                    showFirstLabel: false
+                    opposite: true
                     },{
                     // linkedTo: 0,
                     startOnTick: false,
@@ -190,7 +196,7 @@ $(function ()
                         text: second_y
                     },
                     labels: {
-                        align: 'right',
+                        align: 'left',
                         x: -3,
                         y: 16,
                         formatter: function() 
@@ -198,7 +204,25 @@ $(function ()
                             return this.value +'°C'
                         }
                     },
-                    showFirstLabel: false
+                    opposite: false
+                },
+                {
+                    startOnTick: false,
+                    endOnTick: false,
+                    min: 0,
+                    max: 20,
+                    title:
+                    {
+                        text: third_y
+                    }, 
+                    labels:
+                    {
+                        formatter: function()
+                        {
+                            return this.value + '%'
+                        }
+                    },
+                    opposite: true
                 }
             ],
             tooltip:
@@ -208,10 +232,15 @@ $(function ()
                 {
                     if(this.series.name == second_y) {
                         const pointData = chartTemp.find(row => row.timestamp === this.point.x)
-                        return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y.toFixed(2) +'°C';
-                    } else {
+                        return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x)) + ' ' + tooltip_time + ' ' + this.y.toFixed(2) +'°C';
+                    } 
+                    if(this.series.name == first_y) {
                         const pointData = chartSVG.find(row => row.timestamp === this.point.x)
-                        return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y.toFixed(2) +'%';
+                        return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x))  + ' ' + tooltip_time + ' ' + this.y.toFixed(2) +'%';
+                    }
+                    if(this.series.name == third_y) {
+                        const pointData = chartABV.find(row => row.timestamp === this.point.x)
+                        return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x))  + ' ' + tooltip_time + ' ' + this.y.toFixed(2) +'%';
                     }
                 }
             },  
@@ -263,8 +292,27 @@ $(function ()
                                 }
                             }
                         }
-
+                },
+                {   name: third_y,
+                    yAxis: 2,
+                    color: '#00FF00',
+                    data: chartABV.map(row => [row.timestamp, row.value]),
+                    marker:
+                    {
+                        symbol: 'square',
+                        enabled: false,
+                        states:
+                        {
+                            hover:
+                            {
+                                symbol: 'square',
+                                enabled: true,
+                                radius: 8
+                            }
+                        }
+                    }
                 }
+
             ] //series      
             });
     }
