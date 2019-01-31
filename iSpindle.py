@@ -134,12 +134,12 @@ HOST = get_config_from_sql('GENERAL', 'HOST')  # Allowed IP range. Leave at 0.0.
 CSV = int(get_config_from_sql('CSV', 'ENABLE_CSV'))  # Set to 1 if you want CSV (text file) output
 OUTPATH = get_config_from_sql('CSV', 'OUTPATH')  # CSV output file path; filename will be name_id.csv
 DELIMITER = get_config_from_sql('CSV', 'DELIMITER')  # CSV delimiter (normally use ; for Excel)
-NEWLINE =  get_config_from_sql('CSV', 'NEWLINE')  # newline (\r\n for windows clients)
+NEWLINE = get_config_from_sql('CSV', 'NEWLINE')  # newline (\r\n for windows clients)
 DATETIME = int(get_config_from_sql('CSV', 'DATETIME'))  # Leave this at 1 to include Excel compatible timestamp in CSV
 
 # Ubidots (using existing account)
 UBIDOTS = int(get_config_from_sql('UBIDOTS', 'ENABLE_UBIDOTS'))  # 1 to enable output to ubidots
-UBI_USE_ISPINDLE_TOKEN = get_config_from_sql('UBIDOTS', 'UBI_USE_ISPINDLE_TOKEN')  # 1 to use "token" field in iSpindle config (overrides UBI_TOKEN)
+UBI_USE_ISPINDLE_TOKEN = int(get_config_from_sql('UBIDOTS', 'UBI_USE_ISPINDLE_TOKEN'))  # 1 to use "token" field in iSpindle config (overrides UBI_TOKEN)
 UBI_TOKEN = get_config_from_sql('UBIDOTS', 'UBI_TOKEN')  # global ubidots token, see manual or ubidots.com
 
 # Forward to public server or other relay (i.e. another instance of this script)
@@ -149,8 +149,8 @@ FORWARDPORT =  int(get_config_from_sql('FORWARD', 'FORWARDPORT'))
 
 
 # Fermentrack
-FERMENTRACK =  int(get_config_from_sql('FERMENTRACK', 'ENABLE_FERMENTRACK'))
-FERM_USE_ISPINDLE_TOKEN = get_config_from_sql('FERMENTRACK', 'FERM_USE_ISPINDLE_TOKEN')
+FERMENTRACK = int(get_config_from_sql('FERMENTRACK', 'ENABLE_FERMENTRACK'))
+FERM_USE_ISPINDLE_TOKEN = int(get_config_from_sql('FERMENTRACK', 'FERM_USE_ISPINDLE_TOKEN'))
 FERMENTRACKADDR = get_config_from_sql('FERMENTRACK', 'FERMENTRACKADDR')
 FERMENTRACK_TOKEN = get_config_from_sql('FERMENTRACK', 'FERMENTRACK_TOKEN')
 FERMENTRACKPORT = int(get_config_from_sql('FERMENTRACK', 'FERMENTRACKPORT'))
