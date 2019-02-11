@@ -89,6 +89,7 @@ $stop = get_field_from_sql($conn,$file,"stop");
 <html>
 <head>
 
+    <meta charset="utf-8">
     <title>RasPySpindel Kalibrierung</title>
     <meta name="Keywords" content="iSpindle, iSpindel, Chart, genericTCP, Select">
     <meta name="Description" content="iSpindle Fermentation Chart Selection Screen">

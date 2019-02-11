@@ -111,6 +111,7 @@ if (isset($_POST['Go']))
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
     <title>RasPySpindel Settings</title>
     <meta name="Keywords" content="iSpindle, iSpindel, Chart, genericTCP, Select">
     <meta name="Description" content="iSpindle Fermentation Chart Selection Screen">
