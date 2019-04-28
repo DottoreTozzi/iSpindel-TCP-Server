@@ -1,4 +1,10 @@
 <?php
+// April 2019
+// Added selection for spindel that has to be calibrated to this script
+//
+// December 2018
+// Initial script
+
 // DB config values will be pulled from differtent location and user can personalize this file: common_db_config.php
 // If file does not exist, values will be pulled from default file
 
@@ -39,7 +45,7 @@ if (isset($_POST['Go']))
             $url="http://";
             $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
             $url .= "calibration.php";
-            $url .= "?name=" . $_POST["Name"]; 
+            $url .= "?name=" . $_POST["current_id"]; 
             // open the page
             header("Location: ".$url);
 
@@ -49,12 +55,22 @@ if (isset($_POST['Go']))
 
 // Check GET parameters
 // Added parameter recipe to set recipe name at reset point. Recipe nam will be displayed in diagrams as header and in tooltip
-if(!isset($_GET['name'])) $_GET['name'] = 'iSpindel000'; else $_GET['name'] = $_GET['name'];
+if(!isset($_GET['name'])) $_GET['name'] = '0'; else $_GET['name'] = $_GET['name'];
 
-$iSpindleID = $_GET['name'];
+$current_spindle = $_GET['name'];
 
+$sql_q = "SELECT max(Timestamp), Name FROM Data GROUP BY Name";
+    $result=mysqli_query($conn, $sql_q) or die(mysqli_error($conn));
+
+    $spindle_list = array();
+    while($row_s = mysqli_fetch_assoc($result) ) {
+    $spindle_list[] = $row_s['Name'];
+    }
+
+$iSpindleID=$spindle_list[$_GET['name']];
 //get current calibration values for iSpindelID
 $valCalib = getSpindleCalibration($conn, $iSpindleID );
+
 
 // Get fields from database in language selected in settings
 $file = "calibration";
@@ -66,7 +82,6 @@ $constant3 = get_field_from_sql($conn,$file,"constant3");
 $header = get_field_from_sql($conn,$file,"header");
 $send = get_field_from_sql($conn,$file,"send");
 $stop = get_field_from_sql($conn,$file,"stop");
- 
 
 ?>
 
@@ -82,6 +97,19 @@ $stop = get_field_from_sql($conn,$file,"stop");
     function target_popup(form) {
         window.alert('<?php echo $window_alert_update; ?>');
     }
+
+// function to reload page when section is changed -> different section parameters will be displayed and can be changed
+    function reload_page() {
+        var iSpindleID = document.getElementById('ispindel_name').selectedIndex;
+        var variable = '?name='.concat(iSpindleID);
+        var url = "http://";
+        var server = window.location.hostname;
+        var path = window.location.pathname;
+        var full_path = url.concat(server).concat(path).concat(variable);
+        window.open(full_path,"_self");
+    }
+
+
 </script>
 
 </head>
@@ -106,6 +134,31 @@ $const3=$valCalib[3];
 }
 ?>
 
+<!-- select options for spindle names -->
+<select id="ispindel_name" name = 'ispindel_name' onchange="reload_page()">
+        <?php
+            $i = 0;
+            $max = count ($spindle_list);
+            while($i < $max ) {
+                if ($i <> $_GET['name']) {
+                    echo'<option value = "' . $spindle_list[$i].'" name = "' . $spindle_list[$i].'">';
+                    echo($spindle_list[$i]);
+                    echo"</option>\n";
+                }
+                else {
+                    echo'<option value = "' . $spindle_list[$i] .'" selected name = "' . $spindle_list[$i].'">';
+                    echo($spindle_list[$i]);
+                    echo"</option>\n";
+                }
+            $i = ++$i;
+            }
+        ?>
+
+
+        </option>
+</select>
+
+
 <p><b><?php echo $enter_constants ?></b><br/>
 <br/>
 <?php echo $constant1 ?> <input type = "number" name = "const1" step = "0.000000001" value = <?php echo $const1 ?> />
@@ -116,6 +169,9 @@ $const3=$valCalib[3];
 <input type = "hidden" name="Is_Calib" value= <?php echo $valCalib[0] ?>>
 <input type = "hidden" name="ID" value= <?php echo $valCalib[4] ?>>
 <input type = "hidden" name="Name" value= <?php echo $iSpindleID ?>>
+<input type = "hidden" name="current_spindle" value="<?php echo $spindle_list[$_GET['name']]; ?>">
+<input type = "hidden" name="current_id" value="<?php echo $_GET['name']; ?>">
+
 
 <br/>
 </p>
@@ -124,3 +180,5 @@ $const3=$valCalib[3];
 <input type = "submit" name = "Go" value = "<?php echo $send ?>" onclick="target_popup(this)">
 <input type = "submit" name = "Stop" value = "<?php echo $stop ?>">
 <br />
+
+

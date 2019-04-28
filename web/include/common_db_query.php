@@ -13,6 +13,15 @@ Got rid of deprecated stuff, ready for Debian Stretch now.
 
 Tozzi (stephan@sschreiber.de), Nov 25 2017
 
+Apr 28 2019:
+Intruduced selects for handling of strings from database. This allows usage of multiple languages based on DB configuration
+Some changes required in the selects as UTF8mb4 encoding is required. Some tables parameters in the DB need to be changed to utf8mb4
+Implemented function for spindle calibration. Spindles can now be calibrated via web interface.
+Settings are now stored in the database and not in iSpindle.py. Some functions were added to change settings from web interface.
+Select for new diagram introduced: apparent attenuation and ABV calculation with time trend possible.
+Select for initial/original gravity added. Average of first two hours after reset for spindle are used to calculate OG
+Added select to calculate delta plato for a defined timeframe and display in a trendchart.
+
 Oct 14 2018:
 Added Moving Average Selects, thanks to nice job by mrhyde
 Minor fixes
@@ -42,7 +51,7 @@ Jan 24 2019
 function get_field_from_sql($conn, $file, $field)
 {
 // set connection to utf-8 to display characters like umlauts correctly    
-    mysqli_set_charset($conn, "utf8");
+    mysqli_set_charset($conn, "utf8mb4");
 // query to get language setting
     $sql_language = mysqli_query($conn, "SELECT value FROM Settings WHERE Section = 'GENERAL' AND Parameter = 'LANGUAGE'") or die(mysqli_error($conn));
     $LANGUAGE = mysqli_fetch_array($sql_language);
@@ -170,6 +179,7 @@ function delLastChar($string = "")
 //Returns name of Recipe for current fermentation - Name can be set with reset.
 function getCurrentRecipeName($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $reset = defaultReset)
 {
+    mysqli_set_charset($conn, "utf8mb4");
     $q_sql1 = mysqli_query($conn, "SELECT Data.Recipe, Data.Timestamp FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.Timestamp >= (SELECT max( Data.Timestamp )FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.ResetFlag = true) LIMIT 1") or die(mysqli_error($conn));
 
 
@@ -261,6 +271,8 @@ function getChartValues($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = de
             AND Timestamp >= date_sub(NOW(), INTERVAL " . $timeFrameHours . " HOUR)                                                                                                                                                              
             AND Timestamp <= NOW()";
     }
+    mysqli_set_charset($conn, "utf8mb4");
+
     $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe, battery, rssi                                                                                                                                    
                          FROM Data " . $where . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
     
@@ -303,10 +315,10 @@ function getChartValues_ma($conn, $iSpindleID = 'iSpindel000', $timeFrameHours =
 
     $where_ma = '';
     if ($reset) {
-        $where = "Data.Timestamp >= (Select max(Timestamp) FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.ResetFlag = true)";
+        $where = "Data.Timestamp > (Select max(Timestamp) FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.ResetFlag = true)";
         $where_oldDB = "WHERE Data1.Name = '" . $iSpindleID . "'
-                                                AND Data1.Timestamp >= (Select max(Timestamp) FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.ResetFlag = true)";
-        $where_ma = "Data2.Timestamp >= (Select max(Data2.Timestamp) FROM Data AS Data2  WHERE Data2.ResetFlag = true AND Data2.Name = '" . $iSpindleID . "') AND";
+                                                AND Data1.Timestamp > (Select max(Timestamp) FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.ResetFlag = true)";
+        $where_ma = "Data2.Timestamp > (Select max(Data2.Timestamp) FROM Data AS Data2  WHERE Data2.ResetFlag = true AND Data2.Name = '" . $iSpindleID . "') AND";
 
 
     } else {
@@ -317,6 +329,8 @@ function getChartValues_ma($conn, $iSpindleID = 'iSpindel000', $timeFrameHours =
 
     }
 // test if sql windows functions are working. Therefore newer sql server version is required
+    mysqli_set_charset($conn, "utf8mb4");
+
     if (!$q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data.Timestamp) as unixtime, Data.temperature, Data.angle, Data.recipe,
                                 AVG(Data.Angle) OVER (ORDER BY Data.Timestamp ASC ROWS " . $Rows . " PRECEDING) AS mv_angle 
                 FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND " . $where)) 
@@ -360,6 +374,8 @@ function getChartValuesPlato($conn, $iSpindleID = 'iSpindel000', $timeFrameHours
             AND Timestamp >= date_sub(NOW(), INTERVAL " . $timeFrameHours . " HOUR) 
             AND Timestamp <= NOW()";
     }
+    mysqli_set_charset($conn, "utf8mb4");
+
     $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, gravity, recipe
                           FROM Data " . $where . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
     
@@ -460,6 +476,8 @@ function getChartValuesPlato4($conn, $iSpindleID = 'iSpindel000', $timeFrameHour
             AND Timestamp <= NOW()";
     }
 
+    mysqli_set_charset($conn, "utf8mb4");
+
     $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe
                            FROM Data " . $where . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
     
@@ -537,12 +555,13 @@ function getChartValuesPlato4_delta($conn, $iSpindleID = 'iSpindel000', $timeFra
 
     if ($reset) {
         $where = "WHERE Name = '" . $iSpindleID . "'
-            AND Timestamp >= (Select max(Timestamp) FROM Data  WHERE ResetFlag = true AND Name = '" . $iSpindleID . "')";
+            AND Timestamp > (Select max(Timestamp) FROM Data  WHERE ResetFlag = true AND Name = '" . $iSpindleID . "')";
     } else {
         $where = "WHERE Name = '" . $iSpindleID . "'
             AND Timestamp >= date_sub(NOW(), INTERVAL " . $timeFrameHours . " HOUR)
             AND Timestamp <= NOW()";
     }
+    mysqli_set_charset($conn, "utf8mb4");
 
          $p_sql = mysqli_query($conn, "SET @x:=0") or die(mysqli_error($conn));
          if($q_sql = mysqli_query($conn, "SELECT * 
@@ -606,16 +625,17 @@ function getChartValuesPlato4_ma($conn, $iSpindleID = 'iSpindel000', $timeFrameH
 
 
     if ($reset) {
-        $where = "Data.Timestamp >= (Select max(Timestamp) FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.ResetFlag = true)";
+        $where = "Data.Timestamp > (Select max(Timestamp) FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.ResetFlag = true)";
         $where_oldDB = "WHERE Data1.Name = '" . $iSpindleID . "'
-                                                AND Data1.Timestamp >= (Select max(Timestamp) FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.ResetFlag = true)";
-        $where_ma = "Data2.Timestamp >= (Select max(Data2.Timestamp) FROM Data AS Data2  WHERE Data2.ResetFlag = true AND Data2.Name = '" . $iSpindleID . "') AND";
+                                                AND Data1.Timestamp > (Select max(Timestamp) FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.ResetFlag = true)";
+        $where_ma = "Data2.Timestamp > (Select max(Data2.Timestamp) FROM Data AS Data2  WHERE Data2.ResetFlag = true AND Data2.Name = '" . $iSpindleID . "') AND";
     } else {
         $where = "Data.Timestamp >= date_sub(NOW(), INTERVAL " . $timeFrameHours . " HOUR) AND Data.Timestamp <= NOW()";
         $where_oldDB = "WHERE Data1.Name = '" . $iSpindleID . "'
                                                 AND Data1.Timestamp >= date_sub(NOW(), INTERVAL " . $timeFrameHours . " HOUR)
                                                 and Data1.Timestamp <= NOW()";
     }
+    mysqli_set_charset($conn, "utf8mb4");
     if (!$q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data.Timestamp) as unixtime, Data.temperature, Data.angle, Data.recipe,
                                 AVG(Data.Angle) OVER (ORDER BY Data.Timestamp ASC ROWS " . $Rows . " PRECEDING) AS mv_angle
                                 FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND " . $where)) {
@@ -695,6 +715,8 @@ function getChartValuesSVG_ma($conn, $iSpindleID = 'iSpindel000', $movingtime)
                                                 AND Data1.Timestamp > (Select max(Timestamp) FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.ResetFlag = true)";
         $where_ma = "Data2.Timestamp > (Select max(Data2.Timestamp) FROM Data AS Data2  WHERE Data2.ResetFlag = true AND Data2.Name = '" . $iSpindleID . "') AND";
 // test if windows functions are working (way faster but only available in newer SQL installations)
+    mysqli_set_charset($conn, "utf8mb4");
+
     if (!$q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data.Timestamp) as unixtime, Data.temperature, Data.angle, Data.recipe,
                                 AVG(Data.Angle) OVER (ORDER BY Data.Timestamp ASC ROWS " . $Rows . " PRECEDING) AS mv_angle
                                 FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND " . $where)) {

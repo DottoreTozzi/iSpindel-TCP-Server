@@ -161,8 +161,8 @@ $(function ()
       {  
 	startOnTick: false,
 	endOnTick: false, 
-        min: 0,
-	max: 90,
+        min: 15,
+	max: 75,
 	title: 
         {
           text: first_y         
@@ -180,10 +180,10 @@ $(function ()
 	showFirstLabel: false
       },{
          // linkedTo: 0,
-	 startOnTick: false,
-	 endOnTick: false,
+	 startOnTick: true,
+	 endOnTick: true,
 	 min: -5,
-	 max: 35,
+	 max: 30,
 	 gridLineWidth: 0,
          opposite: true,
          title: {

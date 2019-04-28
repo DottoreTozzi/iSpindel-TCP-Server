@@ -28,7 +28,17 @@ error_reporting(E_ALL | E_STRICT);
     //
     // January 2019
     // Added chart for apparent attenuation and delta trend for plato4
-    // Added support for different languages. Fields stroed in strings table in databse
+    // Added support for different languages. Fields stored in strings table in databse
+    //
+    // April 2019
+    // Added support for Umlauts or other characters in recipe name.  
+    // --> requires change for recipe culomn in 'data' table of database -> encoding: utf8mb4
+    // Added several buttons to the page and removed spindle calibrarion from the select fields
+    // Added more java functionality to display only the fileds required for the corresponding selection 
+    // Changed back the select for spindesl to be displayed: Only spindles that have sent data the past x days ago will be shown on this page.
+    // Calibration calls a separate script where the user has to select the spindel that should be calibrated. All spindles are shown there
+    
+    
 
     // Self-called by submit button?
     if (isset($_POST['Go']))
@@ -69,6 +79,21 @@ error_reporting(E_ALL | E_STRICT);
         exit;
     }
 
+// Self-called by calibrate button
+// calls php script to calibrate Spindle in  TCP-Server
+
+    if (isset($_POST['Cal']))
+    {
+
+        // establish path by the current URL used to invoke this page
+        $url="http://";
+        $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
+        $url .= 'calibration.php';
+        // open the page
+        header("Location: ".$url);
+        unset($result, $sql_q);
+        exit;
+    }
     
     // Loads personal config file for db connection details. If not found, default file will be used
     if ((include_once '../config/common_db_config.php') == FALSE){
@@ -94,6 +119,7 @@ include_once("include/common_db_query.php");
     $chart_filename_12 = get_field_from_sql($conn,$file,"chart_filename_12");
     $chart_filename_13 = get_field_from_sql($conn,$file,"chart_filename_13");
     $show_diagram = get_field_from_sql($conn,$file,"show_diagram");
+    $calibrate_spindle = get_field_from_sql($conn,$file,"calibrate_spindle");
     $server_settings = get_field_from_sql($conn,$file,"server_settings");
     $server_running = get_field_from_sql($conn,$file,"server_running");
     $server_not_running = get_field_from_sql($conn,$file,"server_not_running");
@@ -102,7 +128,7 @@ include_once("include/common_db_query.php");
     $recipe_name = get_field_from_sql($conn,$file,"recipe_name");
     $days_history = get_field_from_sql($conn,$file,"days_history");
     $or = get_field_from_sql($conn,$file,"or");
-    
+    $send_reset = get_field_from_sql($conn,$file,"send_reset"); 
   
     // "Days Ago parameter set?
     if(!isset($_GET['days'])) $_GET['days'] = 0; else $_GET['days'] = $_GET['days'];
@@ -122,9 +148,10 @@ include_once("include/common_db_query.php");
         $iSpindleServerRunning = $server_not_running;
     }
 
-// get all spindle names to be displayed in form
-    $sql_q = "SELECT max(Timestamp), Name FROM Data GROUP BY Name";
+// get all spindle names to be displayed in form that have submitted data within the timeframe of $daysago
+    $sql_q = "SELECT DISTINCT Name FROM Data WHERE Timestamp > date_sub(NOW(), INTERVAL ".$daysago." DAY) ORDER BY Name";
     $result=mysqli_query($conn, $sql_q) or die(mysqli_error($conn));
+
  
 ?>
 
@@ -140,8 +167,20 @@ include_once("include/common_db_query.php");
 // Function to hide or display elements. Used for recipe name. Only displayed if reset_now is selected in options
     function einblenden(){
         var select = document.getElementById('chart_filename').selectedIndex;
-        if(select == 8 ) document.getElementById('ResetNow').style.display = "block";
-        else document.getElementById('ResetNow').style.display = "none";        
+        if(select == 11 ){
+           document.getElementById('ResetNow').style.display = "block";
+           document.getElementById('send').style.display = "block";
+           document.getElementById('show').style.display = "none";
+           document.getElementById('diagrams').style.display = "none";
+
+        }
+        else {
+            document.getElementById('ResetNow').style.display = "none";        
+            document.getElementById('send').style.display = "none";
+            document.getElementById('show').style.display = "block";
+            document.getElementById('diagrams').style.display = "block";
+
+        }
     }
 </script>
 
@@ -175,11 +214,11 @@ include_once("include/common_db_query.php");
         <option value="angle.php"><?php echo $chart_filename_06 ?></option>
         <option value="angle_ma.php"><?php echo $chart_filename_07 ?></option>
         <option value="plato.php"><?php echo $chart_filename_08 ?></option>
-        <option value="reset_now.php"><?php echo $chart_filename_09 ?></option>>
+        <option value="batterytrend.php"><?php echo $chart_filename_12 ?></option>>
         <option value="svg_ma.php"><?php echo $chart_filename_10 ?></option>
         <option value="plato4_delta.php"><?php echo $chart_filename_11 ?></option>	
-        <option value="batterytrend.php"><?php echo $chart_filename_12 ?></option>
-        <option value="calibration.php"><?php echo $chart_filename_13 ?></option>
+        <option value="reset_now.php"><?php echo $chart_filename_09 ?></option>
+<!--        <option value="calibration.php"><?php echo $chart_filename_13 ?></option> -->
 </select>
 
 <br />
@@ -187,6 +226,8 @@ include_once("include/common_db_query.php");
 
 <!-- "hidden" checkbox to make sure we have a response here and not just send "null" -->
 <input type = "hidden" name="fromreset" value="0">
+
+<div id="diagrams" style="display: block;">
 <input type = "checkbox" name="fromreset" value="1">
 <?php echo($reset_flag)?>
 
@@ -196,18 +237,29 @@ include_once("include/common_db_query.php");
 <?php echo($days_history)?>
 <br />
 <br />
+</div>
 
 <div id="ResetNow" style="display: none;">
 <p><?php echo($recipe_name)?>
 <input type = "text" name = "recipename" /> </p>
 </div>
 
+<div id="show" style="display: block;">
 <input type = "submit" name = "Go" value = "<?php echo($show_diagram)?>">
+</div>
+<div id="send" style="display: none;">
+<input type = "submit" name = "Go" value = "<?php echo($send_reset)?>">
+</div>
+
+<br />
+<br />
+
+<input type = "submit" name = "Cal" value = "<?php echo($calibrate_spindle)?>">
 <input type = "submit" name = "Set" value = "<?php echo($server_settings)?>">
 
 <br />
 
 <br/> <?php echo($iSpindleServerRunning)?> <br/>
 
-        
+       
 </form>

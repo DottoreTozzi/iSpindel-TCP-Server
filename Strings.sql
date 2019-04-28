@@ -1,22 +1,20 @@
 -- phpMyAdmin SQL Dump
--- version 4.8.3
--- https://www.phpmyadmin.net/
+-- version 4.0.10deb1ubuntu0.1
+-- http://www.phpmyadmin.net
 --
--- Host: db
--- Erstellungszeit: 26. Jan 2019 um 16:33
--- Server-Version: 10.3.11-MariaDB-1:10.3.11+maria~bionic
--- PHP-Version: 7.2.8
+-- Host: localhost
+-- Erstellungszeit: 28. Apr 2019 um 12:36
+-- Server Version: 10.3.13-MariaDB-1:10.3.13+maria~trusty-log
+-- PHP-Version: 5.5.9-1ubuntu4.27
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-SET AUTOCOMMIT = 0;
-START TRANSACTION;
 SET time_zone = "+00:00";
 
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
+/*!40101 SET NAMES utf8 */;
 
 --
 -- Datenbank: `iSpindle`
@@ -28,12 +26,13 @@ SET time_zone = "+00:00";
 -- Tabellenstruktur für Tabelle `Strings`
 --
 
-CREATE TABLE `Strings` (
-  `File` varchar(64) NOT NULL,
-  `Field` varchar(64) NOT NULL,
-  `Description_DE` varchar(128) NOT NULL,
-  `Description_EN` varchar(128) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE IF NOT EXISTS `Strings` (
+  `File` varchar(64) CHARACTER SET utf8 NOT NULL,
+  `Field` varchar(64) CHARACTER SET utf8 NOT NULL,
+  `Description_DE` varchar(1024) CHARACTER SET utf8 NOT NULL,
+  `Description_EN` varchar(1024) CHARACTER SET utf8 NOT NULL,
+  UNIQUE KEY `File` (`File`,`Field`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=COMPACT;
 
 --
 -- Daten für Tabelle `Strings`
@@ -75,6 +74,7 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`) VALU
 ('diagram', 'timetext_weeks', 'Woche(n), ', 'Week(s), '),
 ('diagram', 'tooltip_at', 'um', 'at'),
 ('diagram', 'tooltip_time', 'Uhr:', ':'),
+('index', 'calibrate_spindle', 'Spindle im TCP Server kalibrieren', 'Claibrate spindle in TCP Server '),
 ('index', 'chart_filename_01', 'Status (Batterie, Winkel, Temperatur)', 'Show Status (Battery, Angle, Temperature)'),
 ('index', 'chart_filename_02', 'Batteriezustand', 'Show Battery Condition'),
 ('index', 'chart_filename_03', 'Netzwerk Empfangsqualität', 'Show WiFi quality'),
@@ -92,11 +92,12 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`) VALU
 ('index', 'diagram_selection', 'Diagramm Auswahl(Tage):', 'Diagram selection (days):'),
 ('index', 'or', 'oder:', 'or:'),
 ('index', 'recipe_name', 'Optional Sudnamen eingeben:', 'Enter optional recipe name:'),
-('index', 'reset_flag', 'Daten seit zuletzt gesetztem \"Reset\" Flag zeigen', 'Show data since last set \'Reset\''),
+('index', 'reset_flag', 'Daten seit zuletzt gesetztem "Reset" Flag zeigen', 'Show data since last set ''Reset'''),
+('index', 'send_reset', 'Gärbegin festlegen', 'Set fermentation start'),
 ('index', 'server_not_running', 'Warnung: TCP Server läuft nicht!', 'Warning: TCP Server is not running!'),
 ('index', 'server_running', 'TCP Server läuft mit PID: ', 'TCP Server is running with PID: '),
 ('index', 'server_settings', 'TCP Server Settings Editieren', 'Edit TCP Server Settings'),
-('index', 'show_diagram', 'Anzeigen', 'Show Diagram'),
+('index', 'show_diagram', 'Diagram Anzeigen', 'Show Diagram'),
 ('plato', 'first_y', 'Extrakt % w/w (Spindel)', 'Extract % w/w (Spindle)'),
 ('plato', 'second_y', 'Temperatur', 'Temperature'),
 ('plato', 'timetext', 'Temperatur und Extraktgehalt (Spindel) der letzten', 'Temperature and extract (Spindle) of the last '),
@@ -121,6 +122,14 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`) VALU
 ('reset_now', 'error_write', 'Fehler beim Insert', 'Cannot insert reset into Database'),
 ('reset_now', 'recipe_written', 'Sudname in Datenbank eingetragen:', 'Recipe name added to database:'),
 ('reset_now', 'reset_written', 'Reset-Timestamp in Datenbank eingetragen', 'Reset-Timestamp added to database'),
+('sendmail', 'content_alarm_low_gravity_1', '<b>Der gemessene Extrakt folgender Spindel(n) ist unter das Limit von %s Plato gefallen:</b><br/><br/>', '<b>Measured Gravity for these Spindle(s) is below Limit of %s Plato:</b><br/><br/>'),
+('sendmail', 'content_alarm_svg', '<b>Der Vergärungsgrad folgender Spindel(n) ist oberhalbe dem Alarm Limit von %s Prozent gefallen:</b><br/><br/>', '<b>Calculated Apparent Attenuation for these Spindle(s) is above alarm Limit of %s Percent:</b><br/><br/>'),
+('sendmail', 'content_data', '<b>%s <br/>Datum:</b> %s <br/><b>ID:</b> %s <br/><b>Winkel:</b> %s <br/><b>Stammwürze in Plato:</b> %s <br/><b>Extrakt in Plato:</b> %s <br/><b>Scheinbarer Vergärungsgrad:</b> %s <br/><b>Alkohol im Volumen :</b> %s <br/><b>Delta Plato letzte 24h:</b> %s <br/><b>Delta Plato letzte 12h:</b> %s <br/><b>Temperatur:</b> %s <br/><b>Batteriespannung:</b> %s <br/><b>Sudname:</b> %s <br/><br/>', '<b>%s <br/>Date:</b> %s <br/><b>ID:</b> %s <br/><b>Angle:</b> %s <br/><b>Apparent Attenuation in Plato:</b> %s <br/><b>Current extract in Plato:</b> %s <br/><b>Apparent attentuation:</b> %s <br/><b>Alcohol by Volumen :</b> %s <br/><b>Delta Plato last 24h:</b> %s <br/><b>Delta Plato last 12h:</b> %s <br/><b>Temperature:</b> %s <br/><b>Battery:</b> %s <br/><b>Recipe:</b> %s <br/><br/>'),
+('sendmail', 'content_info', '<b>Alarm bei Plato Unterschreitung:</b> %s Plato<br/><b>Alarm Delta Plato in den letzten 24 Stunden :</b> %s Plato<br/><b>Zeit für Statusemail:</b> %s<br/>                    <b>Aktuelle Zeit:</b> %s', '<b>Lower limit for Plato Alarm:</b> %s Plato<br/><b>Alarm Delta Plato in last 24 hours :</b> %s Plato<br/><b>Time for Statusmail:</b> %s<br/>                    <b>Current Time:</b> %s'),
+('sendmail', 'content_status_1', '<b>Letzter Datensatz innerhalb der letzten %s Tage wurde für folgende Spindel(n) gefunden:</b><br/><br/>', '<b>Last dataset within the last %s days was found for the following Spindles:</b><br/><br/>'),
+('sendmail', 'subject_alarm_low_gravity', 'Alarm von iSpindel-TCP-Server: Gravity unter Limit gefallen', 'Alarm from iSpindel-TCP-Server: Gravity below limit'),
+('sendmail', 'subject_alarm_svg', 'Alarm von iSpindel-TCP-Server: Vergärungsgrad oberhalb Alarm Limit', 'Alarm from iSpindel-TCP-Server: Apparent attenuation above alarm limit'),
+('sendmail', 'subject_status', 'Status Email von iSpindel-TCP-Server', 'Status Email from iSpindel-TCP-Server'),
 ('settings', 'description', 'Beschreibung', 'Description'),
 ('settings', 'problem', 'Probleme beim Schreiben der Settings', 'Problem with writing settings'),
 ('settings', 'select_section', 'Section Auswahl', 'Select Section'),
@@ -140,17 +149,6 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`) VALU
 ('svg_ma', 'timetext_reset', 'Temperatur und scheinbarer Vergärungsgrad seit dem letzten Reset: ', 'Temperature and apparent attenuation since last reset: '),
 ('svg_ma', 'x_axis', 'Datum / Uhrzeit', 'Date / Time'),
 ('wifi', 'header', 'Aktuelle WiFi Empfangsqualität:', 'Current Wifi reception: ');
-
---
--- Indizes der exportierten Tabellen
---
-
---
--- Indizes für die Tabelle `Strings`
---
-ALTER TABLE `Strings`
-  ADD UNIQUE KEY `File` (`File`,`Field`);
-COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

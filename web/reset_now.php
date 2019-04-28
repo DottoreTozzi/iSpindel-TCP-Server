@@ -1,4 +1,8 @@
 <?php
+ini_set('display_errors', 'On');
+error_reporting(E_ALL | E_STRICT);
+
+
 // DB config values will be pulled from differtent location and user can personalize this file: common_db_config.php
 // If file does not exist, values will be pulled from default file
 
@@ -28,6 +32,7 @@ $recipe_written = get_field_from_sql($conn,$file,"recipe_written");
 //unique spindle id is pulled from DB and transferred for reset timestamp
 $q_sql0 = mysqli_query($conn, "SELECT DISTINCT ID FROM Data WHERE Name = '".$Name."'AND (ID <>'' OR ID <>'0') ORDER BY Timestamp DESC LIMIT 1") or die(mysqli_error($conn));  
 
+
 if (! $q_sql0){ 
   echo $error_read_id;                                             
 }
@@ -40,9 +45,12 @@ $valID='0';
     $valID = $r_row['ID'];
   }     
 
+
 // set reset flag for spindel and write recipe name , '0' values for other parameters as 'NULL' values may cause a problem for some database configurations (strict SQL mode)
- $q_sql = mysqli_query($conn, "INSERT INTO Data (Timestamp, Name, ID, Angle, Temperature, Battery, resetFlag, Recipe)
-                      VALUES (NOW(),'$Name', $valID, 0, 0, 0, true, '$Recipe')")
+$sql_select="INSERT INTO Data (Timestamp, Name, ID, Angle, Temperature, Battery, resetFlag, Recipe)VALUES (NOW(),'$Name', $valID, 0, 0, 0, true, '$Recipe')";
+    mysqli_set_charset($conn, "utf8mb4");
+
+ $q_sql = mysqli_query($conn, $sql_select)
                        or die(mysqli_error($conn));
                        
 if (! $q_sql){
