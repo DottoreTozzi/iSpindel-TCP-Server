@@ -9,7 +9,7 @@ Möglichkeit der Vergabe eines Sudnamens beim Reset der entsprechendne SPindel i
 Möglichkeit der Kalibrierung der Spindeln über das Web-Interface
 Settings können nun auch per button über das Webinterface geändert werden
 Mehrsprachiges Interface. Deutsch und Englisch bereits implementiert. Sollte recht einfach erweiterbar auf andere Sprachen sein.
-Anzeige der PID des Servers in der Landing page
+Anzeige der PID des Servers in der Landing page.
 
 **Neu (15.10.2018)**
 Neue Diagramme: Moving Average (Glättung für angle.php und plato4.php, konfigurierbar)
