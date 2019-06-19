@@ -1,12 +1,13 @@
 <?php
 
     // configure your database connection here:
-    define('DB_SERVER',"localhost");
+    define('DB_SERVER',"127.0.0.1");
     define('DB_NAME',"iSpindle");
     define('DB_USER',"iSpindle");
     define('DB_PASSWORD',"ohyeah");
+    define('DB_PORT',"3306");
 
-    $conn = mysqli_connect(DB_SERVER, DB_USER, DB_PASSWORD, DB_NAME);
+    $conn = mysqli_connect(DB_SERVER, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT);
     if (!$conn) {
             die("Connection failed: " . mysqli_connect_error());
     }

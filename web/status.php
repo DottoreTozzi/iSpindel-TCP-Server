@@ -3,14 +3,34 @@
 // Show battery status as a chart
 // GET Parameters:
 // name = iSpindle name
+//
+// January 2019
+// Added support for differnet languages that are pulled from strings table in database
+
+
+// DB config values will be pulled from differtent location and user can personalize this file: common_db_config.php
+// If file does not exist, values will be pulled from default file
  
-include_once("include/common_db.php");
-include_once("include/common_db_query.php");
+if ((include_once '../config/common_db_config.php') == FALSE){
+       include_once("../config/common_db_default.php");
+      }
+     include_once("include/common_db_query.php");
 
 // Check GET parameters (for now: Spindle name and Timeframe to display) 
 if(!isset($_GET['name'])) $_GET['name'] = 'iSpindel000'; else $_GET['name'] = $_GET['name'];
 
 list($time, $temperature, $angle, $battery) = getCurrentValues($conn, $_GET['name']);
+
+
+// get description for fields in corresponding language
+$file = "status";
+$header_battery = get_field_from_sql($conn,$file,"header_battery");
+$header_temperature = get_field_from_sql($conn,$file,"header_temperature");
+$header_angle = get_field_from_sql($conn,$file,"header_angle");
+$diagram_battery = get_field_from_sql($conn,$file,"diagram_battery");
+$diagram_temperature = get_field_from_sql($conn,$file,"diagram_temperature");
+$diagram_angle = get_field_from_sql($conn,$file,"diagram_angle");
+
 
 ?>
 
@@ -24,6 +44,10 @@ list($time, $temperature, $angle, $battery) = getCurrentValues($conn, $_GET['nam
   <script src="include/jquery-3.1.1.min.js"></script>
 
 <script type="text/javascript">
+const dia_battery=[<?php echo "'".$diagram_battery."'";?>]
+const dia_temperature=[<?php echo "'".$diagram_temperature."'";?>]
+const dia_angle=[<?php echo "'".$diagram_angle."'";?>]
+
 $(function () 
 {
   var chart_battery;
@@ -45,7 +69,7 @@ $(function ()
       },
       title: 
       {
-        text: '<?php echo $_GET['name'];?>: Akku'
+        text: '<?php echo $_GET['name'].': '.$header_battery;?>'
       },
 
       pane: {
@@ -102,7 +126,7 @@ $(function ()
             rotation: 'auto'
         },
         title: {
-            text: 'Volt'
+            text: dia_battery
         },
         plotBands: [{
             from: 3.5,
@@ -120,10 +144,10 @@ $(function ()
     },
 
     series: [{
-        name: 'Spannung',
+        name: dia_battery,
         data: [<?php echo $battery;?>],
         tooltip: {
-            valueSuffix: ' Volt'
+            valueSuffix: dia_battery
         }
       }]
     }); // chart   
@@ -142,7 +166,8 @@ $(function ()
 
       title: 
       {
-        text: 'Winkel'
+        text: '<?php echo $header_angle;?>'
+ 
       },
 
       pane: {
@@ -199,7 +224,7 @@ $(function ()
             rotation: 'auto'
         },
         title: {
-            text: 'Grad'
+            text: dia_angle
         },
         plotBands: [{
             from: 0,
@@ -225,7 +250,7 @@ $(function ()
     },
 
     series: [{
-        name: 'Winkel',
+        name: dia_angle,
         data: [<?php echo $angle;?>],
         tooltip: {
             valueSuffix: '°'
@@ -247,7 +272,8 @@ $(function ()
 
       title: 
       {
-        text: 'Temperatur'
+        text: '<?php echo $header_temperature;?>'
+
       },
 
       pane: {

@@ -21,6 +21,8 @@ if(!isset($_GET['name'])) $_GET['name'] = 'iSpindel001'; else $_GET['name'] = $_
 if(!isset($_GET['reset'])) $_GET['reset'] = defaultReset; else $_GET['reset'] = $_GET['reset'];
 if(!isset($_GET['days'])) $_GET['days'] = 0; else $_GET['days'] = $_GET['days'];    
 if(!isset($_GET['weeks'])) $_GET['weeks'] = 0; else $_GET['weeks'] = $_GET['weeks'];
+if(!isset($_GET['moving'])) $_GET['moving'] = 720; else $_GET['moving'] = $_GET['moving'];
+
                                                                             
 // Calculate Timeframe in Hours                                             
 $timeFrame = $_GET['hours'] + ($_GET['days'] * 24) + ($_GET['weeks'] * 168);
@@ -32,11 +34,11 @@ $tfdays = floor($tftemp / 24);
 $tftemp -= $tfdays * 24;
 $tfhours = $tftemp;                                
                                                    
-list($isCalib, $dens, $temperature, $angle) = getChartValuesPlato4($conn, $_GET['name'], $timeFrame, $_GET['reset']);
+list($isCalib, $dens, $temperature, $angle) = getChartValuesPlato4_delta($conn, $_GET['name'], $timeFrame, $_GET['moving'], $_GET['reset']);
 list($RecipeName, $show) = getCurrentRecipeName($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 
 // Get fields from database in language selected in settings
-$file = "plato4";
+$file = "plato4_delta";
 $recipe_name = get_field_from_sql($conn,'diagram',"recipe_name");
 $first_y = get_field_from_sql($conn,$file,"first_y");
 $second_y = get_field_from_sql($conn,$file,"second_y");
@@ -49,7 +51,7 @@ $subheader_hours = get_field_from_sql($conn,'diagram',"timetext_hours");
 $header_no_data_1 = get_field_from_sql($conn,'diagram',"header_no_data_1");
 $header_no_data_2 = get_field_from_sql($conn,'diagram',"header_no_data_2");
 $header_no_data_3 = get_field_from_sql($conn,'diagram',"header_no_data_3");
-$not_calibrated = get_field_from_sql($conn,'diagram',"not_calibrated"); 
+$not_calibrated = get_field_from_sql($conn,'diagram',"not_calibrated");
 $tooltip_at = get_field_from_sql($conn,'diagram',"tooltip_at");
 $tooltip_time = get_field_from_sql($conn,'diagram',"tooltip_time");
 
@@ -143,8 +145,7 @@ $(function ()
                 text: chart_header
             },
             subtitle:
-            { 
-                      text: chart_subheader                 
+                  { text: chart_subheader                        
             },                                                                
             xAxis:
             {
@@ -159,8 +160,8 @@ $(function ()
                 {
                     startOnTick: false,
                     endOnTick: false,
-                    min: 0,
-                    max: 25,
+                    min: -4,
+                    max: 4,
                     title:
                     {
                         text: first_y
@@ -178,10 +179,10 @@ $(function ()
                     showFirstLabel: false
                     },{
                     // linkedTo: 0,
-                    startOnTick: true,
-                    endOnTick: true,
+                    startOnTick: false,
+                    endOnTick: false,
                     min: -5,
-                    max: 30,
+                    max: 35,
                     gridLineWidth: 0,
                     opposite: true,
                     title: {

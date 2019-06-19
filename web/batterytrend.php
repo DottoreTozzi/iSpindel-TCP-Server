@@ -3,24 +3,19 @@
 ini_set('display_errors', 'On');
 error_reporting(E_ALL | E_STRICT);
 
-// Show the Angle/Temperature chart
+// Show the Voltage / Wifi Signal chart
 // GET Parameters:
 // hours = number of hours before now() to be displayed
 // days = hours x 24
 // weeks = days x 7
 // name = iSpindle name
-// moving = timeframe for moving average calculation
-//
-// January 2019
-// Added support for different languages stored in strings table in database 
-
-
+ 
 // DB config values will be pulled from differtent location and user can personalize this file: common_db_config.php
 // If file does not exist, values will be pulled from default file
 
 if ((include_once '../config/common_db_config.php') == FALSE){
        include_once("../config/common_db_default.php");
-       }
+	}
        include_once("include/common_db_query.php");
 
 // Check GET parameters (for now: Spindle name and Timeframe to display) 
@@ -29,7 +24,6 @@ if(!isset($_GET['name'])) $_GET['name'] = 'iSpindel001'; else $_GET['name'] = $_
 if(!isset($_GET['reset'])) $_GET['reset'] = defaultReset; else $_GET['reset'] = $_GET['reset'];
 if(!isset($_GET['days'])) $_GET['days'] = 0; else $_GET['days'] = $_GET['days'];
 if(!isset($_GET['weeks'])) $_GET['weeks'] = 0; else $_GET['weeks'] = $_GET['weeks'];
-if(!isset($_GET['moving'])) $_GET['moving'] = 120; else $_GET['moving'] = $_GET['moving'];
 
 // Calculate Timeframe in Hours
 $timeFrame = $_GET['hours'] + ($_GET['days'] * 24) + ($_GET['weeks'] * 168);
@@ -41,13 +35,13 @@ $tfdays = floor($tftemp / 24);
 $tftemp -= $tfdays * 24;
 $tfhours = $tftemp;
 
-// Array angle and temperature contain now also recipe name for each data point which will be displeayed in diagram tooltip                                     
-// Variable RecipeName will be displayed in header depending on selected timeframe    
-list($angle, $temperature) = getChartValues_ma($conn, $_GET['name'], $timeFrame, $_GET['moving'], $_GET['reset']);
+// Array angle and temperature contain now also recipe name for each data point which will be displeayed in diagram tooltip
+// Variable RecipeName will be displayed in header depending on selected timeframe
+list($angle, $temperature,$battery,$RSSI) = getChartValues($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 list($RecipeName, $show) = getCurrentRecipeName($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 
 // Get fields from database in language selected in settings
-$file = "angle_ma";
+$file = "batterytrend";
 $recipe_name = get_field_from_sql($conn,'diagram',"recipe_name");
 $first_y = get_field_from_sql($conn,$file,"first_y");
 $second_y = get_field_from_sql($conn,$file,"second_y");
@@ -65,36 +59,35 @@ $tooltip_time = get_field_from_sql($conn,'diagram',"tooltip_time");
 
 // define header displayed in diagram depending on value for recipe
 if ($RecipeName <> '') {
-    $Header=$_GET['name'].' | ' . $recipe_name .' ' . $RecipeName;
-    }
+  $Header=$_GET['name'].' | ' . $recipe_name .' ' . $RecipeName;
+  }
 else {
-    $Header='iSpindel: ' . $_GET['name'];
-    }
+  $Header='iSpindel: ' . $_GET['name'];
+  }
 
 
 // Header will show, that there is no data available, and displays timeframe user needs to go back to see data in diagram
 if (!$_GET['reset'])
 {
- $DataAvailable=isDataAvailable($conn, $_GET['name'], $timeFrame);
-  if($DataAvailable[0]=='0')
-  {
-   $Header='iSpindel: ' . $header_no_data_1 . ' ' . $_GET['name']. ' ' . $header_no_data_2 . ' ' .$DataAvailable[1]. ' ' . $header_no_data_3;
-  }
+$DataAvailable=isDataAvailable($conn, $_GET['name'], $timeFrame);
+if($DataAvailable[0]=='0')
+{
+ $Header='iSpindel: ' . $header_no_data_1 . ' ' . $_GET['name']. ' ' . $header_no_data_2 . ' ' .$DataAvailable[1]. ' ' . $header_no_data_3;
+}
 }
 
 // define subheader to be displayed in diagram
 $timetext = $subheader . ' ';
 if($_GET['reset']) {
-    $timetext = $subheader_reset . ' ';
-    }
+  $timetext = $subheader_reset . ' ';
+  }
 if($tfweeks != 0) {
-    $timetext .= $tfweeks . ' ' . $subheader_weeks;
-    }
+  $timetext .= $tfweeks . ' ' . $subheader_weeks;
+  }
 if($tfdays != 0) {
-    $timetext .= $tfdays . ' ' . $subheader_days;
-    }
+  $timetext .= $tfdays . ' ' . $subheader_days;
+  }
 $timetext .= $tfhours . ' ' . $subheader_hours;
-
 
 ?>
 
@@ -108,12 +101,13 @@ $timetext .= $tfhours . ' ' . $subheader_hours;
   <script src="include/jquery-3.1.1.min.js"></script>
   <script src="include/moment.min.js"></script>
   <script src="include/moment-timezone-with-data.js"></script>
+  <script src="include/highcharts.js"></script>
 
 <script type="text/javascript">
 
 // define constants for data in chart. Allows for mor than two variables. Recipe information is included here and can be displayed in tooltip
-const chartAngle = [<?php echo $angle;?>]
-const chartTemp = [<?php echo $temperature;?>]
+const chartBattery = [<?php echo $battery;?>]
+const chartRSSI = [<?php echo $RSSI;?>]
 // define constants to be displayed in diagram -> no php code needed in chart
 const recipe_name=[<?php echo "'".$recipe_name."'";?>]
 const first_y=[<?php echo "'".$first_y."'";?>]
@@ -124,8 +118,12 @@ const chart_subheader=[<?php echo "'" . $timetext . "'";?>]
 const tooltip_at=[<?php echo "'".$tooltip_at."'";?>]
 const tooltip_time=[<?php echo "'".$tooltip_time."'";?>]
 
+//console.log(chartBattery)
+//console.log(chartRSSI)
+
 $(function () 
 {
+
   var chart;
  
   $(document).ready(function() 
@@ -163,10 +161,10 @@ $(function ()
 	startOnTick: false,
 	endOnTick: false, 
         min: 0,
-	max: 90,
+	max: 5,
 	title: 
         {
-          text: first_y         
+          text: first_y       
         },      
 	labels: 
         {
@@ -175,7 +173,7 @@ $(function ()
           y: 16,
           formatter: function() 
           {
-            return this.value +'°'
+            return this.value +'V'
           }
         },
 	showFirstLabel: false
@@ -183,8 +181,8 @@ $(function ()
          // linkedTo: 0,
 	 startOnTick: false,
 	 endOnTick: false,
-	 min: -5,
-	 max: 30,
+	 min: -100,
+	 max: 0,
 	 gridLineWidth: 0,
          opposite: true,
          title: {
@@ -196,7 +194,7 @@ $(function ()
             y: 16,
           formatter: function() 
           {
-            return this.value +'°C'
+            return this.value +'dB'
           }
          },
 	showFirstLabel: false
@@ -208,12 +206,12 @@ $(function ()
 	crosshairs: [true, true],
         formatter: function() 
         {
-	   if(this.series.name == second_y) {
-               const pointData = chartTemp.find(row => row.timestamp === this.point.x)
-               return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x)) + ' ' + tooltip_time + ' ' + this.y.toFixed(2) +'°C';
-           } else {
-               const pointData = chartAngle.find(row => row.timestamp === this.point.x)
-               return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x))  + ' ' + tooltip_time + ' ' + this.y.toFixed(2) +'°';
+	   if(this.series.name == first_y) {
+           	const pointData = chartBattery.find(row => row.timestamp === this.point.x)
+                return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x)) + ' ' + tooltip_time + ' ' + this.y.toFixed(5) +' V';
+	   } else {
+		const pointData = chartRSSI.find(row => row.timestamp === this.point.x)
+                return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x))  + ' ' + tooltip_time + ' ' + this.y +' dB';
 	   }
         }
       },  
@@ -230,7 +228,7 @@ $(function ()
 	  {
           name: first_y, 
 	  color: '#FF0000',
-          data: chartAngle.map(row => [row.timestamp, row.value]),
+	  data: chartBattery.map(row => [row.timestamp, row.value]),
           marker: 
           {
             symbol: 'square',
@@ -250,7 +248,7 @@ $(function ()
           name: second_y, 
 	  yAxis: 1,
 	  color: '#0000FF',
-          data: chartTemp.map(row => [row.timestamp, row.value]),
+	  data: chartRSSI.map(row => [row.timestamp, row.value]),
           marker: 
           {
             symbol: 'square',
@@ -267,6 +265,7 @@ $(function ()
           }    
         
         }
+
       ] //series      
     });
   });  
