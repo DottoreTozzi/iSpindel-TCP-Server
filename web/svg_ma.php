@@ -6,14 +6,15 @@
 // days = hours x 24   
 // weeks = days x 7    
 // name = iSpindle name
- 
+// moving = time in minutes for moving average calculation
+
 // DB config values will be pulled from differtent location and user can personalize this file: common_db_config.php
 // If file does not exist, values will be pulled from default file
  
 if ((include_once '../config/common_db_config.php') == FALSE){
        include_once("../config/common_db_default.php");
-      }
-     include_once("include/common_db_query.php");
+      } 
+      include_once("include/common_db_query.php");
 
 // Check GET parameters (for now: Spindle name and Timeframe to display) 
 if(!isset($_GET['hours'])) $_GET['hours'] = 0; else $_GET['hours'] = $_GET['hours'];
@@ -21,7 +22,8 @@ if(!isset($_GET['name'])) $_GET['name'] = 'iSpindel001'; else $_GET['name'] = $_
 if(!isset($_GET['reset'])) $_GET['reset'] = defaultReset; else $_GET['reset'] = $_GET['reset'];
 if(!isset($_GET['days'])) $_GET['days'] = 0; else $_GET['days'] = $_GET['days'];    
 if(!isset($_GET['weeks'])) $_GET['weeks'] = 0; else $_GET['weeks'] = $_GET['weeks'];
-                                                                            
+if(!isset($_GET['moving'])) $_GET['moving'] = 120; else $_GET['moving'] = $_GET['moving'];                         
+                                                    
 // Calculate Timeframe in Hours                                             
 $timeFrame = $_GET['hours'] + ($_GET['days'] * 24) + ($_GET['weeks'] * 168);
 if($timeFrame == 0) $timeFrame = defaultTimePeriod;
@@ -31,12 +33,16 @@ $tftemp -= $tfweeks * 168;
 $tfdays = floor($tftemp / 24);
 $tftemp -= $tfdays * 24;
 $tfhours = $tftemp;                                
+$minTemp = 0;
+$maxTemp = 30;
+$mindens = 0;
+$maxdens = 20;
                                                    
-list($isCalib, $dens, $temperature, $angle) = getChartValuesPlato4($conn, $_GET['name'], $timeFrame, $_GET['reset']);
+list($isCalib, $SVG, $temperature, $angle, $ABV) = getChartValuesSVG_ma($conn, $_GET['name'], $_GET['moving']);
 list($RecipeName, $show) = getCurrentRecipeName($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 
 // Get fields from database in language selected in settings
-$file = "plato4";
+$file = "svg_ma";
 $recipe_name = get_field_from_sql($conn,'diagram',"recipe_name");
 $first_y = get_field_from_sql($conn,$file,"first_y");
 $second_y = get_field_from_sql($conn,$file,"second_y");
@@ -49,9 +55,12 @@ $subheader_hours = get_field_from_sql($conn,'diagram',"timetext_hours");
 $header_no_data_1 = get_field_from_sql($conn,'diagram',"header_no_data_1");
 $header_no_data_2 = get_field_from_sql($conn,'diagram',"header_no_data_2");
 $header_no_data_3 = get_field_from_sql($conn,'diagram',"header_no_data_3");
-$not_calibrated = get_field_from_sql($conn,'diagram',"not_calibrated"); 
+$not_calibrated = get_field_from_sql($conn,'diagram',"not_calibrated");
 $tooltip_at = get_field_from_sql($conn,'diagram',"tooltip_at");
 $tooltip_time = get_field_from_sql($conn,'diagram',"tooltip_time");
+$third_y = get_field_from_sql($conn,$file,"third_y");
+
+
 
 // define header displayed in diagram depending on value for recipe
 if ($RecipeName <> '') {
@@ -101,12 +110,14 @@ $timetext .= $tfhours . ' ' . $subheader_hours;
 <script type="text/javascript">
 
 // define constants for data in chart. Allows for mor than two variables. Recipe information is included here and can be displayed in tooltip
-const chartDens=[<?php echo $dens;?>]
+const chartSVG=[<?php echo $SVG;?>]
 const chartTemp=[<?php echo $temperature;?>]
+const chartABV=[<?php echo $ABV;?>]
 // define constants to be displayed in diagram -> no php code needed in chart
 const recipe_name=[<?php echo "'".$recipe_name."'";?>]
 const first_y=[<?php echo "'".$first_y."'";?>]
 const second_y=[<?php echo "'".$second_y."'";?>]
+const third_y=[<?php echo "'".$third_y."'";?>]
 const x_axis=[<?php echo "'".$x_axis."'";?>]
 const chart_header=[<?php echo "'" . $Header . "'";?>]
 const chart_subheader=[<?php echo "'" . $timetext . "'";?>]
@@ -144,7 +155,7 @@ $(function ()
             },
             subtitle:
             { 
-                      text: chart_subheader                 
+                text: chart_subheader                 
             },                                                                
             xAxis:
             {
@@ -160,26 +171,23 @@ $(function ()
                     startOnTick: false,
                     endOnTick: false,
                     min: 0,
-                    max: 25,
+                    max: 100,
                     title:
                     {
                         text: first_y
-                    },
+                    }, 
                     labels:
                     {
-                        align: 'left',
-                        x: 3,
-                        y: 16,
                         formatter: function()
                         {
-                            return this.value + '°P'
+                            return this.value + '%'
                         }
                     },
-                    showFirstLabel: false
+                    opposite: true
                     },{
                     // linkedTo: 0,
-                    startOnTick: true,
-                    endOnTick: true,
+                    startOnTick: false,
+                    endOnTick: false,
                     min: -5,
                     max: 30,
                     gridLineWidth: 0,
@@ -188,7 +196,7 @@ $(function ()
                         text: second_y
                     },
                     labels: {
-                        align: 'right',
+                        align: 'left',
                         x: -3,
                         y: 16,
                         formatter: function() 
@@ -196,7 +204,25 @@ $(function ()
                             return this.value +'°C'
                         }
                     },
-                    showFirstLabel: false
+                    opposite: false
+                },
+                {
+                    startOnTick: false,
+                    endOnTick: false,
+                    min: 0,
+                    max: 20,
+                    title:
+                    {
+                        text: third_y
+                    }, 
+                    labels:
+                    {
+                        formatter: function()
+                        {
+                            return this.value + '%'
+                        }
+                    },
+                    opposite: true
                 }
             ],
             tooltip:
@@ -205,10 +231,15 @@ $(function ()
                 formatter: function() 
                 {
                     if(this.series.name == second_y) {
-			const pointData = chartTemp.find(row => row.timestamp === this.point.x)
+                        const pointData = chartTemp.find(row => row.timestamp === this.point.x)
                         return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x)) + ' ' + tooltip_time + ' ' + this.y.toFixed(2) +'°C';
-                    } else {
-			const pointData = chartDens.find(row => row.timestamp === this.point.x)
+                    } 
+                    if(this.series.name == first_y) {
+                        const pointData = chartSVG.find(row => row.timestamp === this.point.x)
+                        return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x))  + ' ' + tooltip_time + ' ' + this.y.toFixed(2) +'%';
+                    }
+                    if(this.series.name == third_y) {
+                        const pointData = chartABV.find(row => row.timestamp === this.point.x)
                         return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x))  + ' ' + tooltip_time + ' ' + this.y.toFixed(2) +'%';
                     }
                 }
@@ -226,7 +257,7 @@ $(function ()
                 {
                     name: first_y,
                     color: '#FF0000',
-                    data: chartDens.map(row => [row.timestamp, row.value]),
+                    data: chartSVG.map(row => [row.timestamp, row.value]),
                     marker: 
                     {
                         symbol: 'square',
@@ -261,8 +292,27 @@ $(function ()
                                 }
                             }
                         }
-
+                },
+                {   name: third_y,
+                    yAxis: 2,
+                    color: '#00FF00',
+                    data: chartABV.map(row => [row.timestamp, row.value]),
+                    marker:
+                    {
+                        symbol: 'square',
+                        enabled: false,
+                        states:
+                        {
+                            hover:
+                            {
+                                symbol: 'square',
+                                enabled: true,
+                                radius: 8
+                            }
+                        }
+                    }
                 }
+
             ] //series      
             });
     }

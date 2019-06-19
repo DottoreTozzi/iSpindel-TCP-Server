@@ -1,7 +1,15 @@
 # iSpindel Generic TCP Server
-#### (iSpindle.py Version 1.6.0)
+#### (iSpindle.py Version 1.6.3)
 
 [English Version](README_en.md)
+**Neu (28.04.2019)**
+Neue Diagramme: Berechneter SVG, Alkoholgehalt; Delta Plato für bestimmten Zeitraum; Wifi/Batterytrend
+Optimierte Landing page mit neuen Funktionen:
+Möglichkeit der Vergabe eines Sudnamens beim Reset der entsprechendne SPindel im TCP server
+Möglichkeit der Kalibrierung der Spindeln über das Web-Interface
+Settings können nun auch per button über das Webinterface geändert werden
+Mehrsprachiges Interface. Deutsch und Englisch bereits implementiert. Sollte recht einfach erweiterbar auf andere Sprachen sein.
+Anzeige der PID des Servers in der Landing page.
 
 **Neu (15.10.2018)**
 Neue Diagramme: Moving Average (Glättung für angle.php und plato4.php, konfigurierbar)

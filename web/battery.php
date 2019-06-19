@@ -4,13 +4,24 @@
 // GET Parameters:
 // name = iSpindle name
  
-include_once("include/common_db.php");
-include_once("include/common_db_query.php");
+// DB config values will be pulled from differtent location and user can personalize this file: common_db_config.php
+// If file does not exist, values will be pulled from default file
+ 
+if ((include_once '../config/common_db_config.php') == FALSE){
+       include_once("../config/common_db_default.php");
+      }
+     include_once("include/common_db_query.php");
 
 // Check GET parameters (for now: Spindle name and Timeframe to display) 
 if(!isset($_GET['name'])) $_GET['name'] = 'iSpindel000'; else $_GET['name'] = $_GET['name'];
 
 list($time, $temperature, $angle, $battery) = getCurrentValues($conn, $_GET['name']);
+
+// Get fields from database in language selected in settings
+$file = "battery";
+$header_battery = get_field_from_sql($conn,$file,"header_battery");
+$diagram_battery = get_field_from_sql($conn,$file,"diagram_battery");
+
 
 ?>
 
@@ -43,7 +54,7 @@ $(function ()
       },
       title: 
       {
-        text: 'Aktueller Ladezustand: <?php echo $_GET['name'];?>'
+        text: '<?php echo $header_battery;?> <?php echo $_GET['name'];?>'
       },
 
       pane: {
@@ -100,7 +111,7 @@ $(function ()
             rotation: 'auto'
         },
         title: {
-            text: 'Volt'
+            text: '<?php echo $diagram_battery;?>'
         },
         plotBands: [{
             from: 3.5,
