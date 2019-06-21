@@ -1,6 +1,12 @@
 # iSpindel Generic TCP Server
 #### (iSpindle.py Version 1.6.3)
 
+**Neu (20.06.2019)**
+Merged avollkopf's fork.
+Many thanks!
+
+Documentation will be fully updated soon.
+
 [English Version](README_en.md)
 **Neu (28.04.2019)**
 Neue Diagramme: Berechneter SVG, Alkoholgehalt; Delta Plato für bestimmten Zeitraum; Wifi/Batterytrend
