@@ -17,8 +17,8 @@ error_reporting(E_ALL | E_STRICT);
 // Self-called by submit button. Calls landing page on stop
 
 // load information for sql connection
-if ((include_once '../config/common_db_config.php') == FALSE){
-       include_once("../config/common_db_default.php");
+if ((include_once './config/common_db_config.php') == FALSE){
+       include_once("./config/common_db_default.php");
     }
 // load db query functions
 include_once("include/common_db_query.php");
