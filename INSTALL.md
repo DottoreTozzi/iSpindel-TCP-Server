@@ -10,7 +10,7 @@ Um bei einem Reset für eine Spindel auch einen Rezeptnamen zu setzen, muss ein 
 
 ALTER TABLE `Data` ADD `Recipe` VARCHAR( 64 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL;
 
-Es gibt nun auch eine pendmail.py Datei. Diese muss auch in den Ordner /usr/local/bin kopiert werden. 
+Es gibt nun auch eine sendmail.py Datei. Diese muss auch in den Ordner /usr/local/bin kopiert werden. 
 Dadurch ist es möglich, Alarme per email zu senden.
 
 Es muss eine 'Tabelle' Strings und 'Settings' in der iSpindel Datenbank angelegt werden. 
@@ -19,6 +19,8 @@ Die Dateien Strings.sql und Settings.sql müssen in die zuvor erstellen Tebellen
 Es gibt ein config Verzeichnis unter iSPindel-srv. Dort gibt es für die python und php scripte je eine default version die geladen wird, wenn keine persönliche konfiguration erstellt wurde
 Um eine persönliches fiel zu erstellen, dass bei einem Update nicht überschrieben wird einfach eine Kopie mit dem Namen common_db_config.php und iSpindle_config.ini anlegen.
 Dort die entsprechenden Einträge für die Verbindung zur Datenbank machen / anpassen
+
+Diese Schritte müssen leider immer gemacht werden, sie haben ihren Weg an die richtige Stelle der Anleitung noch nicht gefunden...
 
 ### Update auf Version 1.6.0, Firmware 6.0.1 und höher:
      
