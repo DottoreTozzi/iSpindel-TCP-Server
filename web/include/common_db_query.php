@@ -598,7 +598,7 @@ function getChartValuesPlato4_delta($conn, $iSpindleID = 'iSpindel000', $timeFra
          );
          }
          else {
-             echo "Select for this diagram is using 'SQL Windows functions'. Your Database does not ssem to support it. If you want to use these functions you need to upgrade to a newer version of your SQL installation";
+             echo "Select for this diagram is using 'SQL Windows functions'. Either your Data table is still empty, or your Database does not seem to support it. If you want to use these functions you need to upgrade to a newer version of your SQL installation";
              exit;
          }
 }
