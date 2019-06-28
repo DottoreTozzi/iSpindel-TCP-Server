@@ -136,6 +136,7 @@ if (isset($_POST['Go']))
 </head>
 <body bgcolor="#E6E6FA">
 <form name="main" action="<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method="post">
+<a href=/iSpindle/index.php><img src=include/icons8-home-26.png></a>
 <h1>RasPySpindel Settings</h1>
 <h3><?php echo $select_section; ?></h3>
 
@@ -167,7 +168,7 @@ if (isset($_POST['Go']))
 
 <?php 
 
-// if a section is selected (default is 0), talbe will be defined
+// if a section is selected (default is 0), table will be defined
 // Database entries for parameter, value and description of defined language will be displayed for selected section
 // name of input field gets unique id (combination of section and parameter). This is used to identify parameter value during _POST['GO']
 if ($_GET['section']<>''){ 
@@ -178,7 +179,7 @@ echo "<td><b>Parameter</b></td>";
 echo "<td><b>Value</b></td>";
 echo "<td><b>$description</b></td>";
 echo "</tr>";
-    $InputWidth = 80;
+    $InputWidth = 15;
     while($row = mysqli_fetch_assoc($result) ) {
         if ($row['Section'] == $sections[$_GET['section']]){
         echo "<tr>";
