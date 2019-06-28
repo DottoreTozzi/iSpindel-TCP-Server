@@ -258,7 +258,7 @@ include_once("./include/common_db_query.php");
 
 <br />
 
-<br/> <?php echo($iSpindleServerRunning)?> <br/>
+<br/><br/><?php echo($iSpindleServerRunning)?> <br/>
 
        
 </form>

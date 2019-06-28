@@ -162,8 +162,11 @@ $const3=$valCalib[3];
 <p><b><?php echo $enter_constants ?></b><br/>
 <br/>
 <?php echo $constant1 ?> <input type = "number" name = "const1" step = "0.000000001" value = <?php echo $const1 ?> />
+<br/>
 <?php echo $constant2 ?> <input type = "number" name = "const2" step = "0.000000001" value = <?php echo $const2 ?> />
+<br/>
 <?php echo $constant3 ?> <input type = "number" name = "const3" step = "0.000000001" value = <?php echo $const3 ?> />
+<br/>
 
 <!-- hidden fields. Information required to write back calibration data for corresponding spindel-->
 <input type = "hidden" name="Is_Calib" value= <?php echo $valCalib[0] ?>>
