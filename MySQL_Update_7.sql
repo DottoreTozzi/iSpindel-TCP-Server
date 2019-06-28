@@ -97,7 +97,7 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`) VALU
 ('index', 'server_not_running', 'Warnung: TCP Server läuft nicht!', 'Warning: TCP Server is not running!'),
 ('index', 'server_running', 'TCP Server läuft mit PID: ', 'TCP Server is running with PID: '),
 ('index', 'server_settings', 'TCP Server Settings Editieren', 'Edit TCP Server Settings'),
-('index', 'show_diagram', 'Diagram Anzeigen', 'Show Diagram'),
+('index', 'show_diagram', 'Diagramm Anzeigen', 'Show Diagram'),
 ('plato', 'first_y', 'Extrakt % w/w (Spindel)', 'Extract % w/w (Spindle)'),
 ('plato', 'second_y', 'Temperatur', 'Temperature'),
 ('plato', 'timetext', 'Temperatur und Extraktgehalt (Spindel) der letzten', 'Temperature and extract (Spindle) of the last '),

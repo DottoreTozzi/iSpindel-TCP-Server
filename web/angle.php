@@ -275,6 +275,8 @@ $(function ()
 </head>
 <body>
  
+<a href=/iSpindle/index.php><img src=include/icons8-home-26.png></a>
+
 <div id="wrapper">
   <script src="include/highcharts.js"></script>
   <div id="container" style="width:98%; height:98%; position:absolute"></div>

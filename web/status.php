@@ -369,6 +369,7 @@ $(function ()
 </head>
 <body>
  
+<a href=/iSpindle/index.php><img src=include/icons8-home-26.png></a>
 <div id="wrapper" style="width:97%; height:96%; position:absolute">
 <script src="include/highcharts.js"></script>
 <script src="include/highcharts-more.js"></script>
@@ -376,6 +377,5 @@ $(function ()
 <div id="angle" style="width:32%; height:96%; float:right"></div>
 <div id="temperature" style="width:32%; height:96%; margin-left: 32%; margin-right: 32%"></div>
 </div>
- 
 </body>
 </html>

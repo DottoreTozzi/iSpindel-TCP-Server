@@ -63,5 +63,6 @@ if ($Recipe <>'')
    echo $recipe_written . " <b>" . $Recipe . "</b>";
    }
 }
+echo "<br/><br/><a href=/iSpindle/index.php><img src=include/icons8-home-26.png></a>"
 ?>
 
