@@ -1,0 +1,16 @@
+# neue Datei /etc/systemd/system/vncserver.service
+[Unit]
+Description=Remote desktop service (VNC)
+After=syslog.target network.target
+
+[Service]
+Type=forking
+User=pi
+#PAMName=login
+PIDFile=/home/pi/.vnc/%H:1.pid
+ExecStartPre=/bin/sh -c '/usr/bin/vncserver-virtual -kill :1 > /dev/null 2>&1 || :'
+ExecStart=/usr/bin/vncserver-virtual
+ExecStop=/usr/bin/vncserver -kill :1
+
+[Install]
+WantedBy=multi-user.target
