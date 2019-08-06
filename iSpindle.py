@@ -150,6 +150,44 @@ def get_config_from_sql(section, parameter, spindle_name = ''):
 PORT = int(get_config_from_sql('GENERAL', 'PORT')) # TCP Port to listen to (to be used in iSpindle config as well)
 HOST = get_config_from_sql('GENERAL', 'HOST')  # Allowed IP range. Leave at 0.0.0.0 to allow connections from anywhere
 
+# CSV
+CSV = int(get_config_from_sql('CSV', 'ENABLE_CSV'))  # Set to 1 if you want CSV (text file) output
+OUTPATH = get_config_from_sql('CSV', 'OUTPATH')  # CSV output file path; filename will be name_id.csv
+DELIMITER = get_config_from_sql('CSV', 'DELIMITER')  # CSV delimiter (normally use ; for Excel)
+NEWLINE =  get_config_from_sql('CSV', 'NEWLINE')  # newline (\r\n for windows clients)
+DATETIME = int(get_config_from_sql('CSV', 'DATETIME'))  # Leave this at 1 to include Excel compatible timestamp in CSV
+
+# Ubidots (using existing account)
+UBIDOTS = int(get_config_from_sql('UBIDOTS', 'ENABLE_UBIDOTS'))  # 1 to enable output to ubidots
+UBI_USE_ISPINDLE_TOKEN = int(get_config_from_sql('UBIDOTS', 'UBI_USE_ISPINDLE_TOKEN'))  # 1 to use "token" field in iSpindle config (overrides UBI_TOKEN)
+UBI_TOKEN = get_config_from_sql('UBIDOTS', 'UBI_TOKEN')  # global ubidots token, see manual or ubidots.com
+
+# Forward to public server or other relay (i.e. another instance of this script)
+FORWARD = int(get_config_from_sql('FORWARD', 'ENABLE_FORWARD'))
+FORWARDADDR = get_config_from_sql('FORWARD', 'FORWARDADDR')
+FORWARDPORT =  int(get_config_from_sql('FORWARD', 'FORWARDPORT'))
+
+
+# Fermentrack
+FERMENTRACK = int(get_config_from_sql('FERMENTRACK', 'ENABLE_FERMENTRACK'))
+FERM_USE_ISPINDLE_TOKEN = int(get_config_from_sql('FERMENTRACK', 'FERM_USE_ISPINDLE_TOKEN'))
+FERMENTRACKADDR = get_config_from_sql('FERMENTRACK', 'FERMENTRACKADDR')
+FERMENTRACK_TOKEN = get_config_from_sql('FERMENTRACK', 'FERMENTRACK_TOKEN')
+FERMENTRACKPORT = int(get_config_from_sql('FERMENTRACK', 'FERMENTRACKPORT'))
+
+# BREWPILESS
+BREWPILESS = int(get_config_from_sql('BREWPILESS', 'ENABLE_BREWPILESS'))
+BREWPILESSADDR = get_config_from_sql('BREWPILESS', 'BREWPILESSADDR')
+
+# Forward to CraftBeerPi3 iSpindel Addon
+CRAFTBEERPI3 = int(get_config_from_sql('CRAFTBEERPI3', 'ENABLE_CRAFTBEERPI3'))
+CRAFTBEERPI3ADDR = get_config_from_sql('CRAFTBEERPI3', 'CRAFTBEERPI3ADDR')
+# if this is true the raw angle will be sent to CBPI3 instead of
+# the gravity value. Use this if you want to configure the
+# polynome from within CBPI3.
+# Otherwise leave this 0 and just use "tilt" in CBPI3
+CRAFTBEERPI3_SEND_ANGLE = int(get_config_from_sql('CRAFTBEERPI3', 'CRAFTBEERPI3_SEND_ANGLE'))
+
 # iSpindle Remote Config?
 # If this is enabled, we'll send iSpindle config JSON as TCP reply.
 # Before using this, make sure your database is up-to-date. See README and INSTALL.
