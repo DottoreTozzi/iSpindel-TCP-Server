@@ -78,7 +78,7 @@ function UpdateSettings($conn, $Section, $Parameter, $value)
 {
 // added to wite newline for csv file correctly to database    
     $value= str_replace('\\', '\\\\', $value);
-    $q_sql = mysqli_query($conn, "UPDATE Settings SET value = '" . $value . "' WHERE Section = '" . $Section . "' AND Parameter = '" . $Parameter . "'") or die(mysqli_error($conn));
+    $q_sql = mysqli_query($conn, "UPDATE Settings SET value = '" . $value . "' WHERE Section = '" . $Section . "' AND Parameter = '" . $Parameter . "'" . " AND DeviceName = ''") or die(mysqli_error($conn));
     return 1;
 }
 
