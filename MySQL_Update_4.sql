@@ -1,1 +1,0 @@
-ALTER TABLE Data ADD Recipe VARCHAR(64);
