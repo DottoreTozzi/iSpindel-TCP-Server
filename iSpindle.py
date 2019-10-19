@@ -175,6 +175,21 @@ FERMENTRACKADDR = get_config_from_sql('FERMENTRACK', 'FERMENTRACKADDR')
 FERMENTRACK_TOKEN = get_config_from_sql('FERMENTRACK', 'FERMENTRACK_TOKEN')
 FERMENTRACKPORT = int(get_config_from_sql('FERMENTRACK', 'FERMENTRACKPORT'))
 
+# BrewSpy
+BREWSPY = int(get_config_from_sql('BREWSPY', 'ENABLE_BREWSPY'))
+SPY_USE_ISPINDLE_TOKEN = int(get_config_from_sql('BREWSPY', 'SPY_USE_ISPINDLE_TOKEN'))
+BREWSPYADDR = get_config_from_sql('BREWSPY', 'BREWSPYADDR')
+BREWSPY_TOKEN = get_config_from_sql('BREWSPY', 'BREWSPY_TOKEN')
+BREWSPYPORT = int(get_config_from_sql('BREWSPY', 'BREWSPYPORT'))
+
+# Brewfather
+BREWFATHER = int(get_config_from_sql('BREWFATHER', 'ENABLE_BREWFATHER'))
+FAT_USE_ISPINDLE_TOKEN = int(get_config_from_sql('BREWFATHER', 'FAT_USE_ISPINDLE_TOKEN'))
+BREWFATHERADDR = get_config_from_sql('BREWFATHER', 'BREWFATHERADDR')
+BREWFATHER_TOKEN = get_config_from_sql('BREWFATHER', 'BREWFATHER_TOKEN')
+BREWFATHERPORT = int(get_config_from_sql('BREWFATHER', 'BREWFATHERPORT'))
+BREWFATHERSUFFIX = get_config_from_sql('BREWFATHER', 'BREWFATHERSUFFIX')
+
 # BREWPILESS
 BREWPILESS = int(get_config_from_sql('BREWPILESS', 'ENABLE_BREWPILESS'))
 BREWPILESSADDR = get_config_from_sql('BREWPILESS', 'BREWPILESSADDR')
@@ -211,7 +226,6 @@ dPoly = {}
 
 def dbgprint(s):
     if DEBUG: print(str(s))
-
 
 def readConfig():
     if REMOTECONFIG:
@@ -390,6 +404,21 @@ def handler(clientsock, addr):
         # polynome from within CBPI3.
         # Otherwise leave this 0 and just use "tilt" in CBPI3
         CRAFTBEERPI3_SEND_ANGLE = int(get_config_from_sql('CRAFTBEERPI3', 'CRAFTBEERPI3_SEND_ANGLE', spindle_name))
+
+        # BrewSpy
+        BREWSPY = int(get_config_from_sql('BREWSPY', 'ENABLE_BREWSPY', spindle_name))
+        SPY_USE_ISPINDLE_TOKEN = int(get_config_from_sql('BREWSPY', 'SPY_USE_ISPINDLE_TOKEN', spindle_name))
+        BREWSPYADDR = get_config_from_sql('BREWSPY', 'BREWSPYADDR', spindle_name)
+        BREWSPY_TOKEN = get_config_from_sql('BREWSPY', 'BREWSPY_TOKEN', spindle_name)
+        BREWSPYPORT = int(get_config_from_sql('BREWSPY', 'BREWSPYPORT', spindle_name))
+
+        # Brewfather
+        BREWFATHER = int(get_config_from_sql('BREWFATHER', 'ENABLE_BREWFATHER', spindle_name))
+        FAT_USE_ISPINDLE_TOKEN = int(get_config_from_sql('BREWFATHER', 'FAT_USE_ISPINDLE_TOKEN', spindle_name))
+        BREWFATHERADDR = get_config_from_sql('BREWFATHER', 'BREWFATHERADDR', spindle_name)
+        BREWFATHER_TOKEN = get_config_from_sql('BREWFATHER', 'BREWFATHER_TOKEN', spindle_name)
+        BREWFATHERPORT = int(get_config_from_sql('BREWFATHER', 'BREWFATHERPORT', spindle_name))
+        BREWFATHERSUFFIX = get_config_from_sql('BREWFATHER', 'BREWFATHERSUFFIX', spindle_name)
 
         if CSV:
 	    dbgprint(repr(addr) + ' - writing CSV')
@@ -661,6 +690,69 @@ def handler(clientsock, addr):
                         dbgprint(repr(addr) + ' - received: ' + response.read())
             except Exception as e:
                 dbgprint(repr(addr) + ' Fermentrack Error: ' + str(e))
+
+        if BREWSPY:
+            try:
+                if SPY_USE_ISPINDLE_TOKEN:
+                    token = user_token
+                else:
+                    token = BREWSPY_TOKEN
+                if token != '':
+                    if token[:1] != '*':
+                        dbgprint(repr(addr) + ' - sending to brewspy')
+                        import urllib2
+                        outdata = {
+                            "ID": spindle_id,
+                            "angle": angle,
+                            "battery": battery,
+                            "gravity": gravity,
+                            "name": spindle_name,
+                            "temperature": temperature,
+                            "token": token,
+                            "RSSI": rssi
+                        }
+                        out = json.dumps(outdata)
+                        dbgprint(repr(addr) + ' - sending: ' + out)
+                        url = 'http://' + BREWSPYADDR + ':' + str(BREWSPYPORT) + '/api/ispindel/'
+                        dbgprint(repr(addr) + ' to : ' + url)
+                        req = urllib2.Request(url)
+                        req.add_header('Content-Type', 'application/json')
+                        req.add_header('User-Agent', spindle_name)
+                        response = urllib2.urlopen(req, out)
+                        dbgprint(repr(addr) + ' - received: ' + response.read())
+            except Exception as e:
+                dbgprint(repr(addr) + ' Brewspy Error: ' + str(e))
+
+        if BREWFATHER:
+            try:
+                if FAT_USE_ISPINDLE_TOKEN:
+                    token = user_token
+                else:
+                    token = BREWFATHER_TOKEN
+                if token != '':
+                    if token[:1] != '*':
+                        dbgprint(repr(addr) + ' - sending to brewfather')
+                        import urllib2
+                        outdata = {
+                            "ID": spindle_id,
+                            "angle": angle,
+                            "battery": battery,
+                            "gravity": gravity,
+                            "name": spindle_name + BREWFATHERSUFFIX,
+                            "temperature": temperature,
+                            "token": token
+                        }
+                        out = json.dumps(outdata)
+                        dbgprint(repr(addr) + ' - sending: ' + out)
+                        url = 'http://' + BREWFATHERADDR + ':' + str(BREWFATHERPORT) + '/ispindel?id=' + token
+                        dbgprint(repr(addr) + ' to : ' + url)
+                        req = urllib2.Request(url)
+                        req.add_header('Content-Type', 'application/json')
+                        req.add_header('User-Agent', spindle_name)
+                        response = urllib2.urlopen(req, out)
+                        dbgprint(repr(addr) + ' - received: ' + response.read())
+            except Exception as e:
+                dbgprint(repr(addr) + ' Brewfather Error: ' + str(e))
 
         readConfig()
 
