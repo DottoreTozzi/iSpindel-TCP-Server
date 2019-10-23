@@ -79,12 +79,13 @@ class MyConfigParser(ConfigParser):
 # So there shouldn't be anything here for you to adjust anymore.
 
 config = MyConfigParser()
+config_path = '~/iSpindel-Srv/config'
 
 try:
-  with open('/home/pi/iSpindel-Srv/config/iSpindle_config.ini') as f:
+  with open(os.path.join(os.path.expanduser(config_path),'iSpindle_config.ini')) as f:
     config.readfp(f)
 except IOError:
-  config.read('/home/pi/iSpindel-Srv/config/iSpindle_default.ini')
+  config.read(os.path.join(os.path.expanduser(config_path),'iSpindle_default.ini'))
 
 # General
 DEBUG = config.get('GENERAL', 'DEBUG') # Set to 1 to enable debug output on console (usually devs only)
