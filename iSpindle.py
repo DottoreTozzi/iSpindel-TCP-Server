@@ -624,21 +624,36 @@ def handler(clientsock, addr):
             except Exception as e:
                 dbgprint(repr(addr) + ' Ubidots Error: ' + str(e))
 
-        if FORWARD and gauge == 0:
+        if FORWARD:
             try:
                 dbgprint(repr(addr) + ' - forwarding to ' + FORWARDADDR)
-                outdata = {
-                    'name': spindle_name,
-                    'ID': spindle_id,
-                    'angle': angle,
-                    'temperature': temperature,
-                    'battery': battery,
-                    'gravity': gravity,
-                    'token': user_token,
-                    'interval': interval,
-                    'recipe': recipe,
-                    'RSSI': rssi
-                }
+
+                if gauge == 0:
+                    outdata = {
+                        'name': spindle_name,
+                        'ID': spindle_id,
+                        'angle': angle,
+                        'temperature': temperature,
+                        'battery': battery,
+                        'gravity': gravity,
+                        'token': user_token,
+                        'interval': interval,
+                        'recipe': recipe,
+                        'RSSI': rssi
+                    }
+                else:
+                    outdata = {
+                        'name': spindle_name,
+                        'ID': spindle_id,
+                        'angle': angle,
+                        'temperature': temperature,
+                        'carbondioxid': carbondioxid,
+                        'pressure': pressure,
+                        'token': user_token,
+                        'recipe': recipe,
+                        'RSSI': rssi
+                    }
+
                 out = json.dumps(outdata)
                 dbgprint(repr(addr) + ' - sending: ' + out)
                 s = socket(AF_INET, SOCK_STREAM)
