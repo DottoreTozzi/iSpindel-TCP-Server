@@ -201,6 +201,25 @@ include_once("./include/common_db_query.php");
             }
         ?>
         </option>
+        
+        <?php
+        $sql_q = "SELECT DISTINCT Name FROM iGauge
+        WHERE Timestamp > date_sub(NOW(), INTERVAL ".$daysago." DAY)
+        ORDER BY Name";
+    	$result=mysqli_query($conn, $sql_q) or die(mysqli_error($conn));
+            while($row = mysqli_fetch_assoc($result) )
+            {
+                ?>
+                <option value = "<?php echo($row['Name'])?>">
+                <?php echo($row['Name']) ?>
+        <?php
+            }
+            $sql_q = "SELECT DISTINCT Name FROM iGauge
+        WHERE Timestamp > date_sub(NOW(), INTERVAL ".$daysago." DAY)
+        ORDER BY Name";
+    	$result=mysqli_query($conn, $sql_q) or die(mysqli_error($conn));
+        ?>
+        </option>
 </select>
 
 <!-- select options for diagrams to be loaded -->
@@ -217,6 +236,9 @@ include_once("./include/common_db_query.php");
         <option value="svg_ma.php"><?php echo $chart_filename_10 ?></option>
         <option value="plato4_delta.php"><?php echo $chart_filename_11 ?></option>	
         <option value="reset_now.php"><?php echo $chart_filename_09 ?></option>
+        <option value="iGauge.php">iGauge Daten</option>
+        <option value="reset_now_igauge.php">Nachg&auml;beginn Zeitpunkt setzen</option>
+        
 <!--        <option value="calibration.php"><?php echo $chart_filename_13 ?></option> -->
 </select>
 
