@@ -30,7 +30,7 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `iGauge` (
   `Index_` bigint(20) NOT NULL,
-  `Timestamp` datetime NOT NULL DEFAULT current_timestamp(),
+  `Timestamp` datetime NOT NULL,
   `Name` varchar(64) COLLATE ascii_bin NOT NULL,
   `ID` int(11) NOT NULL,
   `Pressure` double NOT NULL,
