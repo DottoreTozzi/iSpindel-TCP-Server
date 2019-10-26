@@ -137,12 +137,15 @@ include_once("./include/common_db_query.php");
 // get information if TCP server is running
     $pids=''; 
     $running=false;
+    $stat = exec("systemctl is-active ispindle-srv");
     if (file_exists( "/var/run/ispindle-srv.pid" )) {
         $pid= (shell_exec("cat /var/run/ispindle-srv.pid"));
         $running = posix_getpgid(intval($pid));
     }
     if ($running) {
         $iSpindleServerRunning = $server_running . $pid;
+    } elseif ($stat == "activating") {
+              $iSpindleServerRunning = $server_running;
     } else {
         $iSpindleServerRunning = $server_not_running;
     }

@@ -101,6 +101,7 @@ $timetext .= $tfhours . ' ' . $subheader_hours;
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
   <title>iSpindle Data</title>
   <meta http-equiv="refresh" content="120">
   <meta name="Keywords" content="iSpindle, iSpindel, Chart, genericTCP">
