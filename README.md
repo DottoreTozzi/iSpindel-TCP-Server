@@ -7,15 +7,10 @@ Added: MQTTDevice support
 The following instructions assume a working TCP server installation!
 
 1. sudo service ispindle-srv stop 
-
 2. rename /home/pi/iSpindle-Srv into ori-iSpindle-Srv (backup)
-
 3. git clone https://github.com/InnuendoPi/iSpindel-TCP-Server iSpindle-Srv
-
 4. copy file ori-iSpindle-Srv/web/config/common_db_config.php to iSpindle-Srv/web/config/common_db_config.php
-
-5. run mqttdevice.sql via phpmyadmin on database iSpindle on table Strings
-
+5. run MySQL_Update_mqttdevice.sql via phpmyadmin on database iSpindle on table Strings
 6. sudo service ispindle-srv start or sudo reboot
 
 
