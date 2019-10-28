@@ -1,4 +1,8 @@
 # iSpindel Generic TCP Server
+
+This fork is for testing purpose only - do not use!
+Added: MQTTDevice support
+
 #### (iSpindle.py Version 1.6.3)
 
 **Neu (20.06.2019)**
