@@ -15,12 +15,19 @@ The following instructions assume a working TCP server installation!
 open a bash and run these commands:
 
 cd /home/pi/iSpindel-Srv
+
 sudo mv iSpindle.py /usr/local/bin
+
 sudo mv ispindle-srv /etc/init.d
+
 sudo chmod 755 /usr/local/bin/iSpindle.py
+
 sudo chmod 755 /etc/init.d/ispindle-srv
+
 cd /etc/init.d
+
 sudo systemctl daemon-reload
+
 
 6. sudo service ispindle-srv start or sudo reboot
 
