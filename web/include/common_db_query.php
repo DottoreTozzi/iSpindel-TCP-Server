@@ -780,7 +780,89 @@ function getChartValuesSVG_ma($conn, $iSpindleID = 'iSpindel000', $movingtime)
         );
     }
 }
+function getChartValuesMQTTDevice($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $movingtime, $reset = defaultReset)
+{
+    $isCalibrated = 0; // is there a calbration record for this iSpindle?
+    $valAngle = '';
+	$valBattery = '';
+    $valTemperature = '';
+    $valDens = '';
+    $const1 = 0;
+    $const2 = 0;
+    $const3 = 0;
+    $where_ma = '';
 
+    $Interval = (getCurrentInterval($conn, $iSpindleID));
+    $Rows = round($movingtime / ($Interval / 60));
+
+
+
+    if ($reset) {
+        $where = "Data.Timestamp > (Select max(Timestamp) FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.ResetFlag = true)";
+        $where_oldDB = "WHERE Data1.Name = '" . $iSpindleID . "'
+                                                AND Data1.Timestamp > (Select max(Timestamp) FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.ResetFlag = true)";
+        $where_ma = "Data2.Timestamp > (Select max(Data2.Timestamp) FROM Data AS Data2  WHERE Data2.ResetFlag = true AND Data2.Name = '" . $iSpindleID . "') AND";
+    } else {
+        $where = "Data.Timestamp >= date_sub(NOW(), INTERVAL " . $timeFrameHours . " HOUR) AND Data.Timestamp <= NOW()";
+        $where_oldDB = "WHERE Data1.Name = '" . $iSpindleID . "'
+                                                AND Data1.Timestamp >= date_sub(NOW(), INTERVAL " . $timeFrameHours . " HOUR)
+                                                and Data1.Timestamp <= NOW()";
+    }
+    mysqli_set_charset($conn, "utf8mb4");
+    if (!$q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data.Timestamp) as unixtime, Data.temperature, Data.angle, Data.battery, Data.recipe,
+                                AVG(Data.Angle) OVER (ORDER BY Data.Timestamp ASC ROWS " . $Rows . " PRECEDING) AS mv_angle
+                                FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND " . $where)) {
+        $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data1.Timestamp) as unixtime, Data1.temperature, Data1.angle, Data1.battery, Data1.recipe,
+                                (SELECT SUM(Data2.Angle) / COUNT(Data2.Angle)
+                                                                FROM Data AS Data2
+                                WHERE Data2.Name = '" . $iSpindleID . "' AND " . $where_ma . " TIMESTAMPDIFF(MINUTE, Data2.Timestamp, Data1.Timestamp) BETWEEN 0 and " . $movingtime . " ) AS mv_angle
+                                                                FROM Data AS Data1 " . $where_oldDB . " ORDER BY Data1.Timestamp ASC") or die(mysqli_error($conn));
+    }
+    
+    
+    // retrieve number of rows
+    $rows = mysqli_num_rows($q_sql);
+    if ($rows > 0) {
+        // get unique hardware ID for calibration
+        $u_sql = mysqli_query($conn, "SELECT ID FROM Data WHERE Name = '" . $iSpindleID . "' ORDER BY Timestamp DESC LIMIT 1") or die(mysqli_error($conn));
+        $rowsID = mysqli_num_rows($u_sql);
+        if ($rowsID > 0) {
+            // try to get calibration for iSpindle hardware ID
+            $r_id = mysqli_fetch_array($u_sql);
+            $uniqueID = $r_id['ID'];
+            $f_sql = mysqli_query($conn, "SELECT const1, const2, const3 FROM Calibration WHERE ID = '$uniqueID' ") or die(mysqli_error($conn));
+            $rows_cal = mysqli_num_rows($f_sql);
+            if ($rows_cal > 0) {
+                $isCalibrated = 1;
+                $r_cal = mysqli_fetch_array($f_sql);
+                $const1 = $r_cal['const1'];
+                $const2 = $r_cal['const2'];
+                $const3 = $r_cal['const3'];
+            }
+        }
+        // retrieve and store the values as CSV lists for HighCharts
+        while ($r_row = mysqli_fetch_array($q_sql)) {
+            $jsTime = $r_row['unixtime'] * 1000;
+            $angle = $r_row['mv_angle'];
+            $dens = $const1 * pow($angle, 2) + $const2 * $angle + $const3; // complete polynome from database
+
+            $valAngle .= '[' . $jsTime . ', ' . $angle . '],';
+			$valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['angle'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
+			$valBattery .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['battery'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
+
+
+        }
+
+        return array(
+            $isCalibrated,
+            $valDens,
+            $valTemperature,
+            $valAngle,
+			$valBattery
+        );
+    }
+}
 
 
 ?>
