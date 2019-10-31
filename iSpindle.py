@@ -65,6 +65,7 @@ import time
 from ConfigParser import ConfigParser
 import os
 import sys
+import mysql.connector
 
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -106,7 +107,6 @@ SQL_PORT = config.getint('MYSQL', 'SQL_PORT')
 check = False
 while check == False:
     try:
-        import mysql.connector
         cnx = mysql.connector.connect(
             user=SQL_USER,  port=SQL_PORT, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
         cur = cnx.cursor()
