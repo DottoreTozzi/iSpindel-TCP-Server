@@ -120,6 +120,7 @@ while check == False:
         else:
             break
     except:
+        print("Error connecting to database:", sys.exc_info()[0])
         time.sleep(1)
         check = False
 
