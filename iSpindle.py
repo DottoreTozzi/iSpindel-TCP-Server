@@ -260,7 +260,6 @@ def handler(clientsock, addr):
     config_sent = 0
     pressure = 0.0
     carbondioxid = 0.0
-    gauge = 0
 
     while 1:
         data = clientsock.recv(BUFF)
@@ -290,17 +289,25 @@ def handler(clientsock, addr):
                 else:
                     timestamp = datetime.now()
 
-                if spindle_name.find("iGauge") == -1:
-                    gauge = 0
-                    spindle_id = jinput['ID']
+                # Common fields for eManometer and iSpindle
+                spindle_id = jinput['ID']
+                temperature = jinput['temperature']
+
+                if jinput.get('RSSI') != None:
+                    rssi = jinput['RSSI']
+
+                if jinput.get('type') != None:
+                    type = jinput['type']
+                else:
+                    type = 'iSpindel';
+
+                if type == 'iSpindel':
                     angle = jinput['angle']
-                    temperature = jinput['temperature']
                     battery = jinput['battery']
 
                     try:
                         gravity = jinput['gravity']
                         interval = jinput['interval']
-                        rssi = jinput['RSSI']
                     except:
                     # older firmwares might not be transmitting all of these
                         dbgprint("Consider updating your iSpindel's Firmware.")
@@ -311,13 +318,9 @@ def handler(clientsock, addr):
                     # older firmwares < 5.4 or field not filled in
                         user_token = '*'
                 else:
-                    spindle_id = jinput['ID']
                     pressure = jinput['pressure']
-                    temperature = jinput['temperature']
                     carbondioxid = jinput['carbondioxid']
                     #interval = jinput['interval']
-                    rssi = jinput['RSSI']
-                    gauge = 1
                 # looks like everything went well :)
                 #
                 # Should we reply with a config JSON?
@@ -416,7 +419,7 @@ def handler(clientsock, addr):
         # Otherwise leave this 0 and just use "tilt" in CBPI3
         CRAFTBEERPI3_SEND_ANGLE = int(get_config_from_sql('CRAFTBEERPI3', 'CRAFTBEERPI3_SEND_ANGLE', spindle_name))
 
-        if CSV and gauge == 0:
+        if CSV and type == 'iSpindel':
             dbgprint(repr(addr) + ' - writing CSV')
             recipe = 'n/a'
             try:
@@ -470,10 +473,10 @@ def handler(clientsock, addr):
 		import mysql.connector
 		cnx = mysql.connector.connect(user=SQL_USER, port=SQL_PORT, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
 		cur = cnx.cursor()
-                if gauge == 0 :
-                    sqlselect="SELECT Data.Recipe FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.Timestamp >= (SELECT max( Data.Timestamp )FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.ResetFlag = true) LIMIT 1;"
-                else:
+                if type == 'eManometer':
                     sqlselect="SELECT iGauge.Recipe,iGauge.First_value FROM iGauge WHERE iGauge.Name = '"+spindle_name+"' AND iGauge.Timestamp >= (SELECT max( iGauge.Timestamp )FROM iGauge WHERE iGauge.Name = '"+spindle_name+"' AND iGauge.ResetFlag = true) LIMIT 1;"
+                else:
+                    sqlselect="SELECT Data.Recipe FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.Timestamp >= (SELECT max( Data.Timestamp )FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.ResetFlag = true) LIMIT 1;"
 		cur.execute(sqlselect)
 		recipe_names = cur.fetchone()
 		cur.close()
@@ -487,12 +490,12 @@ def handler(clientsock, addr):
                 import mysql.connector
                 dbgprint(repr(addr) + ' - writing to database')
                 # standard field definitions:
-                if gauge == 0 :
-                    fieldlist = ['Timestamp', 'Name', 'ID', 'Angle', 'Temperature', 'Battery', 'Gravity', 'Recipe']
-                    valuelist = [timestamp, spindle_name, spindle_id, angle, temperature, battery, gravity, recipe]
-                else:
+                if type == 'eManometer':
                     fieldlist = ['Timestamp', 'Name', 'ID', 'Pressure', 'Temperature', 'Carbondioxid', 'Recipe']
                     valuelist = [timestamp, spindle_name, spindle_id, pressure, temperature, carbondioxid, recipe]
+                else:
+                    fieldlist = ['Timestamp', 'Name', 'ID', 'Angle', 'Temperature', 'Battery', 'Gravity', 'Recipe']
+                    valuelist = [timestamp, spindle_name, spindle_id, angle, temperature, battery, gravity, recipe]
 
                 # do we have a user token defined? (Fw > 5.4.x)
                 # this is for later use (public server) but if it exists, let's store it for testing purposes
@@ -545,10 +548,10 @@ def handler(clientsock, addr):
                 # gather the data now and send it to the database
                 fieldstr = ', '.join(fieldlist)
                 valuestr = ', '.join(['%s' for x in valuelist])
-                if gauge == 0 :
-                    add_sql = 'INSERT INTO Data (' + fieldstr + ')'
-                else:
+                if type == 'eManometer':
                     add_sql = 'INSERT INTO iGauge (' + fieldstr + ')'
+                else:
+                    add_sql = 'INSERT INTO Data (' + fieldstr + ')'
                 add_sql += ' VALUES (' + valuestr + ')'
                 #dbgprint(add_sql)
                 #dbgprint(valuelist)
@@ -560,7 +563,7 @@ def handler(clientsock, addr):
             except Exception as e:
                 dbgprint(repr(addr) + ' Database Error: ' + str(e) + NEWLINE + 'Did you update your database?')
 
-        if BREWPILESS and gauge == 0:
+        if BREWPILESS and type == 'iSpindel':
             try:
                 dbgprint(repr(addr) + ' - forwarding to BREWPILESS at http://' + BREWPILESSADDR)
                 import urllib2
@@ -583,7 +586,7 @@ def handler(clientsock, addr):
             except Exception as e:
                 dbgprint(repr(addr) + ' Error while forwarding to URL ' + url + ' : ' + str(e))
 
-        if CRAFTBEERPI3 and gauge == 0:
+        if CRAFTBEERPI3 and type == 'iSpindel':
             try:
                 dbgprint(repr(addr) + ' - forwarding to CraftBeerPi3 at http://' + CRAFTBEERPI3ADDR)
                 import urllib2
@@ -606,7 +609,7 @@ def handler(clientsock, addr):
                 dbgprint(repr(addr) + ' Error while forwarding to URL ' + url + ' : ' + str(e))
 
 
-        if UBIDOTS and gauge == 0:
+        if UBIDOTS and type == 'iSpindel':
             try:
                 if UBI_USE_ISPINDLE_TOKEN:
                     token = user_token
@@ -639,7 +642,7 @@ def handler(clientsock, addr):
             try:
                 dbgprint(repr(addr) + ' - forwarding to ' + FORWARDADDR)
 
-                if gauge == 0:
+                if type == 'iSpindel':
                     outdata = {
                         'name': spindle_name,
                         'ID': spindle_id,
@@ -681,7 +684,7 @@ def handler(clientsock, addr):
             except Exception as e:
                 dbgprint(repr(addr) + ' Error while forwarding to ' + FORWARDADDR + ': ' + str(e))
 
-        if FERMENTRACK and gauge == 0:
+        if FERMENTRACK and type == 'iSpindel':
             try:
                 if FERM_USE_ISPINDLE_TOKEN:
                     token = user_token
