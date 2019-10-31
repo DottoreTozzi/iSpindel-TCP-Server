@@ -285,7 +285,7 @@ def handler(clientsock, addr):
                 # Note that Timestamps in JS/JSON are in microseconds, so we have
                 # to divide it by 1000 to get a Unix timestamp
                 if jinput.get('timestamp') != None:
-                    timestamp = datetime.utcfromtimestamp(jinput['timestamp'] / 1000)
+                    timestamp = datetime.fromtimestamp(jinput['timestamp'] / 1000)
                 else:
                     timestamp = datetime.now()
 
