@@ -280,6 +280,16 @@ def handler(clientsock, addr):
             if inpstr.find("}") != -1:
                 jinput = json.loads(inpstr)
                 spindle_name = jinput['name']
+
+                # Use the timestamp of the transmitted json if present,
+                # otherwise the current time
+                # Note that Timestamps in JS/JSON are in microseconds, so we have
+                # to divide it by 1000 to get a Unix timestamp
+                if jinput.get('timestamp') != None:
+                    timestamp = datetime.utcfromtimestamp(jinput['timestamp'] / 1000)
+                else:
+                    timestamp = datetime.now()
+
                 if spindle_name.find("iGauge") == -1:
                     gauge = 0
                     spindle_id = jinput['ID']
@@ -434,7 +444,7 @@ def handler(clientsock, addr):
                     # csvw.writerow(jinput.values())
                     outstr = ''
                     if DATETIME == 1:
-                        cdt = datetime.now()
+                        cdt = timestamp
                         outstr += cdt.strftime('%x %X') + DELIMITER
                     outstr += str(spindle_name) + DELIMITER
                     outstr += str(spindle_id) + DELIMITER
@@ -479,10 +489,10 @@ def handler(clientsock, addr):
                 # standard field definitions:
                 if gauge == 0 :
                     fieldlist = ['Timestamp', 'Name', 'ID', 'Angle', 'Temperature', 'Battery', 'Gravity', 'Recipe']
-                    valuelist = [datetime.now(), spindle_name, spindle_id, angle, temperature, battery, gravity, recipe]
+                    valuelist = [timestamp, spindle_name, spindle_id, angle, temperature, battery, gravity, recipe]
                 else:
                     fieldlist = ['Timestamp', 'Name', 'ID', 'Pressure', 'Temperature', 'Carbondioxid', 'Recipe']
-                    valuelist = [datetime.now(), spindle_name, spindle_id, pressure, temperature, carbondioxid, recipe]
+                    valuelist = [timestamp, spindle_name, spindle_id, pressure, temperature, carbondioxid, recipe]
 
                 # do we have a user token defined? (Fw > 5.4.x)
                 # this is for later use (public server) but if it exists, let's store it for testing purposes
