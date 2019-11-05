@@ -215,10 +215,17 @@ $(function ()
                     if(this.series.name == second_y) {
                         const pointData = chartTemp.find(row => row.timestamp === this.point.x)
                         return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x)) + ' ' + tooltip_time + ' ' + this.y.toFixed(2) +'°C';
-                    } else {
+                    } else if(this.series.name == first_y){
                         const pointData = chartDens.find(row => row.timestamp === this.point.x)
                         return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x))  + ' ' + tooltip_time + ' ' + this.y.toFixed(2) +'°C';
+                    } else {
+                        const pointData = chartBatt.find(row => row.timestamp === this.point.x)
+                        return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x))  + ' ' + tooltip_time + ' ' + this.y.toFixed(2) +'%';
                     }
+                    // } else {
+                    //     const pointData = chartDens.find(row => row.timestamp === this.point.x)
+                    //     return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x))  + ' ' + tooltip_time + ' ' + this.y.toFixed(2) +'°C';
+                    // }
                 }
             },  
             legend: 
