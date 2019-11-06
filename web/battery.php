@@ -28,6 +28,7 @@ $diagram_battery = get_field_from_sql($conn,$file,"diagram_battery");
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
   <title>iSpindle Current Data</title>
   <meta http-equiv="refresh" content="120">
   <meta name="Keywords" content="iSpindle, iSpindel, status, current, genericTCP">
