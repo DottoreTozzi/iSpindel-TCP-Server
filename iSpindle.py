@@ -333,7 +333,7 @@ def handler(clientsock, addr):
                         user_token = '*'
                 else:
                     pressure = jinput['pressure']
-                    carbondioxid = jinput['carbondioxid']
+                    carbondioxid = jinput['co2']
                     #interval = jinput['interval']
                 # looks like everything went well :)
                 #
