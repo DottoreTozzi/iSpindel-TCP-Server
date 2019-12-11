@@ -10,8 +10,8 @@
 // DB config values will be pulled from differtent location and user can personalize this file: common_db_config.php
 // If file does not exist, values will be pulled from default file
  
-if ((include_once '../config/common_db_config.php') == FALSE){
-       include_once("../config/common_db_default.php");
+if ((include_once './config/common_db_config.php') == FALSE){
+       include_once("./config/common_db_default.php");
       }
      include_once("include/common_db_query.php");
 
@@ -89,6 +89,7 @@ $timetext .= $tfhours . ' ' . $subheader_hours;
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
   <title>iSpindle Data</title>
   <meta http-equiv="refresh" content="120">
   <meta name="Keywords" content="iSpindle, iSpindel, Chart, genericTCP">
@@ -96,6 +97,7 @@ $timetext .= $tfhours . ' ' . $subheader_hours;
   <script src="include/jquery-3.1.1.min.js"></script>
   <script src="include/moment.min.js"></script>
   <script src="include/moment-timezone-with-data.js"></script>
+  <link rel="stylesheet" type="text/css" href="./include/iSpindle.css">
 
 <script type="text/javascript">
 
@@ -127,7 +129,7 @@ $(function ()
         chart = new Highcharts.Chart(
         {
             chart:
-            {
+            {   backgroundColor: "rgba(0,0,0,0)",
                 renderTo: 'container'
             },
             title:
@@ -261,10 +263,14 @@ $(function ()
 </script>
 </head>
 <body>
+
+<a href=/iSpindle/index.php><img src=include/icons8-home-26.png></a>
  
 <div id="wrapper">
   <script src="include/highcharts.js"></script>
-  <div id="container" style="width:98%; height:98%; position:absolute"></div>
+  <script src="include/modules/exporting.js"></script>
+  <script src="include/modules/offline-exporting.js"></script>
+  <div id="container" style="width:90%; height:90%; position:absolute"></div>
 </div>
  
 </body>

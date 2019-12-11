@@ -13,8 +13,8 @@ error_reporting(E_ALL | E_STRICT);
 // DB config values will be pulled from differtent location and user can personalize this file: common_db_config.php
 // If file does not exist, values will be pulled from default file
 
-if ((include_once '../config/common_db_config.php') == FALSE){
-       include_once("../config/common_db_default.php");
+if ((include_once './config/common_db_config.php') == FALSE){
+       include_once("./config/common_db_default.php");
 	}
        include_once("include/common_db_query.php");
 
@@ -102,7 +102,8 @@ $timetext .= $tfhours . ' ' . $subheader_hours;
   <script src="include/moment.min.js"></script>
   <script src="include/moment-timezone-with-data.js"></script>
   <script src="include/highcharts.js"></script>
-<meta http-equiv="content-type" content="text/html; charset=utf-8"> 
+  <meta http-equiv="content-type" content="text/html; charset=utf-8"> 
+  <link rel="stylesheet" type="text/css" href="./include/iSpindle.css">
 <script type="text/javascript">
 
 // define constants for data in chart. Allows for mor than two variables. Recipe information is included here and can be displayed in tooltip
@@ -138,7 +139,7 @@ $(function ()
     chart = new Highcharts.Chart(
     {
       chart: 
-      {
+      { backgroundColor: 'rgba(0,0,0,0)',
         renderTo: 'container'
       },
       title: 
@@ -275,9 +276,13 @@ $(function ()
 </head>
 <body>
  
+<a href=/iSpindle/index.php><img src=include/icons8-home-26.png></a>
+
 <div id="wrapper">
   <script src="include/highcharts.js"></script>
-  <div id="container" style="width:98%; height:98%; position:absolute"></div>
+  <script src="include/modules/exporting.js"></script>
+  <script src="include/modules/offline-exporting.js"></script>
+  <div id="container" style="width:90%; height:90%; position:absolute"></div>
 </div>
  
 </body>

@@ -8,8 +8,8 @@
 // DB config values will be pulled from differtent location and user can personalize this file: common_db_config.php
 // If file does not exist, values will be pulled from default file
 
-if ((include_once '../config/common_db_config.php') == FALSE){
-       include_once("../config/common_db_default.php");
+if ((include_once './config/common_db_config.php') == FALSE){
+       include_once("./config/common_db_default.php");
      }
     include_once("include/common_db_query.php");
 
@@ -89,9 +89,12 @@ $stop = get_field_from_sql($conn,$file,"stop");
 <html>
 <head>
 
+    <meta charset="utf-8">
     <title>RasPySpindel Kalibrierung</title>
     <meta name="Keywords" content="iSpindle, iSpindel, Chart, genericTCP, Select">
     <meta name="Description" content="iSpindle Fermentation Chart Selection Screen">
+    <link rel="stylesheet" type="text/css" href="./include/iSpindle.css">
+    <a href=/iSpindle/index.php><img src=include/icons8-home-26.png></a>
 
 <script type="text/javascript">
     function target_popup(form) {
@@ -162,8 +165,11 @@ $const3=$valCalib[3];
 <p><b><?php echo $enter_constants ?></b><br/>
 <br/>
 <?php echo $constant1 ?> <input type = "number" name = "const1" step = "0.000000001" value = <?php echo $const1 ?> />
+<br/>
 <?php echo $constant2 ?> <input type = "number" name = "const2" step = "0.000000001" value = <?php echo $const2 ?> />
+<br/>
 <?php echo $constant3 ?> <input type = "number" name = "const3" step = "0.000000001" value = <?php echo $const3 ?> />
+<br/>
 
 <!-- hidden fields. Information required to write back calibration data for corresponding spindel-->
 <input type = "hidden" name="Is_Calib" value= <?php echo $valCalib[0] ?>>

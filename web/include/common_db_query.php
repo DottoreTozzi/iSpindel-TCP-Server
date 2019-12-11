@@ -73,14 +73,38 @@ function get_field_from_sql($conn, $file, $field)
         }
 }
 
+function get_settings_from_sql($conn, $section, $device, $parameter)
+{
+// set connection to utf-8 to display characters like umlauts correctly
+    mysqli_set_charset($conn, "utf8mb4");
+    $q_sql = "SELECT value FROM Settings WHERE Section = '" . $section. "' and Parameter = '" . $parameter . "' and ( DeviceName = '_DEFAULT' or DeviceName = '" . $device . "' ) ORDER BY DeviceName DESC LIMIT 1;";
+    $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
+    $rows = mysqli_num_rows($result);
+    if($rows > 0) {
+        $r_row = mysqli_fetch_array($result);
+        $return_value = $r_row[0];
+            }
+        return $return_value;
+}
+
+
 // Function to write iSpindel Server settings back to sql database. Function is used by settings.php
-function UpdateSettings($conn, $Section, $Parameter, $value)
+function UpdateSettings($conn, $Section, $Device, $Parameter, $value)
 {
 // added to wite newline for csv file correctly to database    
     $value= str_replace('\\', '\\\\', $value);
-    $q_sql = mysqli_query($conn, "UPDATE Settings SET value = '" . $value . "' WHERE Section = '" . $Section . "' AND Parameter = '" . $Parameter . "'") or die(mysqli_error($conn));
+    $q_sql = mysqli_query($conn, "UPDATE Settings SET value = '" . $value . "' WHERE Section = '" . $Section . "' AND Parameter = '" . $Parameter . "'" . " AND DeviceName = '" . $Device . "'") or die(mysqli_error($conn));
     return 1;
 }
+
+function CopySettingsToDevice($conn, $device)
+{
+    $sql_select="INSERT INTO Settings(Section,Parameter,value,Description_DE,Description_EN,Description_IT,DeviceName) SELECT Section,Parameter,value,Description_DE,Description_EN,Description_IT,'" . $device . "' FROM Settings WHERE DeviceName ='_DEFAULT'";
+
+   $q_sql = mysqli_query($conn, $sql_select) or die(mysqli_error($conn));
+    return 1;
+}
+
 
 // Retrieves timestamp of last dataset for corresponding Spindle. If timestamp is older than timeframehours, false will be returned
 // Difference between last available data and selected timeframe is calculated and displayed in diagram to go more days back  
@@ -260,6 +284,36 @@ function getInitialGravity($conn, $iSpindleID = 'iSpindel000')
     }
 }
 
+// Check if alarm mail has been sent
+function check_mail_sent($conn, $alarm, $iSpindel)
+{
+        $sqlselect = "Select value from Settings where Section ='EMAIL' and Parameter = '" . $alarm . "' AND value = '" . $iSpindel . "' ;";
+        $q_sql = mysqli_query($conn, $sqlselect) or die(mysqli_error($conn));
+        if (! $q_sql)
+	    {
+            return 0;
+            } 
+        else
+            {
+            return 1;
+            }
+}
+
+function delete_mail_sent($conn, $alarm, $iSpindel)
+{
+        $sqlselect = "DELETE FROM Settings where Section ='EMAIL' and Parameter = '" . $alarm . "' AND value = '" . $iSpindel . "' ;";
+        $q_sql = mysqli_query($conn, $sqlselect) or die(mysqli_error($conn));
+        if (! $q_sql)
+            {
+            return 0;
+            }
+        else
+            {
+            return 1;
+            }
+}
+
+
 // Get values from database for selected spindle, between now and timeframe in hours ago  
 function getChartValues($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $reset = defaultReset)
 {
@@ -409,7 +463,6 @@ function getCurrentValues($conn, $iSpindleID = 'iSpindel000')
                 FROM Data
                 WHERE Name = '" . $iSpindleID . "'
                 ORDER BY Timestamp DESC LIMIT 1") or die(mysqli_error($conn));
-
     $rows = mysqli_num_rows($q_sql);
     if ($rows > 0) {
         $r_row = mysqli_fetch_array($q_sql);
@@ -522,6 +575,66 @@ function getChartValuesPlato4($conn, $iSpindleID = 'iSpindel000', $timeFrameHour
         );
     }
 }
+// Get calibrated gravity value from database for selected spindle
+function getlastValuesPlato4($conn, $iSpindleID = 'iSpindel000')
+{
+    $isCalibrated = 0; // is there a calbration record for this iSpindle?
+    $valAngle = '';
+    $valTemperature = '';
+    $valDens = '';
+    $const1 = 0;
+    $const2 = 0;
+    $const3 = 0;
+
+    mysqli_set_charset($conn, "utf8mb4");
+
+    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe, battery, rssi
+                FROM Data
+                WHERE Name = '" . $iSpindleID . "'
+                ORDER BY Timestamp DESC LIMIT 1") or die(mysqli_error($conn));
+
+
+    // retrieve number of rows
+    $rows = mysqli_num_rows($q_sql);
+    if ($rows > 0) {
+        // get unique hardware ID for calibration
+        $u_sql = mysqli_query($conn, "SELECT ID FROM Data WHERE Name = '" . $iSpindleID . "' ORDER BY Timestamp DESC LIMIT 1") or die(mysqli_error($conn));
+        $rowsID = mysqli_num_rows($u_sql);
+        if ($rowsID > 0) {
+            // try to get calibration for iSpindle hardware ID
+            $r_id = mysqli_fetch_array($u_sql);
+            $uniqueID = $r_id['ID'];
+            $f_sql = mysqli_query($conn, "SELECT const1, const2, const3 FROM Calibration WHERE ID = '$uniqueID' ") or die(mysqli_error($conn));
+            $rows_cal = mysqli_num_rows($f_sql);
+            if ($rows_cal > 0) {
+                $isCalibrated = 1;
+                $r_cal = mysqli_fetch_array($f_sql);
+                $const1 = $r_cal['const1'];
+                $const2 = $r_cal['const2'];
+                $const3 = $r_cal['const3'];
+            }
+        }
+        // retrieve and store the values as CSV lists for HighCharts
+        $r_row = mysqli_fetch_array($q_sql);
+        $valTime = $r_row['unixtime'];
+        $valTemperature = $r_row['temperature'];
+        $valAngle = $r_row['angle'];
+        $valDens = $const1 * pow($valAngle, 2) + $const2 * $valAngle + $const3; // complete polynome from database
+        $valRecipe = $r_row['recipe'];
+        $valBattery = $r_row['battery'];
+        $valRSSI = $r_row['rssi'];
+        return array(
+            $isCalibrated,
+            $valTime,
+            $valTemperature,
+            $valAngle,
+            $valBattery,
+            $valRecipe,
+            $valDens,
+            $valRSSI
+        );
+    }
+}
 
 function getChartValuesPlato4_delta($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $movingtime = 720, $reset = defaultReset)
 {
@@ -598,7 +711,7 @@ function getChartValuesPlato4_delta($conn, $iSpindleID = 'iSpindel000', $timeFra
          );
          }
          else {
-             echo "Select for this diagram is using 'SQL Windows functions'. Your Database does not ssem to support it. If you want to use these functions you need to upgrade to a newer version of your SQL installation";
+             echo "Select for this diagram is using 'SQL Windows functions'. Either your Data table is still empty, or your Database does not seem to support it. If you want to use these functions you need to upgrade to a newer version of your SQL installation.<br/><br/><a href=/iSpindle/index.php><img src=include/icons8-home-26.png></a>";
              exit;
          }
 }

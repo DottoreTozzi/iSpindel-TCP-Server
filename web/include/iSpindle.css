@@ -1,0 +1,53 @@
+body {
+  background-color: lightblue;
+  padding-bottom:3em;
+
+}
+
+h1 {
+  color: white;
+  background-color: black;
+  text-align: center;
+}
+
+h2 {
+  color: black;
+  text-align: left;
+}
+
+h3 {
+  color: black;
+  text-align: left;
+}
+
+footer {
+  position: fixed;
+  padding: 10px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+/*input#calibrate{
+    background: lightblue url('include/calibre.png') no-repeat center center;
+    padding-left: 40px;
+    height: 40px;
+}
+input#settings{
+    background: lightblue url('include/settings.png') no-repeat center center;
+    padding-left: 48px;
+    height: 48px;
+}
+input#diagram{
+    background: lightblue url('include/Diagram.png') no-repeat center center;
+    padding-left: 48px;
+    height: 48px;
+}
+input#reset{
+    background: lightblue url('include/restore.png') no-repeat center center;
+    padding-left: 40px;
+    height: 40px;
+}
+*/
+
+/* @import 'highcharts.css'; */
+

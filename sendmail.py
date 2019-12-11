@@ -1,4 +1,10 @@
 #!/usr/bin/env python2.7
+# V1.2
+# Improved behavior for SVG and Low Gravity Alarms. Alarm will be send now only once and not sveral times in case of fluctuations
+# Set flags will be removed through Web interface if Reset is selected
+# Added functionality for different settings per device
+# Added possibility to exclude devices with defined substring (EXCLUDESTRING)
+#
 # V1.1
 # Added mor variables such as apparent attenuation and corresponding alarms
 # Added functionality for multiple languages. EN and DE already implemented
@@ -13,6 +19,9 @@
 
 import smtplib
 import logging
+import socket
+import fcntl
+import struct
 from ConfigParser import ConfigParser
 from cStringIO import StringIO
 from email.mime.multipart import MIMEMultipart
@@ -37,12 +46,17 @@ class MyConfigParser(ConfigParser):
 config = MyConfigParser()
 
 # load config from personal ini file if available
+config_path = '~/iSpindel-Srv/config'
+
 try:
-    with open('/home/pi/iSpindel-Srv/config/iSpindle_config.ini') as f:
-        config.readfp(f)
+  with open(os.path.join(os.path.expanduser(config_path),'iSpindle_config.ini')) as f:
+    config.readfp(f)
 # fall back to default ini file if other file does not exist
+
 except IOError:
-    config.read('/home/pi/iSpindel-Srv/config/iSpindle_default.ini')
+  config.read(os.path.join(os.path.expanduser(config_path),'iSpindle_default.ini'))
+
+
 
 # GENERAL
 # Set to 1 to enable debug output on console (usually devs only)
@@ -52,6 +66,16 @@ DEBUG = config.getint('GENERAL', 'DEBUG')
 def dbgprint(s):
     if DEBUG:
         print(str(s))
+
+def get_ip_address(ifname):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(
+        s.fileno(),
+        0x8915,  # SIOCGIFADDR
+        struct.pack('256s', ifname[:15])
+    )[20:24])
+
+server_ip = get_ip_address('eth0')
 
 # SQL settings
 # MySQL
@@ -64,18 +88,20 @@ SQL_PASSWORD = config.get('MYSQL', 'SQL_PASSWORD')
 SQL_PORT = config.getint('MYSQL', 'SQL_PORT')
 
 # Function to retrieve config values from SQL database
-def get_config_from_sql(section, parameter):
+def get_config_from_sql(section, parameter, device='_DEFAULT'):
     try:
         import mysql.connector
         cnx = mysql.connector.connect(
             user=SQL_USER,  port=SQL_PORT, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
         cur = cnx.cursor()
-        sqlselect = "SELECT Value FROM Settings WHERE Section = '%s' and Parameter = '%s';" %(section, parameter)
+        sqlselect = "SELECT Value FROM Settings WHERE Section = '%s' and Parameter = '%s' and ( DeviceName = '_DEFAULT' or DeviceName = '%s' ) ORDER BY DeviceName DESC LIMIT 1;" %(section, parameter, device)
+#        dbgprint(sqlselect)
         cur.execute(sqlselect)
         sqlparameters = cur.fetchall()
         if len(sqlparameters) > 0:
             for i in sqlparameters:
                 sqlparameter = i[0]
+#                dbgprint(sqlparameter)
             return sqlparameter
         else:
             return ''
@@ -84,47 +110,57 @@ def get_config_from_sql(section, parameter):
     except Exception as e:
         dbgprint(e)
 
-# retrieve email settings from Database
-fromaddr = get_config_from_sql('EMAIL','FROMADDR')
+# retrieve email settings from Database (Global and not per device)
+fromaddr = get_config_from_sql('EMAIL','FROMADDR','GLOBAL')
 if fromaddr == '':
     dbgprint('Please enter fromaddr to settings SQL table')
     quit()
-toaddr = get_config_from_sql('EMAIL','TOADDR')
+toaddr = get_config_from_sql('EMAIL','TOADDR','GLOBAL')
 if toaddr == '':
     dbgprint('Please enter toaddr to settings SQL table')
     quit()
-passwd = get_config_from_sql('EMAIL','PASSWD')
+passwd = get_config_from_sql('EMAIL','PASSWD','GLOBAL')
 if passwd == '':
     dbgprint('Please enter Email passwd to settings SQL table')
     quit()
-smtpserver = get_config_from_sql('EMAIL','SMTPSERVER')
+smtpserver = get_config_from_sql('EMAIL','SMTPSERVER','GLOBAL')
 if smtpserver == '':
     dbgprint('Please enter smptserver to settings SQL table')
     quit()
-smtpport = int(get_config_from_sql('EMAIL','SMTPPORT'))
+smtpport = int(get_config_from_sql('EMAIL','SMTPPORT','GLOBAL'))
 if smtpport == '':
     dbgprint('Please enter smtpport to settings SQL table')
     quit()
 
 
-# Retrieve alarsettings from Database
-enablealarmlow = bool(get_config_from_sql('EMAIL','ENABLEALARMLOW'))
-alarmlow = float(get_config_from_sql('EMAIL','ALARMLOW'))
-enablealarmdelta = bool(get_config_from_sql('EMAIL', 'ENABLE_ALARMDELTA'))
-alarmdelta = float(get_config_from_sql('EMAIL', 'ALARMDELTA'))
-enablestatus = bool(get_config_from_sql('EMAIL','ENABLESTATUS'))
-timestatus = int(get_config_from_sql('EMAIL','TIMESTATUS'))
-timeframestatus = int(get_config_from_sql('EMAIL','TIMEFRAMESTATUS'))
-enablealarmsvg = bool(get_config_from_sql('EMAIL','ENABLEALARMSVG'))
-alarmsvg = float(get_config_from_sql('EMAIL','ALARMSVG'))
-
-#  calculation of 30 minutes time window for status alarm email.  
+# Retrieve global alarmsettings from Database
+timestatus = int(get_config_from_sql('EMAIL','TIMESTATUS','GLOBAL'))
+enablestatus = int(get_config_from_sql('EMAIL','ENABLESTATUS','GLOBAL'))
+#Devices that contain this string are excluded from email alarms
+excludedevice = get_config_from_sql('EMAIL','EXCLUDESTRING','GLOBAL')
+#  calculation of 30 minutes time window for status alarm email.
 timestatuslow = datetime.time(timestatus-1, 45)
 timestatushigh = datetime.time(timestatus, 15)
-
 # get current date and time to check against alarmsettings
 currentdate = datetime.datetime.now()
 currenttime = datetime.datetime.time(currentdate)
+
+#enablealarmlow = bool(get_config_from_sql('EMAIL','ENABLEALARMLOW'))
+alarmlow = float(get_config_from_sql('EMAIL','ALARMLOW'))
+#enablealarmdelta = bool(get_config_from_sql('EMAIL', 'ENABLE_ALARMDELTA'))
+alarmdelta = float(get_config_from_sql('EMAIL', 'ALARMDELTA'))
+#timeframestatus = int(get_config_from_sql('EMAIL','TIMEFRAMESTATUS'))
+#enablealarmsvg = bool(get_config_from_sql('EMAIL','ENABLEALARMSVG'))
+alarmsvg = float(get_config_from_sql('EMAIL','ALARMSVG'))
+
+
+def check_exclude_device(iSpindel):
+    if (iSpindel.find(excludedevice) == -1): 
+        return 1 
+    else: 
+        dbgprint("Device %s excluded as it contains %s in Name" %(iSpindel, excludedevice))
+        return 0
+         
 
 # retrieve information from database, if mail has been sent for corresponding alarm
 def check_mail_sent(alarm,iSpindel):
@@ -149,14 +185,14 @@ def check_mail_sent(alarm,iSpindel):
 
 # write information to database, that email has been send for corresponding alarm
 # iSpindel could be also '1' for setting SentStatus
-def write_mail_sent(alarm,iSpindel):
+def write_mail_sent(alarm,iSpindel,SpindelName=''):
     try:
         dbgprint('Writing alarmflag %s for Spindel %s' %(alarm,iSpindel))
         import mysql.connector
         cnx = mysql.connector.connect(
             user=SQL_USER,  port=SQL_PORT, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
         cur = cnx.cursor()
-        sqlselect = "INSERT INTO Settings (Section, Parameter, value) VALUES ('EMAIL','%s','%s');" %(alarm, iSpindel)
+        sqlselect = "INSERT INTO Settings (Section, Parameter, value, DeviceName) VALUES ('EMAIL','%s','%s','%s');" %(alarm, iSpindel, SpindelName)
         cur.execute(sqlselect)
         cnx.commit()
         cur.close()
@@ -313,7 +349,8 @@ def getInitialGravity(iSpindleID):
 
 # Function to get timestamp from last reset for corresponding spinel ID. Can be used to prevent delta calculation if time is less than 1 day
 def timestamp_reset_spindle(iSpindleID):
-    timestamp = 'N/A'
+    min_time = datetime.timedelta(days=99999) # changed to prevent error if one of the devices has no reset flag in the database
+    timestamp = datetime.datetime.now() - min_time
     lSpindleID = []
     dresettime = {}
     try:
@@ -361,6 +398,8 @@ dinitialgravity = {}
 drealdens = {}
 dSVG = {}
 dalcoholbyvolume = {}
+dexcludedevice = {}
+dsendemail = {}
 
 # get now latest dataset for each spindel
 try:
@@ -389,6 +428,8 @@ try:
     drealdens.clear()
     dSVG.clear()
     dalcoholbyvolume.clear()
+    dexcludedevice.clear()
+    dsendemail.clear ()
     spindeldataavailable = 0
     for i in ispindles:
         id = i[3]  # ID
@@ -402,8 +443,15 @@ try:
         time_since_last_reset = currentdate - dlastreset[sID]
         d24hgravity[sID]='N/A'
         d12hgravity[sID]='N/A'
+        dlasttemp[sID] = i[5]  # temperature
+        dName[sID] = i[2] # Spindelname
+        dbattery[sID] = i[6] # batteryvoltage
+        dRecipe[sID] = i[12] # current recipename
+        timeframestatus = int(get_config_from_sql('EMAIL','TIMEFRAMESTATUS',dName[sID]))
+        dbgprint('Timeframe for Spindle ' + dName[sID] + ':' + str(timeframestatus) +' days.')
+
         if time_since_last_reset.days >= 1:
-            dbgprint(sID)
+#           dbgprint(sID)
             d24hangle[sID] = get_data_hours_ago(sID, dlasttime[sID], 24)
             d24hgravity[sID] = calculate_plato_from_calibration(
                 sID, d24hangle[sID]) # calculated gravity (from TCP server calibration)
@@ -412,7 +460,11 @@ try:
                 sID, d12hangle[sID]) # calculated gravity (from TCP server calibration)
 # if difference is within defined timeframe (days) from settings.
 # true flag for available data is set globally and for corresponding spindel
-        if difference.days <= timeframestatus:
+# Additional check, if device should be excluded from email alarms based on exclude string from settings
+        dsendemail[sID] = int(get_config_from_sql('EMAIL','ENABLEMAIL',dName[sID])) 
+        dbgprint('Email function for ' + dName[sID] + ':' + str(dsendemail[sID]))
+        dexcludedevice[sID]=check_exclude_device(dName[sID])
+        if ((difference.days <= timeframestatus) and (dsendemail[sID] == 1) and (dexcludedevice[sID] == 1)):
             dlasttimetrue[sID] = 1
             spindeldataavailable = 1
             dlastangle[sID] = i[4]  # angle from latest dataset of sID
@@ -431,16 +483,16 @@ try:
                 dSVG[sID] = 0
                 dalcoholbyvolume[sID] = 0
            
-        dlasttemp[sID] = i[5]  # temperature
-        dName[sID] = i[2] # Spindelname
-        dbattery[sID] = i[6] # batteryvoltage
-        dRecipe[sID] = i[12] # current recipename
+#        dlasttemp[sID] = i[5]  # temperature
+#        dName[sID] = i[2] # Spindelname
+#        dbattery[sID] = i[6] # batteryvoltage
+#        dRecipe[sID] = i[12] # current recipename
     cur.close()
     cnx.close()
 
 # if at least one of the spindles has actual data
     if spindeldataavailable == 1:
-        dbgprint('Spindledata available')
+        dbgprint('Spindledata availabile for at least one device')
 # if daily status is enabled
         if enablestatus:
             dbgprint('Try to send status email')
@@ -480,7 +532,7 @@ try:
                             dbgprint('Data for Spindel ' + str(dName[lSpindleID[i]]) + ' is older than ' + str(timeframestatus) + ' days')
                         i += 1
 
-                    subject = get_string_from_sql('sendmail', 'subject_status')
+                    subject = get_string_from_sql('sendmail', 'subject_status') %str(server_ip)
                     info = get_string_from_sql('sendmail', 'content_info') %(str(alarmlow), alarmdelta, datetime.time(timestatus), currentdate.strftime("%Y-%m-%d %H:%M:%S"))
 
                     body = """
@@ -495,20 +547,31 @@ try:
             else:  # if status mail enabled
                 dbgprint('Time is not between ' + str(timestatuslow) + ' and ' + str(timestatushigh))
                 delete = delete_mail_sent('SentStatus', '1')               
-
+        else:
+            dbgprint('Status Email not enabled in settings')  
 # send alarm mail if gravity is below threshold limit from settings
-        if enablealarmlow == 1:
-            subject = get_string_from_sql('sendmail', 'subject_alarm_low_gravity')
-            Content = get_string_from_sql('sendmail','content_alarm_low_gravity_1') %str(alarmlow)
-            isreset = 0
-            i = 0
-            while i < len(lSpindleID):
-                if dlasttimetrue[lSpindleID[i]] == 1:
+#       if enablealarmlow == 1:
+        subject = get_string_from_sql('sendmail', 'subject_alarm_low_gravity') %str(server_ip)
+        Content = get_string_from_sql('sendmail','content_alarm_low_gravity_1') %str(alarmlow)
+        isreset = 0
+        i = 0
+        while i < len(lSpindleID):
+            enablealarmlow = 0
+            if dlasttimetrue[lSpindleID[i]] == 1:
+                dbgprint('AlarmLow Data available for Spindle: ' + dName[lSpindleID[i]])
+                enablealarmlow = int(get_config_from_sql('EMAIL','ENABLEALARMLOW',dName[lSpindleID[i]]))
+                dbgprint('AlarmLow enabled: ' + str(enablealarmlow))
+                if enablealarmlow == 1:
+                    alarmlow = float(get_config_from_sql('EMAIL','ALARMLOW',dName[lSpindleID[i]]))
+                    dbgprint('AlarmLowGravity: ' + str(alarmlow))
+                    dbgprint('CurrentGravity: ' + str(float(dgravity[lSpindleID[i]])))
+                    alarmsvg = float(get_config_from_sql('EMAIL','ALARMSVG',dName[lSpindleID[i]]))
+                    alarmdelta = float(get_config_from_sql('EMAIL', 'ALARMDELTA',dName[lSpindleID[i]]))
                     lastreset = dlastreset[lSpindleID[i]]
                     difference = currentdate - lastreset
                     exists = check_mail_sent('SentAlarmLow',str(lSpindleID[i]))
                     try:
-                        if exists and float(dgravity[lSpindleID[i]]) > float(alarmlow):
+                        if exists and float(dgravity[lSpindleID[i]]) >= float(dinitialgravity[lSpindleID[i]]):
                             delete = delete_mail_sent('SentAlarmLow',str(lSpindleID[i]))
                             dbgprint('Deleted LowAlarm  for Spindel %s from database as it exists and gravity still above threshold' %(str(lSpindleID[i])))
                         if difference.days >= 1 and float(dgravity[lSpindleID[i]]) <= float(alarmlow):
@@ -516,7 +579,7 @@ try:
                             if exists:
                                 dbgprint('Alarm for Low Gravity already sent as entry for Spindel %s exists in database' %(str(lSpindleID[i])))
                             else:
-                                write = write_mail_sent('SentAlarmLow',str(lSpindleID[i]))
+                                write = write_mail_sent('SentAlarmLow',str(lSpindleID[i]),str(dName[lSpindleID[i]]))
                                 dbgprint('Added Alarmlowflag for Spindel %s to Database' %(str(lSpindleID[i])))
                                 isreset = 1
                                 Content += '<b>'+str(dName[lSpindleID[i]]) + \
@@ -540,36 +603,45 @@ try:
                             '<br/><b>ID:</b> ' + str(lSpindleID[i]) + \
                             '<br/>' + \
                             '<br/><b>Your Spindel is not calibrated in TCP Server Database!</b><br/><br/>'
-                            write = write_mail_sent('SentAlarmLow',str(lSpindleID[i]))
+                            write = write_mail_sent('SentAlarmLow',str(lSpindleID[i]),str(dName[lSpindleID[i]]))
                             dbgprint('Added Alarmlowflag for Spindel %s to Database' %(str(lSpindleID[i]))) 
                         else:
                             dbgprint('Spindel %s is not calibrated. Alarm has been already send' %(str(lSpindleID[i])))
-                i += 1
+            i += 1
 
-            info = get_string_from_sql('sendmail', 'content_info') %(str(alarmlow), alarmdelta, datetime.time(timestatus), currentdate.strftime("%Y-%m-%d %H:%M:%S"))
+        info = get_string_from_sql('sendmail', 'content_info') %(str(alarmlow), alarmdelta, datetime.time(timestatus), currentdate.strftime("%Y-%m-%d %H:%M:%S"))
 
-            body = """
-            %s
+        body = """
+        %s
 
-            %s
-            """ % (Content, info)
-            if isreset == 1:
-                sendemail(subject, body)
-                dbgprint('Alarm for gravity below threshold has been sent')
+        %s
+        """ % (Content, info)
+        if isreset == 1:
+            sendemail(subject, body)
+            dbgprint('Alarm for gravity below threshold has been sent')
 
 # send alarm mail if gravity is below threshold limit from settings
-        if enablealarmsvg == 1:
-            subject = get_string_from_sql('sendmail', 'subject_alarm_svg')
-            Content = get_string_from_sql('sendmail','content_alarm_svg') %str(alarmsvg)
-            isreset = 0
-            i = 0
-            while i < len(lSpindleID):
-                if dlasttimetrue[lSpindleID[i]] == 1:
+#        if enablealarmsvg == 1:
+        subject = get_string_from_sql('sendmail', 'subject_alarm_svg') %(server_ip)
+        Content = get_string_from_sql('sendmail','content_alarm_svg') %str(alarmsvg)
+        isreset = 0
+        i = 0
+        while i < len(lSpindleID):
+            if dlasttimetrue[lSpindleID[i]] == 1:
+                dbgprint('AlarmSVG Data available for Spindle: ' + dName[lSpindleID[i]])
+                enablealarmsvg = int(get_config_from_sql('EMAIL','ENABLEALARMSVG',dName[lSpindleID[i]]))
+                dbgprint('AlarmSVG enabled: ' + str(enablealarmsvg))
+                if enablealarmsvg == 1:
+                    alarmsvg = float(get_config_from_sql('EMAIL','ALARMSVG',dName[lSpindleID[i]]))
+                    dbgprint('AlarmSVG: ' + str(alarmsvg))
+                    dbgprint('CurrentSVG: ' + str(dSVG[lSpindleID[i]]))
+                    alarmlow = float(get_config_from_sql('EMAIL','ALARMLOW',dName[lSpindleID[i]]))
+                    alarmdelta = float(get_config_from_sql('EMAIL', 'ALARMDELTA',dName[lSpindleID[i]]))
                     lastreset = dlastreset[lSpindleID[i]]
                     difference = currentdate - lastreset
                     exists = check_mail_sent('SentAlarmSVG',str(lSpindleID[i]))
                     try:
-                        if exists and float(dSVG[lSpindleID[i]]) < float(alarmsvg):
+                        if exists and float(dSVG[lSpindleID[i]]) < float(alarmsvg-15):
                             delete = delete_mail_sent('SentAlarmSVG',str(lSpindleID[i]))
                             dbgprint('Deleted Attenuation Alarm  for Spindel %s from database as it exists and Attenuation still below threshold' %(str(lSpindleID[i])))
                         if difference.days >= 1 and float(dSVG[lSpindleID[i]]) >= float(alarmsvg):
@@ -577,7 +649,7 @@ try:
                             if exists:
                                 dbgprint('Alarm for SVG already sent as entry for Spindel %s exists in database' %(str(lSpindleID[i])))
                             else:
-                                write = write_mail_sent('SentAlarmSVG',str(lSpindleID[i]))
+                                write = write_mail_sent('SentAlarmSVG',str(lSpindleID[i]),str(dName[lSpindleID[i]]))
                                 dbgprint('Added AlarmSVGflag for Spindel %s to Database' %(str(lSpindleID[i])))
                                 isreset = 1
                                 Content += '<b>'+str(dName[lSpindleID[i]]) + \
@@ -601,22 +673,22 @@ try:
                             '<br/><b>ID:</b> ' + str(lSpindleID[i]) + \
                             '<br/>' + \
                             '<br/><b>Your Spindel is not calibrated in TCP Server Database!</b><br/><br/>'
-                            write = write_mail_sent('SentAlarmSVG',str(lSpindleID[i]))
+                            write = write_mail_sent('SentAlarmSVG',str(lSpindleID[i]),str(dName[lSpindleID[i]]))
                             dbgprint('Added AlarmSVGflag for Spindel %s to Database' %(str(lSpindleID[i])))
                         else:
                             dbgprint('Spindel %s is not calibrated. Alarm has been already send' %(str(lSpindleID[i])))
-                i += 1
+            i += 1
 
-            info = get_string_from_sql('sendmail', 'content_info') %(str(alarmlow), alarmdelta, datetime.time(timestatus), currentdate.strftime("%Y-%m-%d %H:%M:%S"))
+        info = get_string_from_sql('sendmail', 'content_info') %(str(alarmlow), alarmdelta, datetime.time(timestatus), currentdate.strftime("%Y-%m-%d %H:%M:%S"))
 
-            body = """
-            %s
+        body = """
+        %s
 
-            %s
-            """ % (Content, info)
-            if isreset == 1:
-                sendemail(subject, body)
-                dbgprint('Alarm for SVG above threshold has been sent')
+        %s
+        """ % (Content, info)
+        if isreset == 1:
+            sendemail(subject, body)
+            dbgprint('Alarm for SVG above threshold has been sent')
 
     else:  # if spindledata available
         dbgprint('Data for all Spindels is older than ' +

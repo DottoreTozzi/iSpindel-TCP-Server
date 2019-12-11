@@ -7,8 +7,8 @@
 // DB config values will be pulled from differtent location and user can personalize this file: common_db_config.php
 // If file does not exist, values will be pulled from default file
  
-if ((include_once '../config/common_db_config.php') == FALSE){
-       include_once("../config/common_db_default.php");
+if ((include_once './config/common_db_config.php') == FALSE){
+       include_once("./config/common_db_default.php");
       }
      include_once("include/common_db_query.php");
 
@@ -33,6 +33,7 @@ $header = $header . ' ' . $_GET['name'];
   <meta name="Keywords" content="iSpindle, iSpindel, status, current, genericTCP">
   <meta name="Description" content="iSpindle Current Status">
   <script src="include/jquery-3.1.1.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="./include/iSpindle.css">
   <script type="text/javascript">
 
 
@@ -48,8 +49,9 @@ $(function ()
       chart: 
       {
         type: 'gauge',
-        plotBackgroundColor: null,
-        plotBackgroundImage: null,
+        backgroundColor: 'rgba(0,0,0,0)',
+//        plotBackgroundColor: null,
+//        plotBackgroundImage: null,
         plotBorderWidth: 0,
         plotShadow: false,
         renderTo: 'battery'
@@ -143,11 +145,11 @@ $(function ()
 </script>
 </head>
 <body>
- 
+<a href=/iSpindle/index.php><img src=include/icons8-home-26.png></a> 
 <div id="wrapper">
 <script src="include/highcharts.js"></script>
 <script src="include/highcharts-more.js"></script>
-<div id="battery" style="width: 98%; height: 98%; position: absolute"></div>
+<div id="battery" style="width: 90%; height: 90%; position: absolute"></div>
 </div>
  
 </body>

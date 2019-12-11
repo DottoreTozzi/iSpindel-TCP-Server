@@ -96,12 +96,11 @@ error_reporting(E_ALL | E_STRICT);
     }
     
     // Loads personal config file for db connection details. If not found, default file will be used
-    if ((include_once '../config/common_db_config.php') == FALSE){
-       include_once("../config/common_db_default.php");
-    
+    if ((include_once './config/common_db_config.php') == FALSE){
+       include_once("./config/common_db_default.php");
     }
 //  Loads db query functions
-include_once("include/common_db_query.php");
+include_once("./include/common_db_query.php");
 
 // sql queries to get language dependent fields to be displayed
     $file = "index";
@@ -129,7 +128,28 @@ include_once("include/common_db_query.php");
     $days_history = get_field_from_sql($conn,$file,"days_history");
     $or = get_field_from_sql($conn,$file,"or");
     $send_reset = get_field_from_sql($conn,$file,"send_reset"); 
-  
+    $no_data = get_field_from_sql($conn,$file,"no_data"); 
+    $header_initialgravity = get_field_from_sql($conn,$file,"header_initialgravity");
+
+    $header_recipe = get_field_from_sql($conn,'diagram',"recipe_name");
+
+    $file = "status";
+    $header_battery = get_field_from_sql($conn,$file,"header_battery");
+    $header_temperature = get_field_from_sql($conn,$file,"header_temperature");
+    $header_angle = get_field_from_sql($conn,$file,"header_angle");
+
+    $file = "wifi";
+    $header_wifi = get_field_from_sql($conn,$file,"header");
+
+    $file = "plato4";
+    $header_density = get_field_from_sql($conn,$file,"first_y");
+    $header_time = get_field_from_sql($conn,$file,"x_axis");
+
+    $file = "svg_ma";
+    $header_svg = get_field_from_sql($conn,$file,"first_y");
+    $header_alcohol = get_field_from_sql($conn,$file,"third_y");
+
+
     // "Days Ago parameter set?
     if(!isset($_GET['days'])) $_GET['days'] = 0; else $_GET['days'] = $_GET['days'];
     $daysago = $_GET['days'];
@@ -138,12 +158,15 @@ include_once("include/common_db_query.php");
 // get information if TCP server is running
     $pids=''; 
     $running=false;
+    $stat = exec("systemctl is-active ispindle-srv");
     if (file_exists( "/var/run/ispindle-srv.pid" )) {
         $pid= (shell_exec("cat /var/run/ispindle-srv.pid"));
         $running = posix_getpgid(intval($pid));
     }
     if ($running) {
         $iSpindleServerRunning = $server_running . $pid;
+    } elseif ($stat == "activating") {
+              $iSpindleServerRunning = $server_running;
     } else {
         $iSpindleServerRunning = $server_not_running;
     }
@@ -151,8 +174,8 @@ include_once("include/common_db_query.php");
 // get all spindle names to be displayed in form that have submitted data within the timeframe of $daysago
     $sql_q = "SELECT DISTINCT Name FROM Data WHERE Timestamp > date_sub(NOW(), INTERVAL ".$daysago." DAY) ORDER BY Name";
     $result=mysqli_query($conn, $sql_q) or die(mysqli_error($conn));
-
- 
+    $len = mysqli_num_rows($result);
+    $result1=mysqli_query($conn, $sql_q) or die(mysqli_error($conn)); 
 ?>
 
 <!DOCTYPE html>
@@ -162,7 +185,7 @@ include_once("include/common_db_query.php");
     <meta name="Keywords" content="iSpindle, iSpindel, Chart, genericTCP, Select">
     <meta name="Description" content="iSpindle Fermentation Chart Selection Screen">
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8"> 
-
+    <link rel="stylesheet" type="text/css" href="./include/iSpindle.css">
 <script type="text/javascript">
 // Function to hide or display elements. Used for recipe name. Only displayed if reset_now is selected in options
     function einblenden(){
@@ -185,12 +208,16 @@ include_once("include/common_db_query.php");
 </script>
 
 </head>
-<body bgcolor="#E6E6FA">
+<body>
+<!-- <body bgcolor="#E6E6FA"> -->
 <form name="main" action="<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method="post">
 <h1>RasPySpindel</h1>
 <h3><?php echo($diagram_selection .' '. $daysago)?></h3>
 
 <!-- select options for spindle names -->
+<?php
+    if ($len != 0){
+?>
 <select id="ispindel_name" name = 'ispindel_name'>
         <?php
             while($row = mysqli_fetch_assoc($result) )
@@ -245,21 +272,94 @@ include_once("include/common_db_query.php");
 </div>
 
 <div id="show" style="display: block;">
-<input type = "submit" name = "Go" value = "<?php echo($show_diagram)?>">
+<span title="<?php echo($show_diagram)?>"><input type = "submit" id='diagram' name = "Go" value = "<?php echo($show_diagram)?>"></span>
 </div>
 <div id="send" style="display: none;">
-<input type = "submit" name = "Go" value = "<?php echo($send_reset)?>">
+<span title="<?php echo($send_reset)?>"><input type = "submit" id='reset' name = "Go" value = "<?php echo($send_reset)?>"></span>
 </div>
 
+<?php
+# endif len !=0
+}
+else {
+    echo sprintf($no_data, $daysago);
+}
+
+?>
 <br />
 <br />
 
-<input type = "submit" name = "Cal" value = "<?php echo($calibrate_spindle)?>">
-<input type = "submit" name = "Set" value = "<?php echo($server_settings)?>">
+<span title="<?php echo($calibrate_spindle)?>"> <input type = "submit" id='calibrate' name = "Cal" value="<?php echo($calibrate_spindle)?>"></span>
+<span title="<?php echo($server_settings)?>"><input type = "submit" id='settings' name = "Set" value = "<?php echo($server_settings)?>"></span>
 
 <br />
 
-<br/> <?php echo($iSpindleServerRunning)?> <br/>
 
-       
+
+<br/><br/><?php echo($iSpindleServerRunning)?> <br/></br></br>
+
+<?php
+
+// if a section is selected (default is 0), table will be defined
+// Database entries for parameter, value and description of defined language will be displayed for selected section
+// name of input field gets unique id (combination of section and parameter). This is used to identify parameter value during _POST['GO']
+if ($len !=0 ){
+    echo "<table border='1'>";
+    echo "<tr>";
+    echo "<td><b>Device</b></td>";
+    echo "<td><b>$header_time</b></td>";
+    echo "<td><b>$header_recipe</b></td>";
+    echo "<td><b>$header_angle [°]</b></td>";
+    echo "<td><b>$header_temperature [°C]</b></td>";
+    echo "<td><b>$header_initialgravity</b></td>";
+    echo "<td><b>$header_density</b></td>";
+    echo "<td><b>$header_svg</b></td>";
+    echo "<td><b>$header_alcohol</b></td>";
+    echo "<td><b>$header_battery [Volt]</b></td>";
+    echo "<td><b>$header_wifi [dB]</b></td>";
+    echo "</tr>";
+    while($row = mysqli_fetch_assoc($result1) ) {
+        $show_device=get_settings_from_sql($conn, 'GENERAL', $row['Name'],'SHOWSUMMARY'); 
+        if ($show_device == 1){
+        list($iscalibrated, $time, $temperature, $angle, $battery, $recipe, $dens, $RSSI) = getlastValuesPlato4($conn, $row['Name']);
+
+        $gravity=getInitialGravity($conn, $row['Name']);
+        if ($gravity[0]==1){
+        $initialgravity=$gravity[1];
+        #calculate apparent attenuation
+        $SVG=($initialgravity - $dens)*100/$initialgravity;
+        #real density differs from aparent density
+        $realdens = 0.1808 * $initialgravity + 0.8192 * $dens;
+        # calculate alcohol by weigth and by volume (fabbier calcfabbier calc for link see above)
+        $ABV = (( 100 * ($realdens - $initialgravity) / (1.0665 * $initialgravity- 206.65))/0.795);
+
+        }
+        else {
+        $initialgravity=0;
+        $SVG=0;
+        }
+        echo "<tr>";
+        echo "<td><b>" . $row['Name'] . "</b></td>";
+        echo "<td>" . date("Y-m-d\ H:i:s\ ",$time) . "</td>";
+        echo "<td>" .  $recipe . "</td>";
+        echo "<td style='text-align:center'>" . number_format($angle,1) . "</td>";
+        echo "<td style='text-align:center'>" . number_format($temperature,1) . "</td>";
+        echo "<td style='text-align:center'>" . number_format($initialgravity,1) . "</td>";
+        echo "<td style='text-align:center'>" . number_format($dens,1) . "</td>";
+        echo "<td style='text-align:center'>" . number_format($SVG,1) . "</td>";
+        echo "<td style='text-align:center'>" . number_format($ABV,1) . "</td>";
+        echo "<td style='text-align:center'>" . number_format($battery,2) . "</td>";
+        echo "<td style='text-align:center'>" . number_format($RSSI,0) . "</td>";
+        echo "</tr>\n";
+        }
+    }
+echo "</table>";
+}
+?>
+<!-- 
+<footer>
+<div>Icons made by <a href="https://www.flaticon.com/authors/prosymbols" title="Prosymbols">Prosymbols</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
+</footer>
+-->
+</body>
 </form>
