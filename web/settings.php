@@ -23,6 +23,13 @@ if ((include_once './config/common_db_config.php') == FALSE){
 // load db query functions
 include_once("include/common_db_query.php");
 
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require "../PHPMailer/src/Exception.php";
+require "../PHPMailer/src/PHPMailer.php";
+require "../PHPMailer/src/SMTP.php";
+
 // Get fields from database in language selected in settings
 $file = "settings";
 $window_alert_update = get_field_from_sql($conn,$file,"window_alert_update");
@@ -34,6 +41,8 @@ $description = get_field_from_sql($conn,$file,"description");
 $problem = get_field_from_sql($conn,$file,"problem");
 $delete_device = get_field_from_sql($conn,$file,"delete_device");
 $add_device = get_field_from_sql($conn,$file,"add_device");
+$testmail = get_field_from_sql($conn,$file,"testmail");
+$export_data = get_field_from_sql($conn,$file,"export_data");
 
 // if parameter section not set, '0' for first section in config is default to be displayed
 if(!isset($_GET['section'])) $_GET['section'] = '0'; else $_GET['section'] = $_GET['section'];
@@ -52,6 +61,55 @@ if (isset($_POST['Stop']))
         header("Location: ".$url);
 
     }
+
+if (isset($_POST['Export_Data']))
+    {
+        export_data_table("Data","iSpindle_Data.sql");
+    }
+
+
+// Function to send testmail
+if (isset($_POST['Testmail']))
+    {
+# retrieve email settings from Database (Global and not per device)
+$fromaddr = get_settings_from_sql($conn, 'EMAIL','GLOBAL','FROMADDR');
+$toaddr = get_settings_from_sql($conn, 'EMAIL','GLOBAL','TOADDR');
+$passwd = get_settings_from_sql($conn, 'EMAIL','GLOBAL','PASSWD');
+$smtpserver = get_settings_from_sql($conn, 'EMAIL','GLOBAL','SMTPSERVER');
+$smtpport = get_settings_from_sql($conn, 'EMAIL','GLOBAL','SMTPPORT');
+$debug = get_settings_from_sql($conn, 'EMAIL','GLOBAL','ENABLEDEBUG');
+
+$mail = new PHPMailer(true);                              // Passing `true` enables exceptions
+try {
+    //Server settings
+    $mail->SMTPDebug = $debug;                                 // Enable verbose debug output
+    $mail->isSMTP();                                      // Set mailer to use SMTP
+    $mail->Host = $smtpserver;                   // Specify main and backup SMTP servers
+    $mail->SMTPAuth = true;                               // Enable SMTP authentication
+    $mail->Username = $fromaddr;              // SMTP username
+    $mail->Password = $passwd;                           // SMTP password
+    $mail->SMTPSecure = 'tls';                            // Enable TLS encryption, `ssl` also accepted
+    $mail->Port = $smtpport;                                    // TCP port to connect to
+
+    //Recipients
+    $mail->setFrom($fromaddr);          //This is the email your form sends From
+    $mail->addAddress($toaddr); // Add a recipient address
+
+    //Content
+    $mail->isHTML(true);                                  // Set email format to HTML
+    $mail->Subject = 'Testmail from iSpindle TCP Server';
+    $mail->Body    = 'Testmail has been sent from your iSpindle Server';
+
+    $mail->send();
+//    echo 'Message has been sent';
+
+    } 
+catch (Exception $e) {
+    echo 'Message could not be sent.';
+    echo 'Mailer Error: ' . $mail->ErrorInfo;
+    }
+}
+
 
 // self caled function: if delete button is selected, individual settings for selected device will be deleted
 if (isset($_POST['Delete']))
@@ -195,7 +253,6 @@ if (isset($_POST['Go']))
         window.alert('<?php echo $window_alert_update; ?>');
     }
 
-
     
     // function to reload page when section is changed -> different section parameters will be displayed and can be changed
     function reload_page() {
@@ -270,6 +327,7 @@ if (isset($_POST['Go']))
                     echo'<option value = "' . $sections[$i] .'" selected name = "' . $sections[$i].'">';
                     echo($sections[$i]);
                     echo"</option>\n";
+                    $selected_section=$sections[$i];
                 }
             $i = ++$i;
             }
@@ -320,6 +378,18 @@ echo "</table>";
 <input type = "submit" name = "Go" value = "<?php echo $send; ?>" onclick="target_popup(this)">
 <input type = "submit" name = "Stop" value = "<?php echo $stop; ?>">
 
+
+<?php
+    if ($selected_device == "GLOBAL" && $selected_section == "EMAIL"){
+        echo "</br></br>";
+        echo "<div id='delete' style='display: block;' >";
+        echo "<input type = 'submit' name = 'Testmail' value = '$testmail' >";
+        echo "</div>";
+        }
+?>
+
+
+
 <br />
 <br />
 <br />
@@ -343,6 +413,9 @@ echo "</table>";
     ?>
 </select>
 
+</br>
+</br>
+<input type = "submit" name = "Export_Data" value = "<?php echo $export_data; ?>">
         
 </form>
 

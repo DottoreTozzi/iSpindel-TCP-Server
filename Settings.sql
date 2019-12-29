@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3308
--- Erstellungszeit: 12. Dez 2019 um 02:34
+-- Erstellungszeit: 30. Dez 2019 um 01:05
 -- Server-Version: 10.4.7-MariaDB-debug
 -- PHP-Version: 7.3.7
 
@@ -70,6 +70,7 @@ INSERT INTO `Settings` (`Section`, `Parameter`, `value`, `Description_DE`, `Desc
 ('EMAIL', 'ALARMSVG', '60', 'Vergärungsgrad Limit (%) für Email Alarm (z.B. 60 Alarm, wenn SVG 60 Prozent erreicht)', 'Limit for Email Alarm of apparent attenuation (e.g. 60 raises an alarm once apparent attenuation reaches 60 percent)', 'Limite superiore allarme attenuazione apparente (p.es. 60 -> allarme quando viene raggiunto il 60 per cento)', '_DEFAULT'),
 ('EMAIL', 'ENABLEALARMLOW', '1', 'Sende email Alarm, wenn Gravity unter einen bestimmern Wert fällt (0:nein 1: ja)', 'Enable Alarm for low gravity', 'Abilita allarme in caso la densità scenda al di sotto di un valore impostato (0:no 1:si)', '_DEFAULT'),
 ('EMAIL', 'ENABLEALARMSVG', '1', 'Sende email Alarm, wenn Vergärungsgrad oberhalb eines bestimmern Werts liegt (0:nein 1: ja)', 'Enable Alarm for apparent attenuation above threshhold value (0:no 1:yes)', 'Abilita allarme in caso l\'attenuazione apparente superi un valore impostato (0:no 1:si)', '_DEFAULT'),
+('EMAIL', 'ENABLEDEBUG', '0', 'Debug test email (0:nein 1-2: ja)', 'Debug test email (1-2: yes 0: no)', 'Email di test di debug (1-2: si 0: no)', 'GLOBAL'),
 ('EMAIL', 'ENABLEMAIL', '1', 'Aktiviere Email Funktion für Device (0:nein 1: ja)', 'Activate email function for device (1: yes 0: no)', 'Attiva la funzione Email per dispositivo (1: si 0: no)', '_DEFAULT'),
 ('EMAIL', 'ENABLESTATUS', '1', 'Sende tägliche Status Email (0:nein 1: ja)', 'Send daily status email (1: yes 0: no)', 'Abilita l\'Invio di una mail di stato giornaliera (1: si 0: no)', 'GLOBAL'),
 ('EMAIL', 'ENABLE_ALARMDELTA', '0', 'Alarm, wenn Plato Veränderung innerhalb der letzten 12 Stunden unter limit fällt (An: 1)', 'Alarm for delta plato (On: 1) If change of plato within past 12 hours falls below setting, email alarm will be sent', 'Abilita allarme se il delta plato scende al di sotto un valore impostato nelle ultime 12 ore.', '_DEFAULT'),

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3308
--- Erstellungszeit: 12. Dez 2019 um 02:34
+-- Erstellungszeit: 30. Dez 2019 um 01:03
 -- Server-Version: 10.4.7-MariaDB-debug
 -- PHP-Version: 7.3.7
 
@@ -77,6 +77,7 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('diagram', 'tooltip_at', 'um', 'at', 'alle'),
 ('diagram', 'tooltip_time', 'Uhr:', ':', ':'),
 ('index', 'calibrate_spindle', 'Spindle im TCP Server kalibrieren', 'Calibrate spindle in TCP Server ', 'Calibrare la spindle nel server TCP'),
+('index', 'change_history', 'Historie anpassen\r\n', 'Change history', 'Personalizza la cronologia'),
 ('index', 'chart_filename_01', 'Status (Batterie, Winkel, Temperatur)', 'Show Status (Battery, Angle, Temperature)', 'Stato (batteria, angolo, temperatura)'),
 ('index', 'chart_filename_02', 'Batteriezustand', 'Show Battery Condition', 'Stato batteria'),
 ('index', 'chart_filename_03', 'Netzwerk Empfangsqualität', 'Show WiFi quality', 'Qualità ricezione WiFi'),
@@ -93,7 +94,8 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('index', 'days_history', 'Tage Historie\r\n', 'Days history', 'Giorni di storia'),
 ('index', 'diagram_selection', 'Diagramm Auswahl(Tage):', 'Diagram selection (days):', 'Selezione diagramma (giorni):'),
 ('index', 'header_initialgravity', 'Stammwürze [°P]', 'Initial gravity [°P]', 'Mosto originale [°P]'),
-('index', 'no_data', 'Keine Daten in den letzten %1$d Tagen gespeichert. Bitte Spindel Verbinden, damit Daten angezeigt werden können.', 'No spindle data received in the past %1$d days. Please connect Spindle to generate data.', 'Nessun dato salvato negli ultimi %1$d giorni. Collegare il mandrino in modo che i dati possano essere visualizzati.'),
+('index', 'help', 'Hilfe', 'Help', 'Aiuto'),
+('index', 'no_data', 'Keine Daten in den letzten %1$d Tagen gespeichert. Bitte Spindel Verbinden, damit Daten angezeigt werden können.<br /><br />Oder ändern sie die Anzahl der Tage:<br />\r\n\r\n', 'No spindle data received in the past %1$d days. Please connect Spindle to generate data.<br /><br />Or change days of history:<br />', 'Nessun dato salvato negli ultimi %1$d giorni. Collegare il mandrino in modo che i dati possano essere visualizzati.<br /> <br /> Oppure modifica il numero di giorni: <br />'),
 ('index', 'or', 'oder:', 'or:', 'o:'),
 ('index', 'recipe_name', 'Optional Sudnamen eingeben:', 'Enter optional recipe name:', 'Imposta nome ricetta (opzionale):'),
 ('index', 'reset_flag', 'Daten seit zuletzt gesetztem \"Reset\" Flag zeigen', 'Show data since last set \'Reset\'', 'Visualizzare dati dall\'ultimo reset impostato'),
@@ -137,10 +139,12 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('settings', 'add_device', 'Individuelle Settings für Device anlegen', 'Add individual settings for device', 'Crea impostazioni individuali per il dispositivo'),
 ('settings', 'delete_device', 'Device aus individuellen Settings löschen', 'Remove Device from individual Settings', 'Elimina il dispositivo dalle singole impostazioni'),
 ('settings', 'description', 'Beschreibung', 'Description', 'Descrizione'),
+('settings', 'export_data', 'Daten Tabelle exportieren', 'Export Data Table', 'Esporta tabella dati'),
 ('settings', 'problem', 'Probleme beim Schreiben der Settings', 'Problem with writing settings', 'Problema nella scrittura delle impostazioni'),
 ('settings', 'select_section', 'Section Auswahl', 'Select Section', 'Selezione sezione'),
 ('settings', 'send', 'Settings in DB schreiben', 'Send settings to database', 'Invia impostazioni al database'),
 ('settings', 'stop', 'Zurück', 'Go back', 'Indietro'),
+('settings', 'testmail', 'Sende Test Email', 'Send test email', 'Invia e-mail di prova'),
 ('settings', 'window_alert_update', 'Settings aktualisiert!', 'Settings were updated!', 'Impostazioni aggiornate!'),
 ('status', 'diagram_angle', 'Grad', 'Degree', 'Gradi'),
 ('status', 'diagram_battery', 'Volt', 'Voltage', 'Voltaggio'),

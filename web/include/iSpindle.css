@@ -27,27 +27,69 @@ footer {
   left: 0;
   right: 0;
 }
-/*input#calibrate{
-    background: lightblue url('include/calibre.png') no-repeat center center;
-    padding-left: 40px;
-    height: 40px;
+
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  width: 15%;
+  background-color: lightblue;
+  position: fixed;
+  height: 100%;
+  overflow: auto;
+}
+
+li a {
+  display: block;
+  color: #000;
+  padding: 8px 16px;
+  text-decoration: none;
+}
+
+li a.active {
+  background-color: #4CAF50;
+  color: white;
+}
+
+li a:hover:not(.active) {
+  background-color: #555;
+  color: white;
+}
+.img_norm {
+  width: 80%;
+  max-width: 1280px; 
+  height: auto;
+}
+
+.img_small {
+  width: 45%;
+  max-width: 640px;
+  height: auto;
+}
+
+
+/*
+input#calibrate{
+    background: lightblue url('calibre.png') no-repeat center center;
+    padding-left: 48px;
+    height: 48px;
 }
 input#settings{
-    background: lightblue url('include/settings.png') no-repeat center center;
+    background: lightblue url('settings.png') no-repeat center center;
     padding-left: 48px;
     height: 48px;
 }
 input#diagram{
-    background: lightblue url('include/Diagram.png') no-repeat center center;
+    background: lightblue url('Diagram.png') no-repeat center center;
     padding-left: 48px;
     height: 48px;
 }
 input#reset{
-    background: lightblue url('include/restore.png') no-repeat center center;
-    padding-left: 40px;
-    height: 40px;
+    background: lightblue url('restore.png') no-repeat center center;
+    padding-left: 48px;
+    height: 48px;
 }
-*/
 
+*/
 /* @import 'highcharts.css'; */
 

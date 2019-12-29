@@ -79,6 +79,23 @@ error_reporting(E_ALL | E_STRICT);
         exit;
     }
 
+// Self-called by changedayshistory button
+// calls index page with different daysago settings
+
+    if (isset($_POST['Change']))
+    {
+
+        // establish path by the current URL used to invoke this page
+        $url="http://";
+        $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
+        $url .= 'index.php';
+        $url .="?days=".$_POST["changedefaultdays"];
+        // open the page
+        header("Location: ".$url);
+        unset($result, $sql_q);
+        exit;
+    }
+
 // Self-called by calibrate button
 // calls php script to calibrate Spindle in  TCP-Server
 
@@ -130,6 +147,9 @@ include_once("./include/common_db_query.php");
     $send_reset = get_field_from_sql($conn,$file,"send_reset"); 
     $no_data = get_field_from_sql($conn,$file,"no_data"); 
     $header_initialgravity = get_field_from_sql($conn,$file,"header_initialgravity");
+    $change_history = get_field_from_sql($conn,$file,"change_history");
+    $help = get_field_from_sql($conn,$file,"help");
+
 
     $header_recipe = get_field_from_sql($conn,'diagram',"recipe_name");
 
@@ -283,6 +303,15 @@ include_once("./include/common_db_query.php");
 }
 else {
     echo sprintf($no_data, $daysago);
+    echo "<br />";
+    echo"<input type = 'number' name = 'changedefaultdays' min = '1' max = '365' step = '1' value = '$daysago'>";
+    echo($days_history);
+    echo "<br /><br />";
+
+    echo "<div id='change' style='display: block;'>";
+    echo "<span title='$change_history'><input type = 'submit' id='changehistory' name = 'Change' value = '$change_history'></span>";
+    echo "</div>";
+
 }
 
 ?>
@@ -356,10 +385,12 @@ if ($len !=0 ){
 echo "</table>";
 }
 ?>
-<!-- 
+ 
+
 <footer>
-<div>Icons made by <a href="https://www.flaticon.com/authors/prosymbols" title="Prosymbols">Prosymbols</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
+<?php echo"<div><a href='help.php' title='$help'>$help</a></div>"; ?>
+<!-- <div>Icons made by <a href="https://www.flaticon.com/authors/prosymbols" title="Prosymbols">Prosymbols</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div> -->
 </footer>
--->
+
 </body>
 </form>
