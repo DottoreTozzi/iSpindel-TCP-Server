@@ -48,10 +48,16 @@ Jan 24 2019
 // File is the file which is calling the function (has to be also used in the strings table)
 // field is the field for hich the description will be returned 
 
-    if ((include_once '././config/common_db_config.php') == FALSE){
-       include_once("././config/common_db_default.php");
+    if ((include_once './config/common_db_config.php') == FALSE){
+       include_once("./config/common_db_default.php");
     }
 
+  function cleanData(&$str)
+  {
+    if($str == 't') $str = 'TRUE';
+    if($str == 'f') $str = 'FALSE';
+    if(strstr($str, '"')) $str = '"' . str_replace('"', '""', $str) . '"';
+  }
 
 function export_data_table($table,$file="iSpindle_Backup.sql")
 {
@@ -404,6 +410,36 @@ function delete_mail_sent($conn, $alarm, $iSpindel)
             }
 }
 
+// Export values from database for selected spindle, between now and timeframe in hours ago
+function ExportChartValues($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $reset = defaultReset)
+{
+    if ($reset) {
+        $where = "WHERE Name = '" . $iSpindleID . "'                                                                                                                                                                                         
+                  AND Timestamp >= (Select max(Timestamp) FROM Data  WHERE ResetFlag = true AND Name = '" . $iSpindleID . "')";
+    } else {
+        $where = "WHERE Name = '" . $iSpindleID . "' AND Timestamp >= date_sub(NOW(), INTERVAL " . $timeFrameHours . " HOUR) AND Timestamp <= NOW()";
+    }
+    mysqli_set_charset($conn, "utf8mb4");
+
+    $result = mysqli_query($conn, "SELECT Timestamp as Date, Name, Recipe, Temperature, Angle, Gravity, Battery, RSSI                                                                                                                    
+                         FROM Data " . $where . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
+  // filename for download
+  $filename = "website_data_" . date('Ymd') . ".txt";
+  header('Content-Type: text/csv');
+  header("Content-Disposition: attachment; filename=\"$filename\"");
+  $flag = false;
+  while($row = mysqli_fetch_assoc($result)) {
+    if(!$flag) {
+      // display field/column names as first row
+      echo implode(",", array_keys($row)) . "\r\n";
+      $flag = true;
+    }
+    array_walk($row, __NAMESPACE__ . '\cleanData');
+    echo implode(",", array_values($row)) . "\r\n";
+}
+  exit;
+
+}
 
 // Get values from database for selected spindle, between now and timeframe in hours ago  
 function getChartValues($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $reset = defaultReset)
