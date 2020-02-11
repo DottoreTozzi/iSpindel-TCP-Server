@@ -117,6 +117,8 @@ include_once("./include/common_db_query.php");
     $chart_filename_11 = get_field_from_sql($conn,$file,"chart_filename_11");
     $chart_filename_12 = get_field_from_sql($conn,$file,"chart_filename_12");
     $chart_filename_13 = get_field_from_sql($conn,$file,"chart_filename_13");
+    $chart_filename_14 = get_field_from_sql($conn,$file,"chart_filename_14");
+    
     $show_diagram = get_field_from_sql($conn,$file,"show_diagram");
     $calibrate_spindle = get_field_from_sql($conn,$file,"calibrate_spindle");
     $server_settings = get_field_from_sql($conn,$file,"server_settings");
@@ -220,6 +222,7 @@ include_once("./include/common_db_query.php");
         <option value="svg_ma.php"><?php echo $chart_filename_10 ?></option>
         <option value="plato4_delta.php"><?php echo $chart_filename_11 ?></option>	
         <option value="reset_now.php"><?php echo $chart_filename_09 ?></option>
+        <option value="mqttdevice.php"><?php echo $chart_filename_14 ?></option>
 <!--        <option value="calibration.php"><?php echo $chart_filename_13 ?></option> -->
 </select>
 

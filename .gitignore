@@ -1,3 +1,5 @@
-
+.vscode
+.vscode/arduino.json
+.vscode/c_cpp_properties.json
 config/common_db_config.php
 config/iSpindle_config.ini

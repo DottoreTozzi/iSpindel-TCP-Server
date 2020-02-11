@@ -1,4 +1,37 @@
 # iSpindel Generic TCP Server
+
+This fork is for testing purpose only!
+
+Added: MQTTDevice support
+
+The following instructions assume a working TCP server installation!
+
+1. sudo service ispindle-srv stop 
+2. rename /home/pi/iSpindle-Srv into ori-iSpindle-Srv (backup)
+3. git clone https://github.com/InnuendoPi/iSpindel-TCP-Server iSpindle-Srv
+4. copy file ori-iSpindle-Srv/web/config/common_db_config.php to iSpindle-Srv/web/config/common_db_config.php
+5. run MySQL_Update_mqttdevice.sql via phpmyadmin on database iSpindle on table Strings
+
+open a bash and run these commands:
+
+cd /home/pi/iSpindel-Srv
+
+sudo mv iSpindle.py /usr/local/bin
+
+sudo mv ispindle-srv /etc/init.d
+
+sudo chmod 755 /usr/local/bin/iSpindle.py
+
+sudo chmod 755 /etc/init.d/ispindle-srv
+
+cd /etc/init.d
+
+sudo systemctl daemon-reload
+
+
+6. sudo service ispindle-srv start or sudo reboot
+
+
 #### (iSpindle.py Version 1.6.3)
 
 **Neu (20.06.2019)**
