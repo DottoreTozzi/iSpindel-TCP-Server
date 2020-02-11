@@ -203,6 +203,13 @@ CRAFTBEERPI3ADDR = get_config_from_sql('CRAFTBEERPI3', 'CRAFTBEERPI3ADDR')
 # Otherwise leave this 0 and just use "tilt" in CBPI3
 CRAFTBEERPI3_SEND_ANGLE = int(get_config_from_sql('CRAFTBEERPI3', 'CRAFTBEERPI3_SEND_ANGLE'))
 
+INFLUXDB = int(get_config_from_sql('INFLUXDB', 'ENABLE_INFLUXDB'))
+INFLUXDBADDR = get_config_from_sql('INFLUXDB', 'INFLUXDBADDR')
+INFLUXDBPORT = int(get_config_from_sql('INFLUXDB', 'INFLUXDBPORT'))
+INFLUXDBNAME = get_config_from_sql('INFLUXDB', 'INFLUXDBNAME')
+INFLUXDBUSERNAME = get_config_from_sql('INFLUXDB', 'INFLUXDBUSERNAME')
+INFLUXDBPASSWD = get_config_from_sql('INFLUXDB', 'INFLUXDBPASSWD')
+
 # iSpindle Remote Config?
 # If this is enabled, we'll send iSpindle config JSON as TCP reply.
 # Before using this, make sure your database is up-to-date. See README and INSTALL.
@@ -420,26 +427,34 @@ def handler(clientsock, addr):
         BREWFATHERPORT = int(get_config_from_sql('BREWFATHER', 'BREWFATHERPORT', spindle_name))
         BREWFATHERSUFFIX = get_config_from_sql('BREWFATHER', 'BREWFATHERSUFFIX', spindle_name)
 
-        if CSV:
-	    dbgprint(repr(addr) + ' - writing CSV')
-	    recipe = 'n/a'
-	    try:
-		#   dbgprint(repr(addr) + ' Reading last recipe name for corresponding Spindel' + spindle_name)
-		#   Get the Recipe name from the last reset for the spindel that has sent data
-		    import mysql.connector
-		    cnx = mysql.connector.connect(user=SQL_USER, port=SQL_PORT, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
-		    cur = cnx.cursor()
-		    sqlselect="SELECT Data.Recipe FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.Timestamp >= (SELECT max( Data.Timestamp )FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.ResetFlag = true) LIMIT 1;"
-		    cur.execute(sqlselect)
-		    recipe_names = cur.fetchone()
-		    cur.close()
-		    cnx.close()
-		    recipe = str(recipe_names[0])
-		    dbgprint('Recipe Name: Done. ' + recipe )
-	    except Exception as e:
-		dbgprint(repr(addr) + ' Recipe Name not found - CSV Error: ' + str(e))
+        INFLUXDB = int(get_config_from_sql('INFLUXDB', 'ENABLE_INFLUXDB', spindle_name))
+        INFLUXDBADDR = get_config_from_sql('INFLUXDB', 'INFLUXDBADDR', spindle_name)
+        INFLUXDBPORT = int(get_config_from_sql('INFLUXDB', 'INFLUXDBPORT', spindle_name))
+        INFLUXDBNAME = get_config_from_sql('INFLUXDB', 'INFLUXDBNAME', spindle_name)
+        INFLUXDBUSERNAME = get_config_from_sql('INFLUXDB', 'INFLUXDBUSERNAME', spindle_name)
+        INFLUXDBPASSWD = get_config_from_sql('INFLUXDB', 'INFLUXDBPASSWD', spindle_name)
 
-	    try:
+        if CSV:
+            dbgprint(repr(addr) + ' - writing CSV')
+            recipe = 'n/a'
+            try:
+                #   dbgprint(repr(addr) + ' Reading last recipe name for corresponding Spindel' + spindle_name)
+                #   Get the Recipe name from the last reset for the spindel that has sent data
+                import mysql.connector
+                cnx = mysql.connector.connect(user=SQL_USER, port=SQL_PORT, password=SQL_PASSWORD, host=SQL_HOST,
+                                              database=SQL_DB)
+                cur = cnx.cursor()
+                sqlselect = "SELECT Data.Recipe FROM Data WHERE Data.Name = '" + spindle_name + "' AND Data.Timestamp >= (SELECT max( Data.Timestamp )FROM Data WHERE Data.Name = '" + spindle_name + "' AND Data.ResetFlag = true) LIMIT 1;"
+                cur.execute(sqlselect)
+                recipe_names = cur.fetchone()
+                cur.close()
+                cnx.close()
+                recipe = str(recipe_names[0])
+                dbgprint('Recipe Name: Done. ' + recipe)
+            except Exception as e:
+                dbgprint(repr(addr) + ' Recipe Name not found - CSV Error: ' + str(e))
+
+            try:
                 filename = OUTPATH + spindle_name + '_' + str(spindle_id) + '.csv'
                 with open(filename, 'a') as csv_file:
                     # this would sort output. But we do not want that...
@@ -459,7 +474,7 @@ def handler(clientsock, addr):
                     outstr += user_token + DELIMITER
                     outstr += str(interval) + DELIMITER
                     outstr += str(rssi) + DELIMITER
-		    outstr += recipe
+                    outstr += recipe
                     outstr += NEWLINE
                     csv_file.writelines(outstr)
                     dbgprint(repr(addr) + ' - CSV data written.')
@@ -467,24 +482,25 @@ def handler(clientsock, addr):
                 dbgprint(repr(addr) + ' CSV Error: ' + str(e))
 
         if SQL:
-	    recipe = 'n/a'
-	    try:
-		dbgprint(repr(addr) + ' Reading last recipe name for corresponding Spindel' + spindle_name)
-		# Get the recipe name from last reset for the spindel that has sent data
-		import mysql.connector
-		cnx = mysql.connector.connect(user=SQL_USER, port=SQL_PORT, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
-		cur = cnx.cursor()
-		sqlselect="SELECT Data.Recipe FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.Timestamp >= (SELECT max( Data.Timestamp )FROM Data WHERE Data.Name = '"+spindle_name+"' AND Data.ResetFlag = true) LIMIT 1;"
-		cur.execute(sqlselect)
-		recipe_names = cur.fetchone()
-		cur.close()
-		cnx.close()
-		recipe = str(recipe_names[0])
-		dbgprint('Recipe Name: Done. ' + recipe )
-	    except Exception as e:
-		dbgprint(repr(addr) + ' Recipe Name not found - CSV Error: ' + str(e))
+            recipe = 'n/a'
+            try:
+                dbgprint(repr(addr) + ' Reading last recipe name for corresponding Spindel' + spindle_name)
+                # Get the recipe name from last reset for the spindel that has sent data
+                import mysql.connector
+                cnx = mysql.connector.connect(user=SQL_USER, port=SQL_PORT, password=SQL_PASSWORD, host=SQL_HOST,
+                                              database=SQL_DB)
+                cur = cnx.cursor()
+                sqlselect = "SELECT Data.Recipe FROM Data WHERE Data.Name = '" + spindle_name + "' AND Data.Timestamp >= (SELECT max( Data.Timestamp )FROM Data WHERE Data.Name = '" + spindle_name + "' AND Data.ResetFlag = true) LIMIT 1;"
+                cur.execute(sqlselect)
+                recipe_names = cur.fetchone()
+                cur.close()
+                cnx.close()
+                recipe = str(recipe_names[0])
+                dbgprint('Recipe Name: Done. ' + recipe)
+            except Exception as e:
+                dbgprint(repr(addr) + ' Recipe Name not found - Database Error: ' + str(e))
 
-	    try:
+            try:
                 import mysql.connector
                 dbgprint(repr(addr) + ' - writing to database')
                 # standard field definitions:
@@ -582,19 +598,19 @@ def handler(clientsock, addr):
                 dbgprint(repr(addr) + ' - forwarding to CraftBeerPi3 at http://' + CRAFTBEERPI3ADDR)
                 import urllib2
                 outdata = {
-                    'name' : spindle_name,
-                    'angle' : angle if CRAFTBEERPI3_SEND_ANGLE else gravity,
-                    'temperature' : temperature,
-                    'battery' : battery,
+                    'name': spindle_name,
+                    'angle': angle if CRAFTBEERPI3_SEND_ANGLE else gravity,
+                    'temperature': temperature,
+                    'battery': battery,
                 }
                 out = json.dumps(outdata)
-		dbgprint(repr(addr) + ' - sending: ' + out)
-		url = 'http://' + CRAFTBEERPI3ADDR + '/api/hydrometer/v1/data'
-		req = urllib2.Request(url)
-		req.add_header('Content-Type', 'application/json')
-		req.add_header('User-Agent', spindle_name)
-		response = urllib2.urlopen(req, out)
-		dbgprint(repr(addr) + ' - received: ' + response.read())
+                dbgprint(repr(addr) + ' - sending: ' + out)
+                url = 'http://' + CRAFTBEERPI3ADDR + '/api/hydrometer/v1/data'
+                req = urllib2.Request(url)
+                req.add_header('Content-Type', 'application/json')
+                req.add_header('User-Agent', spindle_name)
+                response = urllib2.urlopen(req, out)
+                dbgprint(repr(addr) + ' - received: ' + response.read())
 
             except Exception as e:
                 dbgprint(repr(addr) + ' Error while forwarding to URL ' + url + ' : ' + str(e))
@@ -690,6 +706,36 @@ def handler(clientsock, addr):
                         dbgprint(repr(addr) + ' - received: ' + response.read())
             except Exception as e:
                 dbgprint(repr(addr) + ' Fermentrack Error: ' + str(e))
+
+        if INFLUXDB:
+            try:
+                dbgprint(repr(addr) + ' - forwarding to InfluxDB ' + INFLUXDBADDR)
+                import urllib2
+                import base64
+                outdata = {
+                    'tilt': angle,
+                    'temperature': temperature,
+                    'battery': battery,
+                    'gravity': gravity,
+                    'interval': interval,
+                    'RSSI': rssi
+                }
+                out = 'measurements,source=' + spindle_name + ' ' +  ",".join("{}={}".format(k,v) for k,v in outdata.items())
+                dbgprint(repr(addr) + ' - sending: ' + out)
+
+                url = 'http://' + INFLUXDBADDR + ':' + str(INFLUXDBPORT) + '/write?db=' + INFLUXDBNAME
+                dbgprint(repr(addr) + ' to : ' + url)
+                req = urllib2.Request(url)
+                req.add_header('Content-Type', 'application/x-www-form-urlencoded')
+                req.add_header('User-Agent', spindle_name)
+
+                base64string = base64.b64encode('%s:%s' % (INFLUXDBUSERNAME, INFLUXDBPASSWD))
+                req.add_header("Authorization", "Basic %s" % base64string)
+
+                response = urllib2.urlopen(req, out)
+                dbgprint(repr(addr) + ' - received: ' + response.read())
+            except Exception as e:
+                dbgprint(repr(addr) + ' InfluxDB Error: ' + str(e))
 
         if BREWSPY:
             try:
