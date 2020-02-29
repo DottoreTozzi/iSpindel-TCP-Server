@@ -94,7 +94,7 @@ $stop = get_field_from_sql($conn,$file,"stop");
     <meta name="Keywords" content="iSpindle, iSpindel, Chart, genericTCP, Select">
     <meta name="Description" content="iSpindle Fermentation Chart Selection Screen">
     <link rel="stylesheet" type="text/css" href="./include/iSpindle.css">
-    <a href=/iSpindle/index.php><img src=include/icons8-home-26.png></a>
+<a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt="<?php echo $stop; ?>"></a>
 
 <script type="text/javascript">
     function target_popup(form) {

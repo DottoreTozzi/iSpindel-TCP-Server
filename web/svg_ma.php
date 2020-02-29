@@ -59,6 +59,8 @@ $not_calibrated = get_field_from_sql($conn,'diagram',"not_calibrated");
 $tooltip_at = get_field_from_sql($conn,'diagram',"tooltip_at");
 $tooltip_time = get_field_from_sql($conn,'diagram',"tooltip_time");
 $third_y = get_field_from_sql($conn,$file,"third_y");
+$file = "settings";
+$stop = get_field_from_sql($conn,$file,"stop");
 
 
 
@@ -323,7 +325,7 @@ $(function ()
 </head>
 <body>
 
-<a href=/iSpindle/index.php><img src=include/icons8-home-26.png></a>
+<a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt="<?php echo $stop; ?>"></a>
  
 <div id="wrapper">
   <script src="include/highcharts.js"></script>

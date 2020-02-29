@@ -21,6 +21,8 @@ list($time, $temperature, $angle, $battery) = getCurrentValues($conn, $_GET['nam
 $file = "battery";
 $header_battery = get_field_from_sql($conn,$file,"header_battery");
 $diagram_battery = get_field_from_sql($conn,$file,"diagram_battery");
+$file = "settings";
+$stop = get_field_from_sql($conn,$file,"stop");
 
 
 ?>
@@ -144,7 +146,8 @@ $(function ()
 </script>
 </head>
 <body>
-<a href=/iSpindle/index.php><img src=include/icons8-home-26.png></a> 
+<a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt="<?php echo $stop; ?>"></a>
+
 <div id="wrapper">
 <script src="include/highcharts.js"></script>
 <script src="include/highcharts-more.js"></script>

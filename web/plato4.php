@@ -52,6 +52,8 @@ $header_no_data_3 = get_field_from_sql($conn,'diagram',"header_no_data_3");
 $not_calibrated = get_field_from_sql($conn,'diagram',"not_calibrated"); 
 $tooltip_at = get_field_from_sql($conn,'diagram',"tooltip_at");
 $tooltip_time = get_field_from_sql($conn,'diagram',"tooltip_time");
+$file = "settings";
+$stop = get_field_from_sql($conn,$file,"stop");
 
 // define header displayed in diagram depending on value for recipe
 if ($RecipeName <> '') {
@@ -274,7 +276,7 @@ $(function ()
 </head>
 <body>
 
-<a href=/iSpindle/index.php><img src=include/icons8-home-26.png></a>
+<a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt="<?php echo $stop; ?>"></a>
  
 <div id="wrapper">
   <script src="include/highcharts.js"></script>

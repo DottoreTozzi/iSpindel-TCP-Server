@@ -11,8 +11,9 @@ h1 {
 }
 
 h2 {
-  color: black;
-  text-align: left;
+  color: white;
+  background-color: black;
+  text-align: center;
 }
 
 h3 {

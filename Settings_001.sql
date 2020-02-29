@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3308
--- Erstellungszeit: 30. Dez 2019 um 01:05
+-- Erstellungszeit: 29. Feb 2020 um 05:34
 -- Server-Version: 10.4.7-MariaDB-debug
 -- PHP-Version: 7.3.7
 
@@ -19,7 +19,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Datenbank: `iSpindle`
+-- Datenbank: `iSpindle2`
 --
 
 -- --------------------------------------------------------
@@ -43,7 +43,7 @@ CREATE TABLE `Settings` (
 --
 
 INSERT INTO `Settings` (`Section`, `Parameter`, `value`, `Description_DE`, `Description_EN`, `Description_IT`, `DeviceName`) VALUES
-('ADVANCED', 'ENABLE_ADDCOLS', '0', 'Enable dynamic columns (do not use this unless you\'re a developer)', 'Enable dynamic columns (do not use this unless you\'re a developer)', 'Abilita colonne dinamiche (non usare se non siete dei sviluppatori)', 'GLOBAL'),
+('ADVANCED', 'ENABLE_ADDCOLS', '0', 'Dynamische Spalten (nur für Entwickler)', 'Enable dynamic columns (do not use this unless you\'re a developer)', 'Abilita colonne dinamiche (non usare se non siete dei sviluppatori)', 'GLOBAL'),
 ('BREWFATHER', 'BREWFATHERADDR', 'log.brewfather.net', 'IP Adresse des Brewfather Servers', 'IP Address of the Brewfather Server', 'INDIRIZZO IP del server Brewfather', '_DEFAULT'),
 ('BREWFATHER', 'BREWFATHERPORT', '80', 'Port des Brewfather Servers', 'Port of Brewfather Server', 'Porta del server Brewfather', '_DEFAULT'),
 ('BREWFATHER', 'BREWFATHERSUFFIX', '[SG]', 'iSpindel polynom in ... ([SG] = relative Dichte, [PL] = plato)  ', 'iSpindle polynom set for ... ([SG] = specific gravity, [PL] = plato)', 'Polinomio iSpindle configurato per ... ([SG] = densità specifica, [PL] = plato)', '_DEFAULT'),
@@ -88,16 +88,23 @@ INSERT INTO `Settings` (`Section`, `Parameter`, `value`, `Description_DE`, `Desc
 ('FERMENTRACK', 'FERMENTRACK_TOKEN', 'my_token', 'Token für Fermentrack Server', 'Token for Fermentrack Server', 'Token per server Fermentrack', '_DEFAULT'),
 ('FERMENTRACK', 'FERM_USE_ISPINDLE_TOKEN', '0', 'Verwendung des ISpindle Tokens zur Weiterleitung', 'Use token from iSpindle for data forwarding', 'Uso del token che si trova sulla iSpindle per inoltrare dati', '_DEFAULT'),
 ('FORWARD', 'ENABLE_FORWARD', '0', 'Weiterleitung der Daten an öffentlichen Server oder andere Instanz vom TCP Server', 'Forward to public server or other relay (i.e. another instance of this script)', 'Inoltro a server pubblico o altra istanza di un server TCP', '_DEFAULT'),
-('FORWARD', 'FORWARDADDR', '0', 'IP Adresse des anderen Servers', 'IP Adress of the other server', 'Indirizzo IP dell\'altro server', '_DEFAULT'),
+('FORWARD', 'FORWARDADDR', '0.0.0.0', 'IP Adresse des anderen Servers', 'IP Adress of the other server', 'Indirizzo IP dell\'altro server', '_DEFAULT'),
 ('FORWARD', 'FORWARDPORT', '9501', 'Port des anderen Servers', 'Port of the remote server', 'Porta del server remoto', '_DEFAULT'),
 ('GENERAL', 'HOST', '0.0.0.0', 'Erlaubter IP Bereich. 0.0.0.0 ermöglicht Verbindungen von überall', 'Allowed IP range. Leave at 0.0.0.0 to allow connections from anywhere', 'Gamma IP concessa. lasciare a 0.0.0.0 per permettere la connessione da ovunque', 'GLOBAL'),
 ('GENERAL', 'LANGUAGE', 'DE', 'Verwendete Sprache (DE für Deutsch, EN for Englisch, IT für Italienisch)', 'Displayed Language (DE for German, EN for English, IT for Italian)', 'Lingua visualizzata (DE per tedesco, EN per inglese, IT per italiano)', 'GLOBAL'),
 ('GENERAL', 'PORT', '9501', 'Port zur Kommunikation zwischen Spindel und TCP Server (muss auch in der Spindel hinterlegt sein)', 'TCP Port to listen to (to be used in iSpindle config as well)', 'Porta TCP di communicazione (da impostare anche nella configurazione iSpindle)', 'GLOBAL'),
 ('GENERAL', 'SHOWSUMMARY', '1', 'Anzeige von Device in der Übersicht auf der Hauptseite. (0: nein 1: ja)', 'Show device in summary on main page (0: no 1: yes)', 'Visualizzazione del dispositivo nella panoramica sulla pagina principale. (0: no 1: sì)', '_DEFAULT'),
+('INFLUXDB', 'ENABLE_INFLUXDB', '0', 'Weiterleitung an InfluxDB', 'Forward to InfluxDB', 'Inoltro a InfluxDB', '_DEFAULT'),
+('INFLUXDB', 'INFLUXDBADDR', 'localhost', 'IP-Adresse/Name des InfluxDB-Servers', 'IP address/hostname of the InfluxDB Server', 'Indirizzo IP / nome del server InfluxDB', '_DEFAULT'),
+('INFLUXDB', 'INFLUXDBNAME', 'spindeldaten', 'Name der Datenbank innerhalb von InfluxDB', 'Name of the database inside InfluxDB', 'Nome del database all\'interno di InfluxDB', '_DEFAULT'),
+('INFLUXDB', 'INFLUXDBPASSWD', 'secret', 'Passwort des InfluxDB-Users', 'Password of the InfluxDB user', 'Password dell\'utente InfluxDB', '_DEFAULT'),
+('INFLUXDB', 'INFLUXDBPORT', '8086', 'Port des InfluxDB-Servers', 'Port of InfluxDB Server', 'Porta del server InfluxDB', '_DEFAULT'),
+('INFLUXDB', 'INFLUXDBUSERNAME', 'username', 'Userame für InfluxDB', 'User name for InfluxDB', 'Inoltro a InfluxDB', '_DEFAULT'),
 ('REMOTECONFIG', 'ENABLE_REMOTECONFIG', '0', 'Bei 1: Konfiguration wird vom TCP Server an die Spindel während eines Datentransfers gesendet (noch in der Testung)', 'If enabled, config from TCP server will be send to Spindle during data transfer once (still under testing)', 'Se abilitato, vengono scritti i dati di configurazione sulla Spindel durante un trasferimento (in fase di testing)', '_DEFAULT'),
 ('UBIDOTS', 'ENABLE_UBIDOTS', '0', 'Weiterleitung der Daten an Ubidots (1: an 0: aus)', '1 to enable output to ubidots', '1 per abilitare l\'inoltro a ubidots ', '_DEFAULT'),
 ('UBIDOTS', 'UBI_TOKEN', 'my_token', 'UBIDOTS Token. Siehe Anleitung oder ubidots.com', 'global ubidots token, see manual or ubidots.com', 'Token ubidots vedi istruzioni o ubidots.com', '_DEFAULT'),
-('UBIDOTS', 'UBI_USE_ISPINDLE_TOKEN', '0', 'Benutzung des in der Spindel gespeicherten Tokens zur Weiterleitung an Ubidots ', '1 to use \"token\" field in iSpindle config (overrides UBI_TOKEN)', 'Utilizzo del token salvato nella iSpindle per l\'inoltro a ubidots', '_DEFAULT');
+('UBIDOTS', 'UBI_USE_ISPINDLE_TOKEN', '0', 'Benutzung des in der Spindel gespeicherten Tokens zur Weiterleitung an Ubidots ', '1 to use \"token\" field in iSpindle config (overrides UBI_TOKEN)', 'Utilizzo del token salvato nella iSpindle per l\'inoltro a ubidots', '_DEFAULT'),
+('VERSION', '', '001', NULL, NULL, NULL, 'GLOBAL');
 
 --
 -- Indizes der exportierten Tabellen

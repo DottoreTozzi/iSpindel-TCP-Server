@@ -21,6 +21,8 @@ list($time, $temperature, $angle, $battery, $interval, $rssi) = getCurrentValues
 $file = "wifi";
 $header = get_field_from_sql($conn,$file,"header");
 $header = $header . ' ' . $_GET['name'];
+$file = "settings";
+$stop = get_field_from_sql($conn,$file,"stop");
 
 ?>
 
@@ -145,7 +147,7 @@ $(function ()
 </script>
 </head>
 <body>
-<a href=/iSpindle/index.php><img src=include/icons8-home-26.png></a> 
+<a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt="<?php echo $stop; ?>"></a>
 <div id="wrapper">
 <script src="include/highcharts.js"></script>
 <script src="include/highcharts-more.js"></script>

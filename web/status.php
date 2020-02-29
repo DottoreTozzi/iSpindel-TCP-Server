@@ -30,6 +30,8 @@ $header_angle = get_field_from_sql($conn,$file,"header_angle");
 $diagram_battery = get_field_from_sql($conn,$file,"diagram_battery");
 $diagram_temperature = get_field_from_sql($conn,$file,"diagram_temperature");
 $diagram_angle = get_field_from_sql($conn,$file,"diagram_angle");
+$file = "settings";
+$stop = get_field_from_sql($conn,$file,"stop");
 
 
 ?>
@@ -373,8 +375,8 @@ $(function ()
 </script>
 </head>
 <body>
+<a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt="<?php echo $stop; ?>"></a>
  
-<a href=/iSpindle/index.php><img src=include/icons8-home-26.png></a>
         <div id="wrapper" style="width:80%; height:80%; position:right">
         <script src='include/highcharts.js'></script>
         <script src='include/highcharts-more.js'></script>

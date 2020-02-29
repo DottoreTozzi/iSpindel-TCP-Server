@@ -16,7 +16,7 @@ error_reporting(E_ALL | E_STRICT);
 if ((include_once './config/common_db_config.php') == FALSE){
        include_once("./config/common_db_default.php");
 	}
-       include_once("include/common_db_query.php");
+include_once("include/common_db_query.php");
 
 // Check GET parameters (for now: Spindle name and Timeframe to display) 
 if(!isset($_GET['hours'])) $_GET['hours'] = 0; else $_GET['hours'] = $_GET['hours'];
@@ -35,10 +35,47 @@ $tfdays = floor($tftemp / 24);
 $tftemp -= $tfdays * 24;
 $tfhours = $tftemp;
 
+if (isset($_POST['Export']))
+    {
+        $timeFrame = $_POST['hours'] + ($_POST['days'] * 24) + ($_POST['weeks'] * 168);
+        ExportChartValues($conn, $_POST['name'], $timeFrame, $_POST['reset']);
+        // establish path by the current URL used to invoke this page
+        $url="http://";
+        $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
+        $url .= 'angle.php';
+        $url .="?name=".$_POST["name"];
+        $url .="&days=".$_POST["days"];
+        $url .="&weeks=".$_POST["weeks"];
+        $url .="&hours=".$_POST["hours"];
+        $url .="&reset=".$_POST["reset"];
+        // open the page
+        header("Location: ".$url);
+        exit;
+    }
+
 // Array angle and temperature contain now also recipe name for each data point which will be displeayed in diagram tooltip
 // Variable RecipeName will be displayed in header depending on selected timeframe
 list($angle, $temperature) = getChartValues($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 list($RecipeName, $show) = getCurrentRecipeName($conn, $_GET['name'], $timeFrame, $_GET['reset']);
+
+if (isset($_POST['Export']))
+    {
+
+        // establish path by the current URL used to invoke this page
+        $url="http://";
+        $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
+        $url .= 'angle.php';
+        $url .="?name=".$_POST["name"];
+        $url .="&days=".$_POST["days"];
+        $url .="&weeks=".$_POST["weeks"];
+        $url .="&hours=".$_POST["hours"];
+        $url .="&reset=".$_POST["reset"];
+        // open the page
+        header("Location: ".$url);
+        unset($result, $sql_q);
+        ExportChartValues($conn, $_GET['name'], $timeFrame, $_GET['reset']);
+        exit;
+    }
 
 // Get fields from database in language selected in settings
 $file = "angle";
@@ -56,6 +93,9 @@ $header_no_data_2 = get_field_from_sql($conn,'diagram',"header_no_data_2");
 $header_no_data_3 = get_field_from_sql($conn,'diagram',"header_no_data_3");
 $tooltip_at = get_field_from_sql($conn,'diagram',"tooltip_at");
 $tooltip_time = get_field_from_sql($conn,'diagram',"tooltip_time");
+
+$file = "settings";
+$stop = get_field_from_sql($conn,$file,"stop");
 
 // define header displayed in diagram depending on value for recipe
 if ($RecipeName <> '') {
@@ -275,8 +315,17 @@ $(function ()
 </script>
 </head>
 <body>
+<form name="main" action="<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method="post">
  
-<a href=/iSpindle/index.php><img src=include/icons8-home-26.png></a>
+<a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt="<?php echo $stop; ?>"></a>
+<input type = "hidden" name="name" value="<?php echo $_GET['name']; ?>">
+<input type = "hidden" name="days" value="<?php echo $_GET['days']; ?>">
+<input type = "hidden" name="hours" value="<?php echo $_GET['hours']; ?>">
+<input type = "hidden" name="weeks" value="<?php echo $_GET['weeks']; ?>">
+<input type = "hidden" name="reset" value="<?php echo $_GET['reset']; ?>">
+
+
+<input type = "submit" id='export' name = "Export" value = "Export">
 
 <div id="wrapper">
   <script src="include/highcharts.js"></script>

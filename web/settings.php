@@ -43,6 +43,14 @@ $delete_device = get_field_from_sql($conn,$file,"delete_device");
 $add_device = get_field_from_sql($conn,$file,"add_device");
 $testmail = get_field_from_sql($conn,$file,"testmail");
 $export_data = get_field_from_sql($conn,$file,"export_data");
+$export_settings = get_field_from_sql($conn,$file,"export_settings");
+$data_table = get_field_from_sql($conn,$file,"data_table");
+$settings_table = get_field_from_sql($conn,$file,"settings_table");
+$export = get_field_from_sql($conn,$file,"export");
+$import = get_field_from_sql($conn,$file,"import");
+$database_header = get_field_from_sql($conn,$file,"database_header");
+$settings_header = get_field_from_sql($conn,$file,"settings_header");
+
 
 // if parameter section not set, '0' for first section in config is default to be displayed
 if(!isset($_GET['section'])) $_GET['section'] = '0'; else $_GET['section'] = $_GET['section'];
@@ -64,8 +72,62 @@ if (isset($_POST['Stop']))
 
 if (isset($_POST['Export_Data']))
     {
-        export_data_table("Data","iSpindle_Data.sql");
+        $today = date("Y_m_d");
+        $export_name=$today."_iSpindle_Data.sql";
+        export_data_table("Data",$export_name);
     }
+
+if (isset($_POST['Export_Settings']))
+    {
+        $today = date("Y_m_d");
+        $export_name=$today."_iSpindle_Settings.csv";
+        export_settings($conn,"Settings",$export_name);
+    }
+
+if (isset($_POST['Import_Data']))
+    {
+        $filename = $_FILES["fileupload"]["name"];
+        $filename_tmp = $_FILES["fileupload"]["tmp_name"];      
+        $file_type=$_FILES['fileupload']['type'];
+        $file_ext=strtolower(pathinfo($_FILES['fileupload']['name'], PATHINFO_EXTENSION));
+      
+        $extensions= array("sql");
+      
+      if(in_array($file_ext,$extensions)=== false){
+         echo "Extension not allowed, please choose a sql file.";
+         exit;
+      }
+//      echo $filename;
+//      exit;
+      if(strpos($filename,"iSpindle_Data")=== false){
+         echo "Wrong Database Filename. Must end with iSpindle_Data.sql";
+         exit;
+      }
+      import_table($conn,"Data",$filename_tmp);
+    }
+
+if (isset($_POST['Import_Settings']))
+    {
+        $filename = $_FILES["settingsupload"]["name"];
+        $filename_tmp = $_FILES["settingsupload"]["tmp_name"];
+        $file_type=$_FILES['settingsupload']['type'];
+        $file_ext=strtolower(pathinfo($_FILES['settingsupload']['name'], PATHINFO_EXTENSION));
+
+        $extensions= array("csv");
+
+      if(in_array($file_ext,$extensions)=== false){
+         echo "Extension not allowed, please choose a csv file.";
+         exit;
+      }
+//      echo $filename;
+//      exit;
+      if(strpos($filename,"iSpindle_Settings")=== false){
+         echo "Wrong Settings Filename. Must end with iSpindle_Settings.csv";
+         exit;
+      }
+      import_settings($conn,"Settings",$filename_tmp);
+    }
+
 
 
 // Function to send testmail
@@ -242,7 +304,7 @@ if (isset($_POST['Go']))
 <html>
 <head>
     <meta charset="utf-8">
-    <title>RasPySpindel Settings</title>
+    <title><?php echo $settings_header; ?></title>
     <meta name="Keywords" content="iSpindle, iSpindel, Chart, genericTCP, Select">
     <meta name="Description" content="iSpindle Fermentation Chart Selection Screen">
     <link rel="stylesheet" type="text/css" href="./include/iSpindle.css">
@@ -271,15 +333,16 @@ if (isset($_POST['Go']))
 
 </head>
 <body bgcolor="#E6E6FA">
-<form name="main" action="<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method="post">
-<a href=/iSpindle/index.php><img src=include/icons8-home-26.png></a>
-<h1>RasPySpindel Settings</h1>
+<form name="main" action="<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method="post" enctype="multipart/form-data">
+<a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt="<?php echo $stop; ?>"></a>
+<h1><?php echo $settings_header; ?></h1>
 <h3><?php echo $select_section; ?></h3>
 
 <!-- 
     All sections from array are listed in a select box
     If selection i changed, reload_page function is called to display parameters for selected section    
 -->
+
 <p>Device:
 <select id = 'device_name' name = 'device_name' onchange="reload_page(this)">
         <?php
@@ -360,25 +423,17 @@ echo "</tr>";
 echo "</table>";
 }
 ?>
-
 <br />
 <br />
-<br />
-
-
 <!--
     hidden fields to define parameters that are used when submit button is selected to write data to database
 -->
-
 <input type = "hidden" name="current_section" value="<?php echo $sections[$_GET['section']]; ?>">
 <input type = "hidden" name="current_Sid" value="<?php echo $_GET['section']; ?>">
 <input type = "hidden" name="current_device" value="<?php echo $devices[$_GET['device']]; ?>">
 <input type = "hidden" name="current_Did" value="<?php echo $_GET['device']; ?>">
-
 <input type = "submit" name = "Go" value = "<?php echo $send; ?>" onclick="target_popup(this)">
 <input type = "submit" name = "Stop" value = "<?php echo $stop; ?>">
-
-
 <?php
     if ($selected_device == "GLOBAL" && $selected_section == "EMAIL"){
         echo "</br></br>";
@@ -387,10 +442,6 @@ echo "</table>";
         echo "</div>";
         }
 ?>
-
-
-
-<br />
 <br />
 <br />
 <!-- show devices that have currently no individual settings. Individual settings can be added for selected device -->
@@ -413,9 +464,41 @@ echo "</table>";
     ?>
 </select>
 
-</br>
+<h2><?php echo $database_header; ?></h2>
+
+<table border='1' cellspacing='0' cellpadding='10'>
+<tr>
+<td><b><?php echo $data_table; ?></b></td>
+<td><b><?php echo $settings_table; ?></b></td>
+</tr>
+
+<tr>
+<td>
+<?php echo $export; ?>
 </br>
 <input type = "submit" name = "Export_Data" value = "<?php echo $export_data; ?>">
-        
+</br>
+</br>
+<?php echo $import; ?>
+</br>
+<input type="file" name="fileupload" value="fileupload" id="fileupload">
+<!-- <label for="fileupload"> Select a file to upload</label>-->
+<input type="submit" name="Import_Data" value="Daten Importieren">        
+</td>
+<td>
+<?php echo $export; ?>
+</br>
+<input type = "submit" name = "Export_Settings" value = "<?php echo $export_settings; ?>">
+</br>
+</br>
+<?php echo $import; ?>
+</br>
+<input type="file" name="settingsupload" value="settingsupload" id="settingsupload">
+<!-- <label for="fileupload"> Select a file to upload</label>-->
+<input type="submit" name="Import_Settings" value="Settings Importieren">
+</br>
+</td>
+</tr>
+</table>
 </form>
 

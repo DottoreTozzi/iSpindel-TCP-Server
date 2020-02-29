@@ -12,7 +12,6 @@ if ((include_once './config/common_db_config.php') == FALSE){
     include_once("include/common_db_query.php");
 
 
-
 // Check GET parameters
 // Added parameter recipe to set recipe name at reset point. Recipe nam will be displayed in diagrams as header and in tooltip
 if(!isset($_GET['name'])) $_GET['name'] = 'iSpindel000'; else $_GET['name'] = $_GET['name'];
@@ -27,11 +26,12 @@ $error_read_id = get_field_from_sql($conn,$file,"error_read_id");
 $enter_write = get_field_from_sql($conn,$file,"error_write");
 $reset_written = get_field_from_sql($conn,$file,"reset_written");
 $recipe_written = get_field_from_sql($conn,$file,"recipe_written");
+$file = "settings";
+$stop = get_field_from_sql($conn,$file,"stop");
 
 //depending on mysql config e.g. strict mode, all values need to be transfered to DB and no empty values are allowed.
 //unique spindle id is pulled from DB and transferred for reset timestamp
 $q_sql0 = mysqli_query($conn, "SELECT DISTINCT ID FROM Data WHERE Name = '".$Name."'AND (ID <>'' OR ID <>'0') ORDER BY Timestamp DESC LIMIT 1") or die(mysqli_error($conn));  
-
 
 if (! $q_sql0){ 
   echo $error_read_id;                                             
@@ -66,6 +66,6 @@ $del_low = delete_mail_sent($conn,"SentAlarmLow",$valID);
 $del_svg = delete_mail_sent($conn,"SentAlarmSVG",$valID);
 
 }
-echo "<br/><br/><a href=/iSpindle/index.php><img src=include/icons8-home-26.png></a>"
+echo "<br/><br/><a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt='$stop'></a>"
 ?>
 

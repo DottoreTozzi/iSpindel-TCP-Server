@@ -38,7 +38,14 @@ error_reporting(E_ALL | E_STRICT);
     // Changed back the select for spindesl to be displayed: Only spindles that have sent data the past x days ago will be shown on this page.
     // Calibration calls a separate script where the user has to select the spindel that should be calibrated. All spindles are shown there
     
-    
+// Loads personal config file for db connection details. If not found, default file will be used
+if ((include_once './config/common_db_config.php') == FALSE){
+       include_once("./config/common_db_default.php");
+    }
+//  Loads db query functions
+include_once("./include/common_db_query.php");
+include_once("./config/tables.php");
+ 
 
     // Self-called by submit button?
     if (isset($_POST['Go']))
@@ -111,13 +118,40 @@ error_reporting(E_ALL | E_STRICT);
         unset($result, $sql_q);
         exit;
     }
-    
-    // Loads personal config file for db connection details. If not found, default file will be used
-    if ((include_once './config/common_db_config.php') == FALSE){
-       include_once("./config/common_db_default.php");
+
+// Self-called by update_strings button
+// updates strings table with latest version and calls index page
+
+    if (isset($_POST['Up_Str']))
+    {
+        upgrade_strings_table($conn);
+        // establish path by the current URL used to invoke this page
+        $url="http://";
+        $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
+        $url .= 'index.php';
+        // open the page
+        header("Location: ".$url);
+        unset($result, $sql_q);
+        exit;
     }
-//  Loads db query functions
-include_once("./include/common_db_query.php");
+
+// Self-called by update_settings button
+// updates settings table with latest version and calls index page
+
+    if (isset($_POST['Up_Set']))
+    {
+        upgrade_settings_table($conn);
+        // establish path by the current URL used to invoke this page
+        $url="http://";
+        $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
+        $url .= 'index.php';
+        // open the page
+        header("Location: ".$url);
+        unset($result, $sql_q);
+        exit;
+    }
+
+    
 
 // sql queries to get language dependent fields to be displayed
     $file = "index";
@@ -149,6 +183,14 @@ include_once("./include/common_db_query.php");
     $header_initialgravity = get_field_from_sql($conn,$file,"header_initialgravity");
     $change_history = get_field_from_sql($conn,$file,"change_history");
     $help = get_field_from_sql($conn,$file,"help");
+    $settings_header = get_field_from_sql($conn,$file,"settings_header");
+    $current_data = get_field_from_sql($conn,$file,"current_data");
+    $expert_settings = get_field_from_sql($conn,$file,"expert_settings");
+    $upgrade_settings = get_field_from_sql($conn,$file,"upgrade_settings");
+    $upgrade_strings = get_field_from_sql($conn,$file,"upgrade_strings");
+    $upgrade_warning = get_field_from_sql($conn,$file,"upgrade_warning");
+    $installed_version = get_field_from_sql($conn,$file,"installed_version");
+    $available_version = get_field_from_sql($conn,$file,"available_version");
 
 
     $header_recipe = get_field_from_sql($conn,'diagram',"recipe_name");
@@ -191,6 +233,25 @@ include_once("./include/common_db_query.php");
         $iSpindleServerRunning = $server_not_running;
     }
 
+// get installed strings table version
+    $installed_strings_version="N/A";
+    $q_sql="Select Field from Strings WHERE File = 'Version'";
+    $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
+    $rows = mysqli_num_rows($result);
+    if($rows > 0) {
+        $row = mysqli_fetch_array($result);
+        $installed_strings_version= $row[0];
+    }
+// get installed settings table version
+    $installed_settings_version="N/A";
+    $q_sql="Select value from Settings WHERE Section = 'VERSION'";
+    $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
+    $rows = mysqli_num_rows($result);
+    if($rows > 0) {
+        $row = mysqli_fetch_array($result);
+        $installed_settings_version = $row[0];
+    }
+
 // get all spindle names to be displayed in form that have submitted data within the timeframe of $daysago
     $sql_q = "SELECT DISTINCT Name FROM Data WHERE Timestamp > date_sub(NOW(), INTERVAL ".$daysago." DAY) ORDER BY Name";
     $result=mysqli_query($conn, $sql_q) or die(mysqli_error($conn));
@@ -225,6 +286,20 @@ include_once("./include/common_db_query.php");
 
         }
     }
+
+    function activate_expert(){
+        var checkBox = document.getElementById("expert");
+        var settings = document.getElementById("expert_settings");
+
+        if (checkBox.checked == true){
+            settings.style.display = "block";
+            } else {
+               settings.style.display = "none";
+              }
+        }    
+
+
+
 </script>
 
 </head>
@@ -265,7 +340,6 @@ include_once("./include/common_db_query.php");
         <option value="svg_ma.php"><?php echo $chart_filename_10 ?></option>
         <option value="plato4_delta.php"><?php echo $chart_filename_11 ?></option>	
         <option value="reset_now.php"><?php echo $chart_filename_09 ?></option>
-<!--        <option value="calibration.php"><?php echo $chart_filename_13 ?></option> -->
 </select>
 
 <br />
@@ -317,22 +391,15 @@ else {
 ?>
 <br />
 <br />
-
-<span title="<?php echo($calibrate_spindle)?>"> <input type = "submit" id='calibrate' name = "Cal" value="<?php echo($calibrate_spindle)?>"></span>
-<span title="<?php echo($server_settings)?>"><input type = "submit" id='settings' name = "Set" value = "<?php echo($server_settings)?>"></span>
-
-<br />
-
-
-
-<br/><br/><?php echo($iSpindleServerRunning)?> <br/></br></br>
-
 <?php
 
 // if a section is selected (default is 0), table will be defined
 // Database entries for parameter, value and description of defined language will be displayed for selected section
 // name of input field gets unique id (combination of section and parameter). This is used to identify parameter value during _POST['GO']
 if ($len !=0 ){
+echo "<h2>$current_data</h2>"; 
+
+
     echo "<table border='1'>";
     echo "<tr>";
     echo "<td><b>Device</b></td>";
@@ -385,10 +452,34 @@ if ($len !=0 ){
 echo "</table>";
 }
 ?>
- 
+</br>
+</br>
+<h2><?php echo $settings_header; ?></h2>
+
+
+<span title="<?php echo($calibrate_spindle)?>"> <input type = "submit" id='calibrate' name = "Cal" value="<?php echo($calibrate_spindle)?>"></span>
+<span title="<?php echo($server_settings)?>"><input type = "submit" id='settings' name = "Set" value = "<?php echo($server_settings)?>"></span>
+</br>
+</br>
+<input type = "checkbox" id="expert" value="0"  onchange="activate_expert()">
+<?php echo $expert_settings; ?> 
+</br>
+</br>
+<div id="expert_settings" style="display: none;">
+<span title="<?php echo('Upgrade Stringtable')?>"> <input type = "submit" id='up_strings' name = "Up_Str" value="<?php echo($upgrade_strings)?>"></span>
+<?php echo($installed_version)?> <?php echo($installed_strings_version)?> | <?php echo($available_version)?> <?php echo(LATEST_STRINGS_TABLE)?>
+</br>
+</br>
+</br> <b><?php echo($upgrade_warning)?></b></br></br>
+<span title="<?php echo($upgrade_settings)?>"><input type = "submit" id='up_settings' name = "Up_Set" value = "<?php echo($upgrade_settings)?>"></span>
+<?php echo($installed_version)?> <?php echo($installed_settings_version)?> | <?php echo($available_version)?> <?php echo(LATEST_SETTINGS_TABLE)?>
+
+</div>
+
 
 <footer>
 <?php echo"<div><a href='help.php' title='$help'>$help</a></div>"; ?>
+</br><?php echo($iSpindleServerRunning)?>
 <!-- <div>Icons made by <a href="https://www.flaticon.com/authors/prosymbols" title="Prosymbols">Prosymbols</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div> -->
 </footer>
 

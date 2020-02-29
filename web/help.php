@@ -305,7 +305,7 @@ Die einzige Voraussetzung ist, dass Python installiert ist.</p>
   <img class="img_norm" src="help/images/index4.png" alt="Hauptseite Funktion/Diagramm auswählen">
 </div>
 
-<div id="config" style="margin-left:15%;padding:1px 16px;height:4500px;">
+<div id="config" style="margin-left:15%;padding:1px 16px;height:5500px;">
   <h2>Konfiguration</h2>
   </br>
   </br>
@@ -330,6 +330,16 @@ Die einzige Voraussetzung ist, dass Python installiert ist.</p>
   <p><b>Device aus individuellen Settings entfernen:</b></br>
   Ein Device kann auch aus den individuellen Settings wieder entfernt werden. Dazu muss das entsprechende Device ausgewählt werdne und der Button 'Device aus individuellen Settings entfernen' angeklickt werden. Derzeit findet keine Sicherheitsabfrage statt. Die Individuellen Settings werden unwiderruflich gelöscht und das Device verwendet dann die Settings, die unter '_DEFAULT' hinterlegt sind. Um individuelle Settings für das Device wieder zu verwenden, muss es erst wieder neu angelegt werden.</p>
   <img class="img_norm" src="help/images/Settings4.PNG" alt="Device aus individuellen Settings entfernen">
+  <p><b>Sprache des Webinterfaces ändern:</b></br>
+  Derzeit sind die Srpachen Deutsch, Englisch und Italienisch integriert. Man kann sie durch Eingabe von DE, EN oder IT im entsprechenden Konfigurationsfeld auswählen.</p>
+  <img class="img_norm" src="help/images/Settings5.PNG" alt="Device aus individuellen Settings entfernen">
+<p>Andere Sprachen könnne hinuzgefügt werden. Hierfür müssen die Tabellen Settings und Strings durch entpsrechende Spalten ergänzt werden. Dazu kann z.B. phpmyadmin genutzt werden. Soll z.B. Niederländisch als Sprache ergänzt werden, so muss in den genannten Tabellen eine Spalte mit Description_NL ergänzt werden und die Zeilen mit der passenden Übersetzung eingetragen werden. Danach kann man im Webinterface NL als Sprache eingeben und es werden die Beschreibungen aus der Spalte Description_NL für das Webinterface verwendet.</p>
+<p><b>Tabelle Settings:</b></p>
+  <img class="img_norm" src="help/images/Settings6.PNG" alt="Device aus individuellen Settings entfernen">
+<p><b>Tabelle Strings:</b></p>
+  <img class="img_norm" src="help/images/Settings7.PNG" alt="Device aus individuellen Settings entfernen">
+
+
 </div>
 
 <div id="calibration" style="margin-left:15%;padding:1px 16px;height:1500px;">

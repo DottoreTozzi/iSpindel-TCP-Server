@@ -51,13 +51,76 @@ Jan 24 2019
     if ((include_once './config/common_db_config.php') == FALSE){
        include_once("./config/common_db_default.php");
     }
+       include_once("./config/tables.php");
 
-  function cleanData(&$str)
+
+function cleanData(&$str)
   {
     if($str == 't') $str = 'TRUE';
     if($str == 'f') $str = 'FALSE';
     if(strstr($str, '"')) $str = '"' . str_replace('"', '""', $str) . '"';
   }
+
+function upgrade_strings_table($conn)
+{
+    $upgrade                    = false;
+    $file_version               = LATEST_STRINGS_TABLE;
+    $file_name                  = "../Strings_".$file_version.".sql";
+
+
+    $q_sql="Select Field from Strings WHERE File = 'Version'";
+    $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn)); 
+    $rows = mysqli_num_rows($result);
+    if($rows > 0) {
+        $row = mysqli_fetch_array($result);
+        $value = $row[0];
+        if (intval($value) == intval($file_version)) {
+            echo 'Latest Version installed:'.intval($value);
+            exit;
+        }
+        if (($value == '') || (intval($value) < intval($file_version))){
+            $upgrade = true;
+        }
+    }
+    else {
+        // No Parameter in Database -> upgrade to newer version. Only older versions do have no version informatrion
+        $upgrade = true;
+    }
+    if ($upgrade == true){
+    import_table($conn,'Strings',$file_name);
+    }
+}
+
+function upgrade_settings_table($conn)
+{
+    $upgrade                    = false;
+    $file_version               = LATEST_SETTINGS_TABLE;
+    $file_name                  = "../Settings_".$file_version.".sql";
+
+
+    $q_sql="Select value from Settings WHERE Section = 'VERSION'";
+    $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
+    $rows = mysqli_num_rows($result);
+    if($rows > 0) {
+        $row = mysqli_fetch_array($result);
+        $value = $row[0];
+        if (intval($value) == intval($file_version)) {
+            echo 'Latest Version installed:'.intval($value);
+            exit;
+        }
+        if (($value == '') || (intval($value) < intval($file_version))){
+            $upgrade = true;
+        }
+    }
+    else {
+        // No Parameter in Database -> upgrade to newer version. Only older versions do have no version informatrion
+        $upgrade = true;
+    }
+    if ($upgrade == true){
+    import_table($conn,'Settings',$file_name);
+    }
+}
+
 
 function export_data_table($table,$file="iSpindle_Backup.sql")
 {
@@ -142,6 +205,119 @@ function export_data_table($table,$file="iSpindle_Backup.sql")
         header("Content-disposition: attachment; filename=\"".$backup_name."\"");  
         echo $content; exit;
     }
+}
+
+
+function import_table($conn,$table,$filename)
+{
+// Drop table first
+$drop_table="DROP TABLE ".$table;
+$result = mysqli_query($conn, $drop_table) or die(mysqli_error($conn));
+
+$auto_increment="SET sql_mode='NO_AUTO_VALUE_ON_ZERO'";
+$result = mysqli_query($conn, $auto_increment) or die(mysqli_error($conn));
+
+// Temporary variable, used to store current query
+$templine = '';
+// Read in entire file
+$lines = file($filename);
+// Loop through each line
+foreach ($lines as $line)
+{
+// Skip it if it's a comment
+if (substr($line, 0, 2) == '--' || $line == '')
+    continue;
+
+// Add this line to the current segment
+$templine .= $line;
+// If it has a semicolon at the end, it's the end of the query
+if (substr(trim($line), -1, 1) == ';')
+{
+    // Perform the query
+    mysqli_query($conn,$templine) or print('Error performing query \'<strong>' . $templine . '\': ' . mysql_error() . '<br /><br />');
+    // Reset temp variable to empty
+    $templine = '';
+}
+}
+ echo "Tables imported successfully";
+}
+
+function export_settings($conn,$table='Settings',$filename)
+{
+    $q_sql="Select Section, Parameter, value, DeviceName from $table WHERE Parameter NOT LIKE 'Sent%' AND Section NOT LIKE 'VERSION' ORDER by DeviceName";
+    $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
+    $fp = fopen('php://output', 'w');
+    if ($fp && $result) 
+    {
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename='.$filename);
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        while ($row = $result->fetch_array(MYSQLI_NUM)) 
+        {
+            fputcsv($fp, array_values($row));
+        }
+    die;
+    }   
+
+}
+
+function import_settings($conn,$table='Settings',$filename)
+{
+$settings_table_exists="SHOW TABLES LIKE '".$table."'";
+$result = mysqli_query($conn, $settings_table_exists) or die(mysqli_error($conn));
+
+$delete_other_devices="DELETE FROM Settings WHERE DeviceName <> 'GLOBAL' AND DeviceName <> '_DEFAULT'";
+$result = mysqli_query($conn, $delete_other_devices) or die(mysqli_error($conn));
+
+$file = fopen($filename, "r");
+$i=0;
+    while (($column = fgetcsv($file, 10000, ",")) !== FALSE) 
+        {
+        if ($column[0]<>"")
+            {
+            if ($column[3]=='GLOBAL' || $column[3] == '_DEFAULT')
+                {
+                $column[2]= str_replace('\\', '\\\\', $column[2]);
+                $sqlUpdate = "UPDATE $table SET value = '$column[2]' WHERE DeviceName = '$column[3]' AND Section = '$column[0]' AND Parameter = '$column[1]'";
+                $result = mysqli_query($conn, $sqlUpdate) or die(mysqli_error($conn));
+                }
+                
+            if ($column[3] != 'GLOBAL' && $column[3] != '_DEFAULT')
+                {
+                if ($i==0)
+                    {
+                    $Devices=array($column[3]);
+                    $i++;
+                    }
+                else 
+                    {
+                    if (!in_array($column[3],$Devices))
+                        {
+                        array_push($Devices,$column[3]);
+                        }
+                    }
+                }
+            }
+        
+        }
+    foreach($Devices as $Device)
+        {
+        CopySettingsToDevice($conn, $Device);
+        } 
+    $file = fopen($filename, "r");
+    while (($column = fgetcsv($file, 10000, ",")) !== FALSE)
+        { 
+        if ($column[0]<>"")
+            {
+            if ($column[3] != 'GLOBAL' && $column[3] != '_DEFAULT')
+                {
+                $sqlUpdate = "UPDATE $table SET value = '$column[2]' WHERE DeviceName = '$column[3]' AND Section = '$column[0]' AND Parameter = '$column[1]'";
+                $result = mysqli_query($conn, $sqlUpdate) or die(mysqli_error($conn));
+                }
+            }
+        }
+ echo "Settings imported successfully";
 }
 
 
@@ -347,7 +523,7 @@ function getInitialGravity($conn, $iSpindleID = 'iSpindel000')
     $where = "WHERE Name = '" . $iSpindleID . "'
               AND Timestamp > (Select MAX(Data.Timestamp) FROM Data  WHERE Data.ResetFlag = true AND Data.Name = '" . $iSpindleID . "') 
               AND Timestamp < DATE_ADD((SELECT MAX(Data.Timestamp)FROM Data WHERE Data.Name = '" . $iSpindleID . "' 
-              AND Data.ResetFlag = true), INTERVAL 2 HOUR)";
+              AND Data.ResetFlag = true), INTERVAL 1 HOUR)";
 
     $q_sql = mysqli_query($conn, "SELECT AVG(Data.Angle) as angle FROM Data " . $where ) or die(mysqli_error($conn));
 

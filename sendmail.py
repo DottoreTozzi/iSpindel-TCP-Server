@@ -513,7 +513,7 @@ try:
                                 D12hGravity = 'Not Calibrated'
                             else:
                                 Gravity = str(round(dgravity[lSpindleID[i]],2)) 
-                                if (d24hgravity[lSpindleID[i]]<>'N/A'):
+                                if (d24hgravity[lSpindleID[i]]!='N/A'):
                                     D24hGravity = str(round(dgravity[lSpindleID[i]]-d24hgravity[lSpindleID[i]],2))
                                     D12hGravity = str(round(dgravity[lSpindleID[i]]-d12hgravity[lSpindleID[i]],2))
                                 else:
