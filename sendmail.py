@@ -67,15 +67,21 @@ def dbgprint(s):
     if DEBUG:
         print(str(s))
 
-def get_ip_address(ifname):
+def get_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    return socket.inet_ntoa(fcntl.ioctl(
-        s.fileno(),
-        0x8915,  # SIOCGIFADDR
-        struct.pack('256s', ifname[:15])
-    )[20:24])
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.255.255.255', 1))
+        IP = s.getsockname()[0]
+    except:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
 
-server_ip = get_ip_address('eth0')
+server_ip = get_ip()
+
+dbgprint(server_ip)
 
 # SQL settings
 # MySQL
@@ -305,7 +311,7 @@ def calculate_plato_from_calibration(iSpindleID, Angle):
             for i in calibrationdata:
                 id = i[0]  # ID
                 sID = str(id)
-                lSpindleID.append(id)
+                lSpindleID.append(sID)
                 dconst1[sID] = i[1]
                 dconst2[sID] = i[2]
                 dconst3[sID] = i[3]
@@ -369,7 +375,7 @@ def timestamp_reset_spindle(iSpindleID):
             for i in ispindles:
                 id = i[0]  # ID
                 sID = str(id)
-                lSpindleID.append(id)
+                lSpindleID.append(sID)
                 dresettime[sID] = i[1]
             cur.close()
             cnx.close()
@@ -434,7 +440,7 @@ try:
     for i in ispindles:
         id = i[3]  # ID
         sID = str(id)
-        lSpindleID.append(id)
+        lSpindleID.append(sID)
         dlasttimetrue[sID] = 0
         dlasttime[sID] = i[0]  # timestamp of latest dataset for sID
         dlastreset[sID] = timestamp_reset_spindle(sID)
