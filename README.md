@@ -1,7 +1,35 @@
 # iSpindel Generic TCP Server
-#### (iSpindle.py Version 1.3.3)
+#### (iSpindle.py Version 1.6.3)
+
+**Neu (20.06.2019)**
+Merged avollkopf's fork.
+Many thanks!
+
+Documentation will be fully updated soon.
 
 [English Version](README_en.md)
+**Neu (28.04.2019)**
+Neue Diagramme: Berechneter SVG, Alkoholgehalt; Delta Plato für bestimmten Zeitraum; Wifi/Batterytrend
+Optimierte Landing page mit neuen Funktionen:
+Möglichkeit der Vergabe eines Sudnamens beim Reset der entsprechendne SPindel im TCP server
+Möglichkeit der Kalibrierung der Spindeln über das Web-Interface
+Settings können nun auch per button über das Webinterface geändert werden
+Mehrsprachiges Interface. Deutsch und Englisch bereits implementiert. Sollte recht einfach erweiterbar auf andere Sprachen sein.
+Anzeige der PID des Servers in der Landing page.
+
+**Neu (15.10.2018)**
+Neue Diagramme: Moving Average (Glättung für angle.php und plato4.php, konfigurierbar)
+"Landing Page" index.php - Die lang ersehnte Auswahlseite für iSpindeln und Diagramme.
+Erreichbar über "http://myraspi/index.php" (je nach Konfiguration).
+Am besten gleich einen Shortcut (Lesezeichen) erstellen.
+
+**Neu (02.10.2018)**
+CBP3 support (Dank an jlanger)     
+Brewpiless support (Dank an ollinator2000)     
+iSpindel Remote Configuration: Die iSpindel kann nun bestimmte Konfigurations Parameter empfangen.     
+Momentan funktioniert das nur mit der "Intervall" Einstellung.     
+Das Polynom und das Token können Server seitig bereits konfiguriert werden, diese werden aber von der momentanen Firmware Version (6.0.1) noch ignoriert.     
+Benötigt wird auf jeden Fall Firmware 6.0.1 oder neuer.
 
 **Neu (15.02.2018)**
 Neues Diagramm wifi.php zeigt die zuletzt gemessene und übertragene Verbindungsqualität zum WLAN.        

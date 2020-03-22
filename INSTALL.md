@@ -5,6 +5,35 @@
 
 ### Interim Release: Debian/Raspbian Stretch
 
+### Update auf Version 1.6.3
+Um bei einem Reset für eine Spindel auch einen Rezeptnamen zu setzen, muss ein etnsprechendes Feld in der Data Tabelle ergänzt werden:
+
+ALTER TABLE `Data` ADD `Recipe` VARCHAR( 64 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL;
+
+Es gibt nun auch eine sendmail.py Datei. Diese muss auch in den Ordner /usr/local/bin kopiert werden. 
+Dadurch ist es möglich, Alarme per email zu senden.
+
+Es muss eine 'Tabelle' Strings und 'Settings' in der iSpindel Datenbank angelegt werden. 
+Die Dateien Strings.sql und Settings.sql müssen in die zuvor erstellen Tebellen importiert werden.
+Über die index.php seite kann man nun ein settings script aufrufen und für verschiedene Parameter die Settings nun über das Webinterface festlegen.
+Es gibt ein config Verzeichnis unter iSPindel-srv. Dort gibt es für die python und php scripte je eine default version die geladen wird, wenn keine persönliche konfiguration erstellt wurde
+Um eine persönliches fiel zu erstellen, dass bei einem Update nicht überschrieben wird einfach eine Kopie mit dem Namen common_db_config.php und iSpindle_config.ini anlegen.
+Dort die entsprechenden Einträge für die Verbindung zur Datenbank machen / anpassen
+
+Diese Schritte müssen leider immer gemacht werden, sie haben ihren Weg an die richtige Stelle der Anleitung noch nicht gefunden...
+
+### Update auf Version 1.6.0, Firmware 6.0.1 und höher:
+     
+Bei Einsatz einer älteren Version muss die Datenbank angepasst werden, wenn die "Remote Configuration" der iSpindel genutzt werden soll.
+
+	CREATE TABLE `Config` (
+		`ID` int NOT NULL,
+		`Interval` int NOT NULL,
+		`Token` varchar(64) NOT NULL,
+		`Polynomial` varchar(64) NOT NULL,
+	        `Sent` boolean NOT NULL,
+		PRIMARY KEY (`ID`)
+		) ENGINE=InnoDB DEFAULT CHARSET=ascii COLLATE=ascii_bin COMMENT='iSpindle Config Data';
 
 ### Update auf Version 1.4.0, Firmare 5.8 und höher...
 
@@ -198,6 +227,17 @@ Die Datentabelle folgt diesem Schema:
 		`const3` double NOT NULL,
 		PRIMARY KEY (`ID`)
 		) ENGINE=InnoDB DEFAULT CHARSET=ascii COLLATE=ascii_bin COMMENT='iSpindle Calibration Data';
+		
+		
+	CREATE TABLE `Config` (
+		`ID` int NOT NULL,
+		`Interval` int NOT NULL,
+		`Token` varchar(64) NOT NULL,
+		`Polynomial` varchar(64) NOT NULL,
+	        `Sent` boolean NOT NULL,
+		PRIMARY KEY (`ID`)
+		) ENGINE=InnoDB DEFAULT CHARSET=ascii COLLATE=ascii_bin COMMENT='iSpindle Config Data';
+
 
 #### Benutzer anlegen und berechtigen (und ihm ein eigenes Passwort geben):
 

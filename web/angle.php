@@ -10,7 +10,12 @@ error_reporting(E_ALL | E_STRICT);
 // weeks = days x 7
 // name = iSpindle name
  
-include_once("include/common_db.php");
+// DB config values will be pulled from differtent location and user can personalize this file: common_db_config.php
+// If file does not exist, values will be pulled from default file
+
+if ((include_once './config/common_db_config.php') == FALSE){
+       include_once("./config/common_db_default.php");
+	}
 include_once("include/common_db_query.php");
 
 // Check GET parameters (for now: Spindle name and Timeframe to display) 
@@ -30,7 +35,99 @@ $tfdays = floor($tftemp / 24);
 $tftemp -= $tfdays * 24;
 $tfhours = $tftemp;
 
+if (isset($_POST['Export']))
+    {
+        $timeFrame = $_POST['hours'] + ($_POST['days'] * 24) + ($_POST['weeks'] * 168);
+        ExportChartValues($conn, $_POST['name'], $timeFrame, $_POST['reset']);
+        // establish path by the current URL used to invoke this page
+        $url="http://";
+        $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
+        $url .= 'angle.php';
+        $url .="?name=".$_POST["name"];
+        $url .="&days=".$_POST["days"];
+        $url .="&weeks=".$_POST["weeks"];
+        $url .="&hours=".$_POST["hours"];
+        $url .="&reset=".$_POST["reset"];
+        // open the page
+        header("Location: ".$url);
+        exit;
+    }
+
+// Array angle and temperature contain now also recipe name for each data point which will be displeayed in diagram tooltip
+// Variable RecipeName will be displayed in header depending on selected timeframe
 list($angle, $temperature) = getChartValues($conn, $_GET['name'], $timeFrame, $_GET['reset']);
+list($RecipeName, $show) = getCurrentRecipeName($conn, $_GET['name'], $timeFrame, $_GET['reset']);
+
+if (isset($_POST['Export']))
+    {
+
+        // establish path by the current URL used to invoke this page
+        $url="http://";
+        $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
+        $url .= 'angle.php';
+        $url .="?name=".$_POST["name"];
+        $url .="&days=".$_POST["days"];
+        $url .="&weeks=".$_POST["weeks"];
+        $url .="&hours=".$_POST["hours"];
+        $url .="&reset=".$_POST["reset"];
+        // open the page
+        header("Location: ".$url);
+        unset($result, $sql_q);
+        ExportChartValues($conn, $_GET['name'], $timeFrame, $_GET['reset']);
+        exit;
+    }
+
+// Get fields from database in language selected in settings
+$file = "angle";
+$recipe_name = get_field_from_sql($conn,'diagram',"recipe_name");
+$first_y = get_field_from_sql($conn,$file,"first_y");
+$second_y = get_field_from_sql($conn,$file,"second_y");
+$x_axis = get_field_from_sql($conn,$file,"x_axis");
+$subheader = get_field_from_sql($conn,$file,"timetext");
+$subheader_reset = get_field_from_sql($conn,$file,"timetext_reset");
+$subheader_weeks = get_field_from_sql($conn,'diagram',"timetext_weeks");
+$subheader_days = get_field_from_sql($conn,'diagram',"timetext_days");
+$subheader_hours = get_field_from_sql($conn,'diagram',"timetext_hours");
+$header_no_data_1 = get_field_from_sql($conn,'diagram',"header_no_data_1");
+$header_no_data_2 = get_field_from_sql($conn,'diagram',"header_no_data_2");
+$header_no_data_3 = get_field_from_sql($conn,'diagram',"header_no_data_3");
+$tooltip_at = get_field_from_sql($conn,'diagram',"tooltip_at");
+$tooltip_time = get_field_from_sql($conn,'diagram',"tooltip_time");
+
+$file = "settings";
+$stop = get_field_from_sql($conn,$file,"stop");
+
+// define header displayed in diagram depending on value for recipe
+if ($RecipeName <> '') {
+  $Header=$_GET['name'].' | ' . $recipe_name .' ' . $RecipeName;
+  }
+else {
+  $Header='iSpindel: ' . $_GET['name'];
+  }
+
+
+// Header will show, that there is no data available, and displays timeframe user needs to go back to see data in diagram
+if (!$_GET['reset'])
+{
+$DataAvailable=isDataAvailable($conn, $_GET['name'], $timeFrame);
+if($DataAvailable[0]=='0')
+{
+ $Header='iSpindel: ' . $header_no_data_1 . ' ' . $_GET['name']. ' ' . $header_no_data_2 . ' ' .$DataAvailable[1]. ' ' . $header_no_data_3;
+}
+}
+
+// define subheader to be displayed in diagram
+$timetext = $subheader . ' ';
+if($_GET['reset']) {
+  $timetext = $subheader_reset . ' ';
+  }
+if($tfweeks != 0) {
+  $timetext .= $tfweeks . ' ' . $subheader_weeks;
+  }
+if($tfdays != 0) {
+  $timetext .= $tfdays . ' ' . $subheader_days;
+  }
+$timetext .= $tfhours . ' ' . $subheader_hours;
 
 ?>
 
@@ -44,11 +141,32 @@ list($angle, $temperature) = getChartValues($conn, $_GET['name'], $timeFrame, $_
   <script src="include/jquery-3.1.1.min.js"></script>
   <script src="include/moment.min.js"></script>
   <script src="include/moment-timezone-with-data.js"></script>
-
+  <script src="include/highcharts.js"></script>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8"> 
+  <link rel="stylesheet" type="text/css" href="./include/iSpindle.css">
 <script type="text/javascript">
+
+// define constants for data in chart. Allows for mor than two variables. Recipe information is included here and can be displayed in tooltip
+const chartAngle = [<?php echo $angle;?>]
+const chartTemp = [<?php echo $temperature;?>]
+// define constants to be displayed in diagram -> no php code needed in chart
+const recipe_name=[<?php echo "'".$recipe_name."'";?>]
+const first_y=[<?php echo "'".$first_y."'";?>]
+const second_y=[<?php echo "'".$second_y."'";?>]
+const x_axis=[<?php echo "'".$x_axis."'";?>]
+const chart_header=[<?php echo "'" . $Header . "'";?>]
+const chart_subheader=[<?php echo "'" . $timetext . "'";?>]
+const tooltip_at=[<?php echo "'".$tooltip_at."'";?>]
+const tooltip_time=[<?php echo "'".$tooltip_time."'";?>]
+
+//console.log(chartAngle)
+//console.log(chartTemp)
+
 $(function () 
 {
+
   var chart;
+
  
   $(document).ready(function() 
   { 
@@ -61,35 +179,15 @@ $(function ()
     chart = new Highcharts.Chart(
     {
       chart: 
-      {
+      { backgroundColor: 'rgba(0,0,0,0)',
         renderTo: 'container'
       },
       title: 
       {
-        text: 'iSpindel: <?php echo $_GET['name'];?>'
+         text: chart_header
       },
       subtitle: 
-      { text: ' <?php
-                  $timetext = 'Temperatur und Winkel ';               
-                  if($_GET['reset']) 
-                  {     
-                    $timetext .= 'seit dem letzten Reset: ';
-                  }
-                  else
-	                {
-                    $timetext .= 'der letzten ';
-                  }
-                  if($tfweeks != 0)
-                  {
-                    $timetext .= $tfweeks . ' Woche(n), ';
-                  }
-                  if($tfdays != 0)
-                  {
-                    $timetext .= $tfdays . ' Tag(e), ';
-                  }
-                  $timetext .= $tfhours . ' Stunde(n).';
-                  echo $timetext;
-                ?>'
+      { text: chart_subheader
       },
       xAxis: 
       {
@@ -97,18 +195,18 @@ $(function ()
 	gridLineWidth: 1,
 	title:
         {
-          text: 'Uhrzeit'
+          text: x_axis
         }
       },      
       yAxis: [
       {  
 	startOnTick: false,
 	endOnTick: false, 
-        min: 0,
-	max: 90,
+        min: 15,
+	max: 75,
 	title: 
         {
-          text: 'Winkel'         
+          text: first_y         
         },      
 	labels: 
         {
@@ -123,14 +221,14 @@ $(function ()
 	showFirstLabel: false
       },{
          // linkedTo: 0,
-	 startOnTick: false,
-	 endOnTick: false,
+	 startOnTick: true,
+	 endOnTick: true,
 	 min: -5,
-	 max: 35,
+	 max: 30,
 	 gridLineWidth: 0,
          opposite: true,
          title: {
-            text: 'Temperatur'
+            text: second_y
          },
          labels: {
             align: 'right',
@@ -150,10 +248,12 @@ $(function ()
 	crosshairs: [true, true],
         formatter: function() 
         {
-	   if(this.series.name == 'Temperatur') {
-           	return '<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y +'°C';
-	   } else {
-	   	return '<b>'+ this.series.name +' </b>um '+ Highcharts.dateFormat('%H:%M', new Date(this.x)) +' Uhr:  '+ this.y +'°';
+	   if(this.series.name == second_y) {
+               const pointData = chartTemp.find(row => row.timestamp === this.point.x)
+	       return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x)) + ' ' + tooltip_time + ' ' + this.y.toFixed(2) +'°C';
+           } else {
+	       const pointData = chartAngle.find(row => row.timestamp === this.point.x)
+               return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x))  + ' ' + tooltip_time + ' ' + this.y.toFixed(2) +'°';
 	   }
         }
       },  
@@ -168,9 +268,9 @@ $(function ()
       series:
       [
 	  {
-          name: 'Winkel', 
+          name: first_y, 
 	  color: '#FF0000',
-          data: [<?php echo $angle;?>],
+	  data: chartAngle.map(row => [row.timestamp, row.value]),
           marker: 
           {
             symbol: 'square',
@@ -187,10 +287,10 @@ $(function ()
           }    
           },
 	  {
-          name: 'Temperatur', 
+          name: second_y, 
 	  yAxis: 1,
 	  color: '#0000FF',
-          data: [<?php echo $temperature;?>],
+	  data: chartTemp.map(row => [row.timestamp, row.value]),
           marker: 
           {
             symbol: 'square',
@@ -207,6 +307,7 @@ $(function ()
           }    
         
         }
+
       ] //series      
     });
   });  
@@ -214,10 +315,23 @@ $(function ()
 </script>
 </head>
 <body>
+<form name="main" action="<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method="post">
  
+<a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt="<?php echo $stop; ?>"></a>
+<input type = "hidden" name="name" value="<?php echo $_GET['name']; ?>">
+<input type = "hidden" name="days" value="<?php echo $_GET['days']; ?>">
+<input type = "hidden" name="hours" value="<?php echo $_GET['hours']; ?>">
+<input type = "hidden" name="weeks" value="<?php echo $_GET['weeks']; ?>">
+<input type = "hidden" name="reset" value="<?php echo $_GET['reset']; ?>">
+
+
+<input type = "submit" id='export' name = "Export" value = "Export">
+
 <div id="wrapper">
   <script src="include/highcharts.js"></script>
-  <div id="container" style="width:98%; height:98%; position:absolute"></div>
+  <script src="include/modules/exporting.js"></script>
+  <script src="include/modules/offline-exporting.js"></script>
+  <div id="container" style="width:90%; height:90%; position:absolute"></div>
 </div>
  
 </body>

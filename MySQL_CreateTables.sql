@@ -10,6 +10,7 @@ CREATE TABLE `Data` (
 	`UserToken` varchar(64) COLLATE ascii_bin,
 	`Interval` int,
 	`RSSI` int,
+	`Recipe` varchar(64),
 	PRIMARY KEY (`Timestamp`, `Name`, `ID`)
 	) 
 ENGINE=InnoDB DEFAULT CHARSET=ascii 
@@ -24,3 +25,13 @@ CREATE TABLE `Calibration` (
 ) 
 ENGINE=InnoDB DEFAULT CHARSET=ascii 
 COLLATE=ascii_bin COMMENT='iSpindle Calibration Data';
+
+CREATE TABLE `Config` (
+	`ID` int NOT NULL,
+	`Interval` int NOT NULL,
+	`Token` varchar(64) NOT NULL,
+	`Polynomial` varchar(64) NOT NULL,
+        `Sent` boolean NOT NULL,
+	PRIMARY KEY (`ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=ascii COLLATE=ascii_bin COMMENT='iSpindle Config Data';
+
