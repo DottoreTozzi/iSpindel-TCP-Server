@@ -500,12 +500,30 @@ def handler(clientsock, addr):
             except Exception as e:
                 dbgprint(repr(addr) + ' Recipe Name not found - Database Error: ' + str(e))
 
+            recipe_id = 0
+            try:
+                dbgprint(repr(addr) + ' Reading last recipe_id value for corresponding Spindel' + spindle_name)
+                # Get the latest recipe_id for the spindel that has sent data from the archive table
+                import mysql.connector
+                cnx = mysql.connector.connect(user=SQL_USER, port=SQL_PORT, password=SQL_PASSWORD, host=SQL_HOST,
+                                              database=SQL_DB)
+                cur = cnx.cursor()
+                sqlselect = "SELECT max(Archive.Recipe_ID) FROM Archive WHERE Archive.Name='" + spindle_name + "';"
+                cur.execute(sqlselect)
+                recipe_ids = cur.fetchone()
+                cur.close()
+                cnx.close()
+                recipe_id = str(recipe_ids[0])
+                dbgprint('Recipe_ID: Done. ' + recipe_id)
+            except Exception as e:
+                dbgprint(repr(addr) + ' Recipe_ID not found - Database Error: ' + str(e))
+
             try:
                 import mysql.connector
                 dbgprint(repr(addr) + ' - writing to database')
                 # standard field definitions:
-                fieldlist = ['Timestamp', 'Name', 'ID', 'Angle', 'Temperature', 'Battery', 'Gravity', 'Recipe']
-                valuelist = [datetime.now(), spindle_name, spindle_id, angle, temperature, battery, gravity, recipe]
+                fieldlist = ['Timestamp', 'Name', 'ID', 'Angle', 'Temperature', 'Battery', 'Gravity', 'Recipe', 'Recipe_ID']
+                valuelist = [datetime.now(), spindle_name, spindle_id, angle, temperature, battery, gravity, recipe, recipe_id]
 
                 # do we have a user token defined? (Fw > 5.4.x)
                 # this is for later use (public server) but if it exists, let's store it for testing purposes

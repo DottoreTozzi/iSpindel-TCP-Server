@@ -438,7 +438,7 @@ try:
     dsendemail.clear ()
     spindeldataavailable = 0
     for i in ispindles:
-        id = i[3]  # ID
+        id = str(i[3])  # ID
         sID = str(id)
         lSpindleID.append(sID)
         dlasttimetrue[sID] = 0

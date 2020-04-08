@@ -119,6 +119,23 @@ include_once("./config/tables.php");
         exit;
     }
 
+// Self-called by archive button
+// calls php script to load archive data in TCP-Server
+
+    if (isset($_POST['archive']))
+    {
+
+        // establish path by the current URL used to invoke this page
+        $url="http://";
+        $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
+        $url .= 'archive.php';
+        // open the page
+        header("Location: ".$url);
+        unset($result, $sql_q);
+        exit;
+    }
+
+
 // Self-called by update_strings button
 // updates strings table with latest version and calls index page
 
@@ -151,6 +168,19 @@ include_once("./config/tables.php");
         exit;
     }
 
+    if (isset($_POST['Up_DataTab']))
+    {
+      upgrade_data_table($conn);
+        // establish path by the current URL used to invoke this page
+        $url="http://";
+        $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
+        $url .= 'index.php';
+        // open the page
+        header("Location: ".$url);
+        unset($result, $sql_q);
+        exit;
+    }
+
     
 
 // sql queries to get language dependent fields to be displayed
@@ -168,6 +198,7 @@ include_once("./config/tables.php");
     $chart_filename_11 = get_field_from_sql($conn,$file,"chart_filename_11");
     $chart_filename_12 = get_field_from_sql($conn,$file,"chart_filename_12");
     $chart_filename_13 = get_field_from_sql($conn,$file,"chart_filename_13");
+    $chart_filename_14 = get_field_from_sql($conn,$file,"chart_filename_14");
     $show_diagram = get_field_from_sql($conn,$file,"show_diagram");
     $calibrate_spindle = get_field_from_sql($conn,$file,"calibrate_spindle");
     $server_settings = get_field_from_sql($conn,$file,"server_settings");
@@ -179,6 +210,7 @@ include_once("./config/tables.php");
     $days_history = get_field_from_sql($conn,$file,"days_history");
     $or = get_field_from_sql($conn,$file,"or");
     $send_reset = get_field_from_sql($conn,$file,"send_reset"); 
+    $send_rdi_end = get_field_from_sql($conn,$file,"send_rdi_end");
     $no_data = get_field_from_sql($conn,$file,"no_data"); 
     $header_initialgravity = get_field_from_sql($conn,$file,"header_initialgravity");
     $change_history = get_field_from_sql($conn,$file,"change_history");
@@ -191,6 +223,8 @@ include_once("./config/tables.php");
     $upgrade_warning = get_field_from_sql($conn,$file,"upgrade_warning");
     $installed_version = get_field_from_sql($conn,$file,"installed_version");
     $available_version = get_field_from_sql($conn,$file,"available_version");
+    $upgrade_data_table = get_field_from_sql($conn,$file,"upgrade_data_table");
+    $show_archive = get_field_from_sql($conn,$file,"show_archive");
 
 
     $header_recipe = get_field_from_sql($conn,'diagram',"recipe_name");
@@ -257,6 +291,13 @@ include_once("./config/tables.php");
     $result=mysqli_query($conn, $sql_q) or die(mysqli_error($conn));
     $len = mysqli_num_rows($result);
     $result1=mysqli_query($conn, $sql_q) or die(mysqli_error($conn)); 
+
+//  check if data table has column recipe_id
+    $q_sql1 = "SHOW COLUMNS FROM Data WHERE FIELD LIKE 'Recipe_ID'";
+    $lines = mysqli_query($conn, $q_sql1) or die(mysqli_error($conn));
+    $exists = mysqli_num_rows($lines);
+
+
 ?>
 
 <!DOCTYPE html>
@@ -271,18 +312,36 @@ include_once("./config/tables.php");
 // Function to hide or display elements. Used for recipe name. Only displayed if reset_now is selected in options
     function einblenden(){
         var select = document.getElementById('chart_filename').selectedIndex;
-        if(select == 11 ){
-           document.getElementById('ResetNow').style.display = "block";
-           document.getElementById('send').style.display = "block";
-           document.getElementById('show').style.display = "none";
+        if(select == 11){
+           document.getElementById('ResetNow').style.display = "block"; // Name for recipe
+           document.getElementById('send').style.display = "block"; //send_reset
+           document.getElementById('show').style.display = "none"; // show diagram button
            document.getElementById('diagrams').style.display = "none";
+           document.getElementById('archive').style.display = "none";
+           document.getElementById('end').style.display = "none";
+
 
         }
+        else if(select == 12){
+           document.getElementById('ResetNow').style.display = "none"; // Name for recipe
+           document.getElementById('send').style.display = "none"; //send_reset
+           document.getElementById('show').style.display = "none"; // show diagram button
+           document.getElementById('diagrams').style.display = "none";
+           document.getElementById('archive').style.display = "none";
+           document.getElementById('end').style.display = "block";
+
+
+        }
+
+
         else {
             document.getElementById('ResetNow').style.display = "none";        
             document.getElementById('send').style.display = "none";
             document.getElementById('show').style.display = "block";
             document.getElementById('diagrams').style.display = "block";
+            document.getElementById('archive').style.display = "block";
+            document.getElementById('end').style.display = "none";
+
 
         }
     }
@@ -340,6 +399,7 @@ include_once("./config/tables.php");
         <option value="svg_ma.php"><?php echo $chart_filename_10 ?></option>
         <option value="plato4_delta.php"><?php echo $chart_filename_11 ?></option>	
         <option value="reset_now.php"><?php echo $chart_filename_09 ?></option>
+        <option value="ferment_end.php"><?php echo $chart_filename_14 ?></option>
 </select>
 
 <br />
@@ -371,6 +431,9 @@ include_once("./config/tables.php");
 <div id="send" style="display: none;">
 <span title="<?php echo($send_reset)?>"><input type = "submit" id='reset' name = "Go" value = "<?php echo($send_reset)?>"></span>
 </div>
+<div id="end" style="display: none;">
+<span title="<?php echo($send_rdi_end)?>"><input type = "submit" id='rdi_end' name = "Go" value = "<?php echo($send_rdi_end)?>"></span>
+</div>
 
 <?php
 # endif len !=0
@@ -387,8 +450,11 @@ else {
     echo "</div>";
 
 }
-
 ?>
+</br>
+<div id="archive" style="display: block;">
+<span title="<?php echo($show_archive)?>"><input type = "submit" id='archive' name = "archive" value = "<?php echo($show_archive)?>"></span>
+</div>
 <br />
 <br />
 <?php
@@ -466,7 +532,7 @@ echo "</table>";
 </br>
 </br>
 <div id="expert_settings" style="display: none;">
-<span title="<?php echo('Upgrade Stringtable')?>"> <input type = "submit" id='up_strings' name = "Up_Str" value="<?php echo($upgrade_strings)?>"></span>
+<span title="<?php echo($upgrade_strings)?>"> <input type = "submit" id='up_strings' name = "Up_Str" value="<?php echo($upgrade_strings)?>"></span>
 <?php echo($installed_version)?> <?php echo($installed_strings_version)?> | <?php echo($available_version)?> <?php echo(LATEST_STRINGS_TABLE)?>
 </br>
 </br>
@@ -474,6 +540,11 @@ echo "</table>";
 <span title="<?php echo($upgrade_settings)?>"><input type = "submit" id='up_settings' name = "Up_Set" value = "<?php echo($upgrade_settings)?>"></span>
 <?php echo($installed_version)?> <?php echo($installed_settings_version)?> | <?php echo($available_version)?> <?php echo(LATEST_SETTINGS_TABLE)?>
 
+<?php if ($exists == 0) { ?>
+</br>
+</br>
+<span title="<?php echo($upgrade_data_table)?>"><input type = "submit" id='up_data_table' name = "Up_DataTab" value = "<?php echo($upgrade_data_table)?>"></span>
+<?php } ?>
 </div>
 
 

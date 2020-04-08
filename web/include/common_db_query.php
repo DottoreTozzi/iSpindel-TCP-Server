@@ -61,6 +61,105 @@ function cleanData(&$str)
     if(strstr($str, '"')) $str = '"' . str_replace('"', '""', $str) . '"';
   }
 
+function upgrade_data_table($conn)
+{
+    $max_time = ini_get("max_execution_time");
+    // set max php execution time to 1 hr for this task
+    set_time_limit (3600);
+    // Create Archive Table
+    $create_recipe_table = "CREATE TABLE `Archive` ( `Recipe_ID` INT NOT NULL AUTO_INCREMENT , 
+                                         `Name` VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL , 
+                                         `ID` VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL, 
+                                         `Recipe` VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL, 
+                                         `Start_date` DATETIME NOT NULL , 
+                                         `End_date` DATETIME NULL DEFAULT NULL, 
+                                         `const1` DOUBLE NULL DEFAULT NULL, 
+                                         `const2` DOUBLE NULL DEFAULT NULL, 
+                                         `const3` DOUBLE NULL DEFAULT NULL, 
+                                         PRIMARY KEY (`Recipe_ID`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;";
+    $result = mysqli_query($conn, $create_recipe_table) or die(mysqli_error($conn));
+
+    // Add Recipe_ID and Comment columns to Data table
+    $q_sql="ALTER TABLE `Data` ADD COLUMN `Recipe_ID` INT NOT NULL AFTER `Recipe`";
+    $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
+    $q_sql="ALTER TABLE `Data` ADD `Internal` VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL AFTER `Recipe_ID`";
+    $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
+    $q_sql="ALTER TABLE `Data` ADD `Comment` VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL AFTER `Internal`";
+    $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
+
+
+    // Select all entries with resetflag and sort them with ascending data to write nitial recipe_ID
+    $q_sql="Select * FROM Data WHERE ResetFlag = '1' ORDER BY Timestamp ASC";
+    $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
+    $rows = mysqli_num_rows($result);
+    if($rows > 0) {
+        $recipe_id = 1;
+        while ($row = mysqli_fetch_array($result)){
+        $timestamp = $row[0];
+        $name = $row[1];
+        $ID = $row[2];
+        $recipe = $row[11];
+        
+        $update_sql = "UPDATE Data SET Recipe_ID = '".$recipe_id."' WHERE Timestamp = '".$timestamp."' AND Name = '".$name."';";
+        $update = mysqli_query($conn, $update_sql) or die(mysqli_error($conn));
+
+        $const1=NULL;
+        $const2=NULL;
+        $const3=NULL;
+
+        $valCalib = getSpindleCalibration($conn, $name );
+
+        if ($valCalib[0])
+        {
+            $const1=$valCalib[1];
+            $const2=$valCalib[2];
+            $const3=$valCalib[3];
+        }
+        
+        $entry_recipe_table_sql = "INSERT INTO `Archive` 
+                                 (`Recipe_ID`, `Name`, `ID`, `Recipe`, `Start_date`, `End_date`, `const1`, `const2`, `const3`) 
+                                 VALUES (NULL, '".$name."', '".$ID."', '".$recipe."', '".$timestamp."', NULL, '".$const1."', '".$const2."', '".$const3."')";
+        $entry_result = mysqli_query($conn, $entry_recipe_table_sql) or die(mysqli_error($conn));
+        $recipe_id++;
+        }
+    //now select all entries with resetflag again
+    $q_sql = "Select Timestamp,Name,Recipe_ID FROM Data WHERE ResetFlag = '1' ORDER BY Timestamp ASC";
+    $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
+    //and work on these entries one by one
+    while ($row = mysqli_fetch_array($result)){
+        $Timestamp = $row[0];
+        $Name = $row[1];
+        $Recipe_ID = $row[2];
+        // select the current entry and the next for this particular SPindle with a reset 
+        $timestamp_sql="SELECT Timestamp,Recipe FROM Data WHERE Name= '".$Name."' AND Timestamp >= '$Timestamp' AND ResetFlag = '1' ORDER BY Timestamp ASC limit 2";
+        $timestamp_result = mysqli_query($conn, $timestamp_sql) or die(mysqli_error($conn));
+        $timestamp_rows = mysqli_num_rows($timestamp_result);
+        $timestamp_array = mysqli_fetch_array($timestamp_result);
+        //define start time to write Recipe_ID
+        $timestamp_1 = $timestamp_array[0];
+        $recipe = $timestamp_array[1];
+        //define end time for Recipe_ID if not last entry in database for this spindle
+        if ($timestamp_rows == 2 ){
+            $timestamp_array = mysqli_fetch_array($timestamp_result);
+            $timestamp_2 = $timestamp_array[0];
+        }
+        // if no further reset flag available, use current time
+        else {
+            $timestamp_2 = date("Y-m-d H:i:s");
+        }
+        $rolloutID_SQL = "UPDATE Data Set Recipe_ID = '".$Recipe_ID."' WHERE NAME = '".$Name."' AND Timestamp BETWEEN '".$timestamp_1."' AND '".$timestamp_2."'";
+        $rolloutID_result = mysqli_query($conn, $rolloutID_SQL) or die(mysqli_error($conn));
+        $update_archive_table = "UPDATE Archive Set End_date = '".$timestamp_2."' WHERE Recipe_ID = '".$Recipe_ID."'";
+        $update_archive_result = mysqli_query($conn, $update_archive_table) or die(mysqli_error($conn));
+
+    }
+        echo "Table modified";
+    }
+    set_time_limit($max_time);
+
+}
+
+
 function upgrade_strings_table($conn)
 {
     $upgrade                    = false;
@@ -814,6 +913,67 @@ function getCurrentValues2($conn, $iSpindleID = 'iSpindel000')
 
 // Get calibrated values from database for selected spindle, between now and [number of hours] ago
 // Old Method for Firmware before 5.x
+function getArchiveValuesPlato4($conn, $recipe_ID)
+{
+    $valAngle = '';
+    $valTemperature = '';
+    $valDens = '';
+    $const1 = 0;
+    $const2 = 0;
+    $const3 = 0;
+    
+
+    $archive_sql = "Select * FROM Archive WHERE Recipe_ID = '$recipe_ID'";
+    mysqli_set_charset($conn, "utf8mb4");
+    $result = mysqli_query($conn, $archive_sql) or die(mysqli_error($conn));
+    $archive_result = mysqli_fetch_array($result);
+    $spindle_name = $archive_result[1];
+    $recipe_name = $archive_result[3];
+    $start_date = $archive_result[4];
+    $end_date = $archive_result[5];
+    $const1 = $archive_result[6];
+    $const2 = $archive_result[7];
+    $const3 = $archive_result[8];
+
+    $check_RID_END = "SELECT * FROM Data WHERE Recipe_ID = '$recipe_ID' AND Internal = 'RID_END'";
+    $q_sql = mysqli_query($conn, $check_RID_END) or die(mysqli_error($conn));
+    $rows = mysqli_fetch_array($q_sql);
+    if ($rows <> 0)    
+    {
+    $AND_RID = " AND Timestamp <= (Select max(Timestamp) FROM Data WHERE Recipe_ID='$recipe_ID' AND Internal = 'RID_END')";
+    }
+
+    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe
+                           FROM Data WHERE Recipe_ID = '$recipe_ID'" . $AND_RID . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
+
+        // retrieve and store the values as CSV lists for HighCharts
+        while ($r_row = mysqli_fetch_array($q_sql)) {
+            $jsTime = $r_row['unixtime'] * 1000;
+            $angle = $r_row['angle'];
+            $dens = $const1 * pow($angle, 2) + $const2 * $angle + $const3; // complete polynome from database
+
+            $valAngle .= '[' . $jsTime . ', ' . $angle . '],';
+            $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $dens . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
+
+
+
+        }
+        return array(
+            $spindle_name,
+            $recipe_name,
+            $start_date,
+            $end_date,
+            $valDens,
+            $valTemperature,
+            $valAngle
+        );
+  
+}
+
+
+// Get calibrated values from database for selected spindle, between now and [number of hours] ago
+// Old Method for Firmware before 5.x
 function getChartValuesPlato4($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $reset = defaultReset)
 {
     $isCalibrated = 0; // is there a calbration record for this iSpindle?
@@ -878,6 +1038,7 @@ function getChartValuesPlato4($conn, $iSpindleID = 'iSpindel000', $timeFrameHour
         );
     }
 }
+
 // Get calibrated gravity value from database for selected spindle
 function getlastValuesPlato4($conn, $iSpindleID = 'iSpindel000')
 {

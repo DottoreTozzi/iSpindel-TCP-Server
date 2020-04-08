@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3308
--- Erstellungszeit: 29. Feb 2020 um 05:29
+-- Erstellungszeit: 09. Apr 2020 um 00:50
 -- Server-Version: 10.4.7-MariaDB-debug
 -- PHP-Version: 7.3.7
 
@@ -29,11 +29,11 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `Strings` (
-  `File` varchar(64) CHARACTER SET utf8 NOT NULL,
-  `Field` varchar(64) CHARACTER SET utf8 NOT NULL,
-  `Description_DE` varchar(1024) CHARACTER SET utf8 NOT NULL,
-  `Description_EN` varchar(1024) CHARACTER SET utf8 NOT NULL,
-  `Description_IT` varchar(1024) CHARACTER SET utf8 DEFAULT NULL
+  `File` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `Field` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `Description_DE` varchar(1024) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `Description_EN` varchar(1024) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `Description_IT` varchar(1024) COLLATE utf8mb4_unicode_ci DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=COMPACT;
 
 --
@@ -76,6 +76,7 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('diagram', 'timetext_weeks', 'Woche(n), ', 'Week(s), ', 'settimana(e), '),
 ('diagram', 'tooltip_at', 'um', 'at', 'alle'),
 ('diagram', 'tooltip_time', 'Uhr:', ':', ':'),
+('ferment_end', 'ferment_end_written', 'Gärende in Datenbank eingetragen', 'Fermentation End added to database', 'Fine della fermentazione inserito nel database'),
 ('index', 'available_version', 'Verfügbare Version:', 'Available version:', 'Versione disponibile:'),
 ('index', 'calibrate_spindle', 'Spindle im TCP Server kalibrieren', 'Calibrate spindle in TCP Server ', 'Calibrare la spindle nel server TCP'),
 ('index', 'change_history', 'Historie anpassen\r\n', 'Change history', 'Personalizza la cronologia'),
@@ -92,6 +93,7 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('index', 'chart_filename_11', 'Änderung (Delta) Extrakt innerhalb 12 Stunden Anzeigen', 'Delta gravity  (12 hrs interval)', 'Delta densità (Intervallo di 12 ore)'),
 ('index', 'chart_filename_12', 'Verlauf Batteriespannung/WiFi anzeigen', 'Battery / Wifi trend', 'Batteria / trend WiFi '),
 ('index', 'chart_filename_13', 'Spindel im TCP Server Kalibrieren', 'Calibrate Spindel in TCP Server', 'Calibrazione Spindel nel server TCP'),
+('index', 'chart_filename_14', 'Gärende Zeitpunkt setzen', 'Set Fermentation End', 'Imposta il tempo di fermentazione'),
 ('index', 'current_data', 'Aktuelle Daten', 'Most recent data', 'Date attuali'),
 ('index', 'days_history', 'Tage Historie\r\n', 'Days history', 'Giorni di storia'),
 ('index', 'diagram_selection', 'Diagramm Auswahl(Tage):', 'Diagram selection (days):', 'Selezione diagramma (giorni):'),
@@ -103,12 +105,15 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('index', 'or', 'oder:', 'or:', 'o:'),
 ('index', 'recipe_name', 'Optional Sudnamen eingeben:', 'Enter optional recipe name:', 'Imposta nome ricetta (opzionale):'),
 ('index', 'reset_flag', 'Daten seit zuletzt gesetztem \"Reset\" Flag zeigen', 'Show data since last set \'Reset\'', 'Visualizzare dati dall\'ultimo reset impostato'),
+('index', 'send_rdi_end', 'Gärende festlegen', 'Set fermentation end', 'Definire la fermentazione'),
 ('index', 'send_reset', 'Gärbegin festlegen', 'Set fermentation start', 'Imposta inizio fermentazione'),
 ('index', 'server_not_running', 'Warnung: TCP Server läuft nicht!', 'Warning: TCP Server is not running!', 'Attenzione: server TCP non avviato!'),
 ('index', 'server_running', 'TCP Server läuft mit PID: ', 'TCP Server is running with PID: ', 'Server TCP avviato: '),
 ('index', 'server_settings', 'TCP Server Settings Editieren', 'Edit TCP Server Settings', 'Modificare impostazioni server TCP'),
 ('index', 'settings_header', 'RasPySpindel Einstellungen', 'RasPySpindel Settings', 'RasPySpindel impostazioni'),
+('index', 'show_archive', 'Archiv Laden', 'Load archive', 'Magazzino archivio'),
 ('index', 'show_diagram', 'Diagram Anzeigen', 'Show Diagram', 'Visualizza diagramma'),
+('index', 'upgrade_data_table', 'Upgrade der Datentabelle', 'Upgrade data table', 'Aggiornamento di Datentabelle'),
 ('index', 'upgrade_settings', 'Settings Tabelle durch neuste Version ersetzen', 'Replace Settings table with latest version', 'Sostituisci la tabella delle impostazioni con l\'ultima versione'),
 ('index', 'upgrade_strings', 'String Tabelle durch neuste Version ersetzen', 'Replace Strings table with latest version', 'Sostituisci la tabella delle stringhe con l\'ultima versione'),
 ('index', 'upgrade_warning', 'Achtung: Individuelle Settings werden gelöscht und mit Default Werten der Installation überschrieben. Bitte vorher ein Backup der Settings erstellen.', 'Attention: Individual settings will be deleted and replaced with the default settings of the installation.Pleas backup settings prior to upgrade.', 'Attenzione: le singole impostazioni vengono eliminate e sovrascritte con i valori predefiniti dell\'applicazione. Effettuare in anticipo un backup delle impostazioni.'),
@@ -145,8 +150,8 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('sendmail', 'subject_alarm_svg', 'Alarm von iSpindel-TCP-Server (%s): Vergärungsgrad oberhalb Alarm Limit', 'Alarm from iSpindel-TCP-Server (%s): Apparent attenuation above alarm limit', 'Allarme dal server-TCP-iSpindle (%s): Attenuazione apparente superiore al limite'),
 ('sendmail', 'subject_status', 'Status Email von iSpindel-TCP-Server (%s)', 'Status Email from iSpindel-TCP-Server (%s)', 'Email di stato dal server-TCP-iSpindle (%s)'),
 ('settings', 'add_device', 'Individuelle Settings für Device anlegen', 'Add individual settings for device', 'Crea impostazioni individuali per il dispositivo'),
-('settings', 'database_header', 'RasPySpindel Datenbank', 'RasPySpindel Database', 'RasPySpindel Database'),
 ('settings', 'data_table', 'Datentabelle', 'Data Table', 'Tabella di dati'),
+('settings', 'database_header', 'RasPySpindel Datenbank', 'RasPySpindel Database', 'RasPySpindel Database'),
 ('settings', 'delete_device', 'Device aus individuellen Settings löschen', 'Remove Device from individual Settings', 'Elimina il dispositivo dalle singole impostazioni'),
 ('settings', 'description', 'Beschreibung', 'Description', 'Descrizione'),
 ('settings', 'export', 'Exportieren:', 'Export:', 'Esporta:'),
@@ -173,7 +178,7 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('svg_ma', 'timetext', 'Temperatur und scheinbarer Vergärungsgrad der letzten', 'Temperature and extract of the last ', 'Tenperatura e densità delle ultime'),
 ('svg_ma', 'timetext_reset', 'Temperatur und scheinbarer Vergärungsgrad seit dem letzten Reset: ', 'Temperature and apparent attenuation since last reset: ', 'Temperatura e attenuazione apparente dall\'ultimo reset: '),
 ('svg_ma', 'x_axis', 'Datum / Uhrzeit', 'Date / Time', 'Data / Orario'),
-('version', '001', '', '', ''),
+('version', '002', '', '', ''),
 ('wifi', 'header', 'Aktuelle WiFi Empfangsqualität:', 'Current Wifi reception: ', 'Qualità della ricezione attuale WiFi: ');
 
 --
