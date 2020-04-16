@@ -316,28 +316,28 @@ Die einzige Voraussetzung ist, dass Python installiert ist.</p>
   <p style="white-space: pre;">GLOBAL&#9;Settings sind Server spezifisch und somit für alle Devices gleich.</br>_DEFAULT&#9;Settings gelten für alle Devices, die keine individuellen Einstellungen haben. Diese Settings können für jedes device kopiert werden und dann individuell angepasst werden.</br>iSpindel001&#9;Beispielname für ein Device mit dem Namen iSpindel001, dass für individuelle angelegt wurde Settings angelegt wurde.</p>
   <p>Außerdem kann man die Datentabelle der Datenbank als sql File exportieren, wenn man den entsprechenden Button anklickt.</p>
 
-  <img class="img_norm" src="help/images/Settings1.PNG" alt="Settings Deviceauswahl">
+  <img class="img_norm" src="help/images/Settings1.png" alt="Settings Deviceauswahl">
   <p><b>Sections:</b></br>
   Dann sind die Settings noch in sogenannte Sections unterteilt um eine bessere Übersicht zu haben. Es kann sein, dass z.B. bei der Auswahl von 'GOBAL' und z.B. 'BREWSPY' keine Settings angezeigt werden, da diese nur unter '_DEFAULT' bzw. einem angelegten individuellen Device zu sehen sind. </p>
-  <img class="img_norm" src="help/images/Settings2.PNG" alt="Settings Sectionauswahl">
+  <img class="img_norm" src="help/images/Settings2.png" alt="Settings Sectionauswahl">
   <p><b>Settings speichern:</b></br>
   Wenn Settings geändert werden, müssen sie mit dem Button 'Settings in DB schreiben' in die Datenbank übertragen werden, sonst haben Änderungen keine Wirkung.</p>
   </br>
   <p><b>Individuelle Settings für Device anlegen:</b></br>
   Um individuelle Settings für ein Device anzulegen, muss das entsprechende Device aus der Liste unterhalb der Parameter ausgewählt werden und der Button 'Individuelle Settings für Device anlegen' geklickt werden. Danach erscheint in der Auswahl 'Device' im oberen Bereich auch das entsprechende Device zur Auswahl. Ist nun das Device angelegt, dann kann man im Feld 'Section' die einzelnen Bereiche auswählen, für die man individuelle Settings einstellen und speichern kann. Änderungen müssen durch anklicken des Button 'Settings in DB schreiben' gesichert werden. Sonst sind die Änderungen unwirksam.</p>
 
-  <img class="img_norm" src="help/images/Settings3.PNG" alt="Settings für Device individuell anlegen">
+  <img class="img_norm" src="help/images/Settings3.png" alt="Settings für Device individuell anlegen">
   <p><b>Device aus individuellen Settings entfernen:</b></br>
   Ein Device kann auch aus den individuellen Settings wieder entfernt werden. Dazu muss das entsprechende Device ausgewählt werdne und der Button 'Device aus individuellen Settings entfernen' angeklickt werden. Derzeit findet keine Sicherheitsabfrage statt. Die Individuellen Settings werden unwiderruflich gelöscht und das Device verwendet dann die Settings, die unter '_DEFAULT' hinterlegt sind. Um individuelle Settings für das Device wieder zu verwenden, muss es erst wieder neu angelegt werden.</p>
-  <img class="img_norm" src="help/images/Settings4.PNG" alt="Device aus individuellen Settings entfernen">
+  <img class="img_norm" src="help/images/Settings4.png" alt="Device aus individuellen Settings entfernen">
   <p><b>Sprache des Webinterfaces ändern:</b></br>
   Derzeit sind die Srpachen Deutsch, Englisch und Italienisch integriert. Man kann sie durch Eingabe von DE, EN oder IT im entsprechenden Konfigurationsfeld auswählen.</p>
-  <img class="img_norm" src="help/images/Settings5.PNG" alt="Device aus individuellen Settings entfernen">
+  <img class="img_norm" src="help/images/Settings5.png" alt="Device aus individuellen Settings entfernen">
 <p>Andere Sprachen könnne hinuzgefügt werden. Hierfür müssen die Tabellen Settings und Strings durch entpsrechende Spalten ergänzt werden. Dazu kann z.B. phpmyadmin genutzt werden. Soll z.B. Niederländisch als Sprache ergänzt werden, so muss in den genannten Tabellen eine Spalte mit Description_NL ergänzt werden und die Zeilen mit der passenden Übersetzung eingetragen werden. Danach kann man im Webinterface NL als Sprache eingeben und es werden die Beschreibungen aus der Spalte Description_NL für das Webinterface verwendet.</p>
 <p><b>Tabelle Settings:</b></p>
-  <img class="img_norm" src="help/images/Settings6.PNG" alt="Device aus individuellen Settings entfernen">
+  <img class="img_norm" src="help/images/Settings6.png" alt="Device aus individuellen Settings entfernen">
 <p><b>Tabelle Strings:</b></p>
-  <img class="img_norm" src="help/images/Settings7.PNG" alt="Device aus individuellen Settings entfernen">
+  <img class="img_norm" src="help/images/Settings7.png" alt="Device aus individuellen Settings entfernen">
 
 
 </div>

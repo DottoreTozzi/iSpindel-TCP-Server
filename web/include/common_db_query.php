@@ -220,6 +220,14 @@ function upgrade_settings_table($conn)
     }
 }
 
+function  delete_recipe_from_archive($conn,$selected_recipe)
+{
+$delete_query1 = "DELETE FROM Archive WHERE Recipe_ID = '$selected_recipe'";
+$result = mysqli_query($conn, $delete_query1) or die(mysqli_error($conn));
+$delete_query2 = "DELETE FROM Data WHERE Recipe_ID = '$selected_recipe'";
+$result = mysqli_query($conn, $delete_query2) or die(mysqli_error($conn));
+}
+
 
 function export_data_table($table,$file="iSpindle_Backup.sql")
 {
@@ -230,8 +238,12 @@ function export_data_table($table,$file="iSpindle_Backup.sql")
     $name               = DB_NAME;
     $port               = DB_PORT;
     $backup_name        = $file;
-    $tables             = array($table,"none");
-
+    if(count($table) == 1){
+    $tables              = array($table,"none");
+    }  
+    else {
+    $tables             = $table;
+    }
    //or add 5th parameter(array) of specific tables:    array("mytable1","mytable2","mytable3") for multiple tables
 
 
@@ -310,7 +322,7 @@ function export_data_table($table,$file="iSpindle_Backup.sql")
 function import_table($conn,$table,$filename)
 {
 // Drop table first
-$drop_table="DROP TABLE ".$table;
+$drop_table="DROP TABLE IF EXISTS ".$table;
 $result = mysqli_query($conn, $drop_table) or die(mysqli_error($conn));
 
 $auto_increment="SET sql_mode='NO_AUTO_VALUE_ON_ZERO'";
@@ -943,7 +955,7 @@ function getArchiveValuesPlato4($conn, $recipe_ID)
     $AND_RID = " AND Timestamp <= (Select max(Timestamp) FROM Data WHERE Recipe_ID='$recipe_ID' AND Internal = 'RID_END')";
     }
 
-    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe
+    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe, comment
                            FROM Data WHERE Recipe_ID = '$recipe_ID'" . $AND_RID . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
 
         // retrieve and store the values as CSV lists for HighCharts
@@ -953,7 +965,12 @@ function getArchiveValuesPlato4($conn, $recipe_ID)
             $dens = $const1 * pow($angle, 2) + $const2 * $angle + $const3; // complete polynome from database
 
             $valAngle .= '[' . $jsTime . ', ' . $angle . '],';
+            if ($r_row['comment']){
+            $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $dens . ", recipe: \"" . $r_row['recipe'] . "\", text: '" . $r_row['comment'] . "'},";
+            }
+            else{
             $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $dens . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            }
             $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
 
 
@@ -994,7 +1011,7 @@ function getChartValuesPlato4($conn, $iSpindleID = 'iSpindel000', $timeFrameHour
 
     mysqli_set_charset($conn, "utf8mb4");
 
-    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe
+    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe, comment
                            FROM Data " . $where . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
     
     // retrieve number of rows
@@ -1024,9 +1041,13 @@ function getChartValuesPlato4($conn, $iSpindleID = 'iSpindel000', $timeFrameHour
             $dens = $const1 * pow($angle, 2) + $const2 * $angle + $const3; // complete polynome from database
 
             $valAngle .= '[' . $jsTime . ', ' . $angle . '],';
+            if ($r_row['comment']){
+            $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $dens . ", recipe: \"" . $r_row['recipe'] . "\", text: '" . $r_row['comment'] . "'},";
+            }
+            else{
             $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $dens . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            }
             $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
-
 
 
         }
@@ -1034,7 +1055,7 @@ function getChartValuesPlato4($conn, $iSpindleID = 'iSpindel000', $timeFrameHour
             $isCalibrated,
             $valDens,
             $valTemperature,
-            $valAngle
+            $valAngle,
         );
     }
 }

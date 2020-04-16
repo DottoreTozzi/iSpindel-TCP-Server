@@ -1,4 +1,6 @@
 <?php
+ini_set('display_errors', 'On');
+error_reporting(E_ALL | E_STRICT);
 
 // Show the Density/Temperature chart
 // GET Parameters:
@@ -116,6 +118,7 @@ const chart_header=[<?php echo "'" . $Header . "'";?>]
 const chart_subheader=[<?php echo "'" . $timetext . "'";?>]
 const tooltip_at=[<?php echo "'".$tooltip_at."'";?>]
 const tooltip_time=[<?php echo "'".$tooltip_time."'";?>]
+const label_count = 'Hefezugabe'
 
 $(function () 
 {
@@ -139,7 +142,8 @@ $(function ()
         chart = new Highcharts.Chart(
         {
             chart:
-            {   backgroundColor: 'rgba(0,0,0,0)',
+            {   //styledMode: true,
+                backgroundColor: 'rgba(0,0,0,0)',
                 renderTo: 'container'
             },
             title:
@@ -228,9 +232,24 @@ $(function ()
             series:
             [
                 {
+                    dataLabels: [{
+                        enabled: true,
+			shape: 'callout',
+                        align: 'left',
+                        y: -15,
+                        borderRadius: 5,
+                        backgroundColor: 'rgba(252, 255, 255, 0.7)',
+                        borderWidth: 1,
+                        borderColor: '#000',
+                        formatter: function() {
+                            const Comment = chartDens.find(row => row.timestamp === this.point.x)
+			    return Comment.text;
+                        }
+                    }],
+
                     name: first_y,
                     color: '#FF0000',
-                    data: chartDens.map(row => [row.timestamp, row.value]),
+                    data: chartDens.map(row => [row.timestamp, row.value, row.text]),
                     marker: 
                     {
                         symbol: 'square',
@@ -282,6 +301,9 @@ $(function ()
   <script src="include/highcharts.js"></script>
   <script src="include/modules/exporting.js"></script>
   <script src="include/modules/offline-exporting.js"></script>
+  <script src="include/modules/annotations.js"></script>
+  <script src="include/modules/accessibility.js"></script>
+
   <div id="container" style="width:90%; height:90%; position:absolute"></div>
 </div>
  

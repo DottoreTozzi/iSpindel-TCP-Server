@@ -23,7 +23,7 @@ $Recipe = $_GET['recipe'];
 // Get fields from database in language selected in settings
 $file = "reset_now";
 $error_read_id = get_field_from_sql($conn,$file,"error_read_id");
-$enter_write = get_field_from_sql($conn,$file,"error_write");
+$error_write = get_field_from_sql($conn,$file,"error_write");
 $reset_written = get_field_from_sql($conn,$file,"reset_written");
 $recipe_written = get_field_from_sql($conn,$file,"recipe_written");
 $file = "settings";

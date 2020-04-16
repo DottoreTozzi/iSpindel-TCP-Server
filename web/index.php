@@ -63,6 +63,8 @@ include_once("./config/tables.php");
 	$url .="&reset=".$_POST["fromreset"];}
         if ($_POST["recipename"]<>''){
         $url .="&recipe=".$_POST["recipename"];}
+        if ($_POST["comment_text"]<>''){
+        $url .="&comment=".$_POST["comment_text"];}
 
         // open the page
         header("Location: ".$url);
@@ -199,6 +201,7 @@ include_once("./config/tables.php");
     $chart_filename_12 = get_field_from_sql($conn,$file,"chart_filename_12");
     $chart_filename_13 = get_field_from_sql($conn,$file,"chart_filename_13");
     $chart_filename_14 = get_field_from_sql($conn,$file,"chart_filename_14");
+    $chart_filename_15 = get_field_from_sql($conn,$file,"chart_filename_15");
     $show_diagram = get_field_from_sql($conn,$file,"show_diagram");
     $calibrate_spindle = get_field_from_sql($conn,$file,"calibrate_spindle");
     $server_settings = get_field_from_sql($conn,$file,"server_settings");
@@ -225,7 +228,8 @@ include_once("./config/tables.php");
     $available_version = get_field_from_sql($conn,$file,"available_version");
     $upgrade_data_table = get_field_from_sql($conn,$file,"upgrade_data_table");
     $show_archive = get_field_from_sql($conn,$file,"show_archive");
-
+    $send_comment = get_field_from_sql($conn,$file,"send_comment");
+    $comment_text = get_field_from_sql($conn,$file,"comment_text");
 
     $header_recipe = get_field_from_sql($conn,'diagram',"recipe_name");
 
@@ -319,6 +323,8 @@ include_once("./config/tables.php");
            document.getElementById('diagrams').style.display = "none";
            document.getElementById('archive').style.display = "none";
            document.getElementById('end').style.display = "none";
+           document.getElementById('commentfield').style.display = "none";
+           document.getElementById('comment').style.display = "none";
 
 
         }
@@ -329,6 +335,20 @@ include_once("./config/tables.php");
            document.getElementById('diagrams').style.display = "none";
            document.getElementById('archive').style.display = "none";
            document.getElementById('end').style.display = "block";
+           document.getElementById('commentfield').style.display = "none";
+           document.getElementById('comment').style.display = "none";
+
+
+        }
+        else if(select == 13){
+           document.getElementById('ResetNow').style.display = "none"; // Name for recipe
+           document.getElementById('send').style.display = "none"; //send_reset
+           document.getElementById('show').style.display = "none"; // show diagram button
+           document.getElementById('diagrams').style.display = "none";
+           document.getElementById('archive').style.display = "none";
+           document.getElementById('end').style.display = "none";
+           document.getElementById('commentfield').style.display = "block";
+           document.getElementById('comment').style.display = "block";
 
 
         }
@@ -341,6 +361,8 @@ include_once("./config/tables.php");
             document.getElementById('diagrams').style.display = "block";
             document.getElementById('archive').style.display = "block";
             document.getElementById('end').style.display = "none";
+            document.getElementById('commentfield').style.display = "none";
+            document.getElementById('comment').style.display = "none";
 
 
         }
@@ -400,6 +422,8 @@ include_once("./config/tables.php");
         <option value="plato4_delta.php"><?php echo $chart_filename_11 ?></option>	
         <option value="reset_now.php"><?php echo $chart_filename_09 ?></option>
         <option value="ferment_end.php"><?php echo $chart_filename_14 ?></option>
+        <option value="add_comment.php"><?php echo $chart_filename_15 ?></option>
+
 </select>
 
 <br />
@@ -425,6 +449,12 @@ include_once("./config/tables.php");
 <input type = "text" name = "recipename" /> </p>
 </div>
 
+<div id="commentfield" style="display: none;">
+<p><?php echo($comment_text)?>
+<input type = "text" name = "comment_text" /> </p>
+</div>
+
+
 <div id="show" style="display: block;">
 <span title="<?php echo($show_diagram)?>"><input type = "submit" id='diagram' name = "Go" value = "<?php echo($show_diagram)?>"></span>
 </div>
@@ -434,6 +464,10 @@ include_once("./config/tables.php");
 <div id="end" style="display: none;">
 <span title="<?php echo($send_rdi_end)?>"><input type = "submit" id='rdi_end' name = "Go" value = "<?php echo($send_rdi_end)?>"></span>
 </div>
+<div id="comment" style="display: none;">
+<span title="<?php echo($send_comment)?>"><input type = "submit" id='send_comment' name = "Go" value = "<?php echo($send_comment)?>"></span>
+</div>
+
 
 <?php
 # endif len !=0

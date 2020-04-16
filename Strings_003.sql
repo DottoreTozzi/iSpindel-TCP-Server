@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3308
--- Erstellungszeit: 09. Apr 2020 um 00:50
+-- Erstellungszeit: 16. Apr 2020 um 13:47
 -- Server-Version: 10.4.7-MariaDB-debug
 -- PHP-Version: 7.3.7
 
@@ -41,6 +41,8 @@ CREATE TABLE `Strings` (
 --
 
 INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Description_IT`) VALUES
+('add_comment', 'comment_written', 'Kommentar in Datenbank eingetragen: ', 'Comment added to database: ', 'Commento inserito nel database: '),
+('add_comment', 'error_write', 'Fehler beim Schreiben des Kommentars in die Datenbank', 'Cannot insert comment into Database', 'Errore durante la scrittura di un commento nel database'),
 ('angle', 'first_y', 'Winkel', 'Angle', 'Angolo'),
 ('angle', 'second_y', 'Temperatur', 'Temperature', 'Temperatura'),
 ('angle', 'timetext', 'Temperatur und Winkel der letzten', 'Temperature and angle of the last ', 'Temperatura e angolo da'),
@@ -51,6 +53,9 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('angle_ma', 'timetext', 'Temperatur und Winkel der letzten', 'Temperature and angle of the last ', 'Temperatura e angolo da'),
 ('angle_ma', 'timetext_reset', 'Temperatur und Winkel seit dem letzten Reset: ', 'Temperature and angle since last reset: ', 'Temperatura e angolo dall\'ultimo reset: '),
 ('angle_ma', 'x_axis', 'Datum / Uhrzeit', 'Date / Time', 'Data / Orario'),
+('archive', 'archive_end', 'Archiv Ende festlegen', 'Set Archive end', 'Imposta fine archivio'),
+('archive', 'Delete_archive', 'Gewählte Fermentation löschen', 'Delete selected fermentation ', 'Elimina la fermentazione selezionata'),
+('archive', 'time_selected', ' wurde ausgewählt', ' has been selected', ' è stato selezionato'),
 ('battery', 'diagram_battery', 'Volt', 'Voltage', 'Voltaggio'),
 ('battery', 'header_battery', 'Aktueller Ladezustand:', 'Battery condition:', 'Stato carica Batteria:'),
 ('batterytrend', 'first_y', 'Batteriespannung', 'Battery voltage', 'Voltaggio Batteria'),
@@ -94,6 +99,8 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('index', 'chart_filename_12', 'Verlauf Batteriespannung/WiFi anzeigen', 'Battery / Wifi trend', 'Batteria / trend WiFi '),
 ('index', 'chart_filename_13', 'Spindel im TCP Server Kalibrieren', 'Calibrate Spindel in TCP Server', 'Calibrazione Spindel nel server TCP'),
 ('index', 'chart_filename_14', 'Gärende Zeitpunkt setzen', 'Set Fermentation End', 'Imposta il tempo di fermentazione'),
+('index', 'chart_filename_15', 'Kommentar eingeben', 'Enter comment', 'Inserisci un commento'),
+('index', 'comment_text', 'Kommentarfeld : ', 'Comment : ', 'Campo commento : '),
 ('index', 'current_data', 'Aktuelle Daten', 'Most recent data', 'Date attuali'),
 ('index', 'days_history', 'Tage Historie\r\n', 'Days history', 'Giorni di storia'),
 ('index', 'diagram_selection', 'Diagramm Auswahl(Tage):', 'Diagram selection (days):', 'Selezione diagramma (giorni):'),
@@ -105,6 +112,7 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('index', 'or', 'oder:', 'or:', 'o:'),
 ('index', 'recipe_name', 'Optional Sudnamen eingeben:', 'Enter optional recipe name:', 'Imposta nome ricetta (opzionale):'),
 ('index', 'reset_flag', 'Daten seit zuletzt gesetztem \"Reset\" Flag zeigen', 'Show data since last set \'Reset\'', 'Visualizzare dati dall\'ultimo reset impostato'),
+('index', 'send_comment', 'Kommentar senden', 'Send Comment', 'Invia un commento'),
 ('index', 'send_rdi_end', 'Gärende festlegen', 'Set fermentation end', 'Definire la fermentazione'),
 ('index', 'send_reset', 'Gärbegin festlegen', 'Set fermentation start', 'Imposta inizio fermentazione'),
 ('index', 'server_not_running', 'Warnung: TCP Server läuft nicht!', 'Warning: TCP Server is not running!', 'Attenzione: server TCP non avviato!'),
@@ -178,7 +186,7 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('svg_ma', 'timetext', 'Temperatur und scheinbarer Vergärungsgrad der letzten', 'Temperature and extract of the last ', 'Tenperatura e densità delle ultime'),
 ('svg_ma', 'timetext_reset', 'Temperatur und scheinbarer Vergärungsgrad seit dem letzten Reset: ', 'Temperature and apparent attenuation since last reset: ', 'Temperatura e attenuazione apparente dall\'ultimo reset: '),
 ('svg_ma', 'x_axis', 'Datum / Uhrzeit', 'Date / Time', 'Data / Orario'),
-('version', '002', '', '', ''),
+('version', '003', '', '', ''),
 ('wifi', 'header', 'Aktuelle WiFi Empfangsqualität:', 'Current Wifi reception: ', 'Qualità della ricezione attuale WiFi: ');
 
 --

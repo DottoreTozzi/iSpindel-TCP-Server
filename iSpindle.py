@@ -517,7 +517,8 @@ def handler(clientsock, addr):
                 dbgprint('Recipe_ID: Done. ' + recipe_id)
             except Exception as e:
                 dbgprint(repr(addr) + ' Recipe_ID not found - Database Error: ' + str(e))
-
+            if recipe_id == "None":
+                recipe_id = 0
             try:
                 import mysql.connector
                 dbgprint(repr(addr) + ' - writing to database')
