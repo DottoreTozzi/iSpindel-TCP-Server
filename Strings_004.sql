@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3308
--- Erstellungszeit: 16. Apr 2020 um 13:47
+-- Erstellungszeit: 19. Apr 2020 um 23:05
 -- Server-Version: 10.4.7-MariaDB-debug
 -- PHP-Version: 7.3.7
 
@@ -53,8 +53,14 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('angle_ma', 'timetext', 'Temperatur und Winkel der letzten', 'Temperature and angle of the last ', 'Temperatura e angolo da'),
 ('angle_ma', 'timetext_reset', 'Temperatur und Winkel seit dem letzten Reset: ', 'Temperature and angle since last reset: ', 'Temperatura e angolo dall\'ultimo reset: '),
 ('angle_ma', 'x_axis', 'Datum / Uhrzeit', 'Date / Time', 'Data / Orario'),
-('archive', 'archive_end', 'Archiv Ende festlegen', 'Set Archive end', 'Imposta fine archivio'),
+('archive', 'archive', 'Archiv', 'Archive', 'Archivio'),
+('archive', 'archive_end', 'Archiv Ende festlegen / Kommentar schreiben', 'Set Archive end / Write comment', 'Imposta fine archivio / Scrivi un commento'),
+('archive', 'archive_end_removal', 'Flag \"Archiv Ende\" entfernen', 'Remove Flag Archive end', 'Rimuovere il flag \"Fine archivio\"'),
+('archive', 'attenuation', 'Vergärungsgrad (%)', 'Attentuation (%)', 'Attenuazione (%)'),
+('archive', 'calibration_archive', 'Kalibrierung aus Archiv', 'Calibration from archive ', 'Calibrazione dall\'archivio'),
 ('archive', 'Delete_archive', 'Gewählte Fermentation löschen', 'Delete selected fermentation ', 'Elimina la fermentazione selezionata'),
+('archive', 'end', 'Ende', 'End', 'Fine'),
+('archive', 'final_gravity', 'Restextrakt [°P]', 'Final Gravity [°P]', 'Estratto residuo [°P]'),
 ('archive', 'time_selected', ' wurde ausgewählt', ' has been selected', ' è stato selezionato'),
 ('battery', 'diagram_battery', 'Volt', 'Voltage', 'Voltaggio'),
 ('battery', 'header_battery', 'Aktueller Ladezustand:', 'Battery condition:', 'Stato carica Batteria:'),
@@ -186,7 +192,7 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('svg_ma', 'timetext', 'Temperatur und scheinbarer Vergärungsgrad der letzten', 'Temperature and extract of the last ', 'Tenperatura e densità delle ultime'),
 ('svg_ma', 'timetext_reset', 'Temperatur und scheinbarer Vergärungsgrad seit dem letzten Reset: ', 'Temperature and apparent attenuation since last reset: ', 'Temperatura e attenuazione apparente dall\'ultimo reset: '),
 ('svg_ma', 'x_axis', 'Datum / Uhrzeit', 'Date / Time', 'Data / Orario'),
-('version', '003', '', '', ''),
+('version', '004', '', '', ''),
 ('wifi', 'header', 'Aktuelle WiFi Empfangsqualität:', 'Current Wifi reception: ', 'Qualità della ricezione attuale WiFi: ');
 
 --

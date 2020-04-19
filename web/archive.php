@@ -22,37 +22,61 @@ $q_sql = mysqli_query($conn, $min_recipe_id) or die(mysqli_error($conn));
 $result = mysqli_fetch_array($q_sql);
 $selected_recipe = $result[0];
 
-// Check GET parameters (for now: Spindle name and Timeframe to display) 
+// Check GET parameters if set
 if(isset($_GET['recipe_id'])){
     $selected_recipe = $_GET['recipe_id'];
 }
+
+$rid_end_exists = 0;
+
+//check if flag for end of fermenation is already existing
+$check_RID_END = "SELECT Timestamp FROM Data WHERE Recipe_ID = '$selected_recipe' AND Internal = 'RID_END'";
+$q_sql = mysqli_query($conn, $check_RID_END) or die(mysqli_error($conn));
+$rows = mysqli_num_rows($q_sql);
+if ($rows <> 0){
+    $rid_end_exists = 1;
+    $result = mysqli_fetch_array($q_sql);
+    $timestamp_rid = $result[0];
+}
+
+if(!isset($_GET['comment']))
+    {
+    $comment = '';
+    }
+else {
+    $comment = $_GET['comment'];
+    }
 
 if(!isset($_GET['RID_END']))
     { 
     $RID_END = ''; 
     }
 else {
-$RID_END = intval($_GET['RID_END']);
-//check if flag for end of fermenation is already existing and remove it
-$check_RID_END = "SELECT Timestamp FROM Data WHERE Recipe_ID = '$selected_recipe' AND Internal = 'RID_END'";
-$q_sql = mysqli_query($conn, $check_RID_END) or die(mysqli_error($conn));
-$rows = mysqli_num_rows($q_sql);
+    $RID_END = intval($_GET['RID_END']);
 
-if ($rows <> 0)
-{
-$result = mysqli_fetch_array($q_sql);
-$timestamp_del = $result[0];
-$remove_recipe_ID="UPDATE Data Set Internal = NULL WHERE Recipe_ID = '$selected_recipe' AND Timestamp = '$timestamp_del'";
-$q_sql = mysqli_query($conn, $remove_recipe_ID) or die(mysqli_error($conn));
+    if($comment == ''){
+        //if flag for end of fermenation is already existing: remove it
+        if ($rid_end_exists == 1)
+        {
+            $remove_recipe_ID="UPDATE Data Set Internal = NULL WHERE Recipe_ID = '$selected_recipe' AND Timestamp = '$timestamp_rid'";
+            $q_sql = mysqli_query($conn, $remove_recipe_ID) or die(mysqli_error($conn));
+        }
+
+        //add Flag for end of fermentation for archive to last datapoint of current spindle
+        $timestamp_add= intval($RID_END/1000);
+        $add_recipe_ID="UPDATE Data Set Internal = 'RID_END' WHERE Recipe_ID = '$selected_recipe' AND UNIX_TIMESTAMP(Timestamp) = '$timestamp_add'";
+        $q_sql = mysqli_query($conn, $add_recipe_ID) or die(mysqli_error($conn));
+
+    }
+    else {
+        $timestamp_add= intval($RID_END/1000);
+        $add_recipe_ID="UPDATE Data Set Comment = '$comment' WHERE Recipe_ID = '$selected_recipe' AND UNIX_TIMESTAMP(Timestamp) = '$timestamp_add'";
+        mysqli_set_charset($conn, "utf8mb4");
+        $q_sql = mysqli_query($conn, $add_recipe_ID) or die(mysqli_error($conn));
+    
+    }
+
 }
-
-//add Flag for end of fermentation for archive to last datapoint of current spindle
-$timestamp_add= intval($RID_END/1000);
-$add_recipe_ID="UPDATE Data Set Internal = 'RID_END' WHERE Recipe_ID = '$selected_recipe' AND UNIX_TIMESTAMP(Timestamp) = '$timestamp_add'";
-$q_sql = mysqli_query($conn, $add_recipe_ID) or die(mysqli_error($conn));
-
-}
-
 
 
 
@@ -83,9 +107,9 @@ if (isset($_POST['Go']))
 
 if (isset($_POST['Del']))
     {
-        $selected_recipe = $_POST['archive_name'];        
+        $recipe_id = $_POST['archive_name'];        
         //delete active recipe
-        delete_recipe_from_archive($conn,$selected_recipe);
+        delete_recipe_from_archive($conn,$recipe_id);
         // reload page for selected archive
         $url="http://";
         $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
@@ -93,6 +117,21 @@ if (isset($_POST['Del']))
         // open the page
         header("Location: ".$url);
     }
+
+if (isset($_POST['Remove']))
+    {
+        $recipe_id = $_POST['archive_name'];
+        //delete active recipe
+        delete_rid_flag_from_archive($conn,$recipe_id);
+        // reload page for selected archive
+        $url="http://";
+        $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
+        $url .= "archive.php?recipe_id=".$recipe_id;
+        // open the page
+        header("Location: ".$url);
+    }
+
+
 
 $timeFrame = defaultTimePeriod;
 $tftemp = $timeFrame;           
@@ -103,8 +142,24 @@ $tftemp -= $tfdays * 24;
 $tfhours = $tftemp;                                
                                                    
 list($SpindleName, $RecipeName, $start_date, $end_date, $dens, $temperature, $angle) = getArchiveValuesPlato4($conn, $selected_recipe);
+list($isCalib,$initial_gravity, $const1, $const2, $const3) = getArchiveInitialGravity($conn, $selected_recipe);
+list($isCalib,$final_gravity) = getArchiveFinalGravity($conn, $selected_recipe, $end_date);
+
+$attenuation = ($initial_gravity - $final_gravity)*100 / $initial_gravity;
+$real_dens = 0.1808 * $initial_gravity + 0.8192 * $final_gravity;
+$alcohol = ((100* ($real_dens - $initial_gravity) / (1.0665 * $initial_gravity -206.65)) / 0.795);
 
 $start_date = date("Y-m-d", strtotime($start_date));
+$end_date = date("Y-m-d", strtotime($end_date));
+$const1 = number_format($const1,4);
+$const2 = number_format($const2,4);
+if ($const2 < 0){
+    $separator = "";
+}
+else {
+    $separator = "+";
+}
+$const3 = number_format($const3,4);
 
 
 // Get fields from database in language selected in settings
@@ -131,13 +186,22 @@ $file="archive";
 $delete_archive = get_field_from_sql($conn,$file,"delete_archive");
 $archive_end = get_field_from_sql($conn,$file,"archive_end");
 $time_selected = get_field_from_sql($conn,$file,"time_selected");
+$archive_end_removal = get_field_from_sql($conn,$file,"archive_end_removal");
+$txt_attenuation = get_field_from_sql($conn,$file,"attenuation");
+$txt_final_gravity = get_field_from_sql($conn,$file,"final_gravity");
+$txt_calibration = get_field_from_sql($conn,$file,"calibration_archive");
+$txt_end = get_field_from_sql($conn,$file,"end");
+$txt_archive = get_field_from_sql($conn,$file,"archive");
 
 
 $file = "index";
 $show_diagram = get_field_from_sql($conn,$file,"show_diagram");
 $comment_text = get_field_from_sql($conn,$file,"comment_text");
 $send_comment = get_field_from_sql($conn,$file,"send_comment");
+$txt_initial_gravity = get_field_from_sql($conn,$file,"header_initialgravity");
 
+$file="svg_ma";
+$txt_alcohol = get_field_from_sql($conn,$file,"third_y");
 
 
 // define header displayed in diagram depending on value for recipe
@@ -151,9 +215,6 @@ else {
 
 // define subheader to be displayed in diagram
 $timetext = $subheader . ' ';
-if($_GET['reset']) {
-    $timetext = $subheader_reset . ' ';
-    }
 if($tfweeks != 0) {
     $timetext .= $tfweeks . ' ' . $subheader_weeks;
     }
@@ -200,14 +261,15 @@ const tooltip_time=[<?php echo "'".$tooltip_time."'";?>]
 const archive_end=[<?php echo "'".$archive_end."'";?>]
 const time_selected=[<?php echo "'".$time_selected."'";?>]
 
-function reload_page(end_date) {
+function reload_page(end_date,comment_text) {
     var recipe_id = '<?php echo $selected_recipe ?>';
     var variable_r = '?recipe_id='.concat(recipe_id);
     var variable_end = '&RID_END='.concat(end_date);
+    var variable_c = '&comment='.concat(comment_text);
     var url = "http://";
     var server = window.location.hostname;
     var path = window.location.pathname;
-    var full_path = url.concat(server).concat(path).concat(variable_r).concat(variable_end);
+    var full_path = url.concat(server).concat(path).concat(variable_r).concat(variable_end).concat(variable_c);
     window.open(full_path,"_self");
     }
 
@@ -218,12 +280,6 @@ $(function ()
   $(document).ready(function() 
   {
                     
-    if ('<?php echo $isCalib;?>' == '0')
-    {
-        document.write('<h2>iSpindel \'<?php echo $_GET['name'] . ' ' . $not_calibrated;?>\'</h2>');
-    }
-    else
-    {
         Highcharts.setOptions({
               global: {
                   timezone: 'Europe/Berlin'
@@ -238,11 +294,11 @@ $(function ()
             },
             title:
             {
-                text: chart_header
+                text: null //chart_header
             },
             subtitle:
             { 
-                      text: chart_subheader                 
+                      text: null //chart_subheader                 
             },                                                                
             xAxis:
             {
@@ -275,6 +331,8 @@ $(function ()
                                     color: '#FFFFFF'
                                 })
                                 .add();
+                                document.getElementById('Commentfield').style.display = "block";
+
                         } else {
                             chart.lbl.attr({
                                 text: text
@@ -285,7 +343,8 @@ $(function ()
                 zIndex: 3
             })
             .on('click', function () {
-            reload_page(end_date)
+            comment_text = document.getElementById('comment').value;
+            reload_page(end_date,comment_text)
             })
             .add();
 
@@ -366,7 +425,6 @@ $(function ()
                     dataLabels: [{
                         enabled: true,
                         shape: 'callout',
-                        align: 'left',
                         y: -15,
                         borderRadius: 5,
                         backgroundColor: 'rgba(252, 255, 255, 0.7)',
@@ -374,9 +432,23 @@ $(function ()
                         borderColor: '#000',
                         formatter: function() {
                             const Comment = chartDens.find(row => row.timestamp === this.point.x)
-                            return Comment.text;
+                            return Comment.text_up;
+                        }
+                    },
+                   {
+                        enabled: true,
+                        shape: 'callout',
+                        y: 35,
+                        borderRadius: 5,
+                        backgroundColor: 'rgba(252, 255, 255, 0.7)',
+                        borderWidth: 1,
+                        borderColor: '#000',
+                        formatter: function() {
+                            const Comment = chartDens.find(row => row.timestamp === this.point.x)
+                            return Comment.text_down;
                         }
                     }],
+
                     name: first_y,
                     color: '#FF0000',
                     data: chartDens.map(row => [row.timestamp, row.value]),
@@ -419,56 +491,107 @@ $(function ()
             ] //series      
 
     });
-    }
+    });
   });
 
-
-});
 </script>
 </head>
 <body>
 
-<!-- select options for spindle names -->
+<!-- select options for  archives-->
 <?php
-    if ($len != 0){
+echo "<table border='1'>";
+echo "<tr>";
+echo "<td><b>$txt_archive :</b></td><td>";
 
-echo "<select id='archive_name' name = 'archive_name'>";
-while($row = mysqli_fetch_assoc($archive_result) )
+if ($len != 0)
 {
-    $start_date = $row['Start_date'];
-    $newDate = date("Y-m-d", strtotime($start_date));
-    $ID = $row['Recipe_ID'];
-if ($selected_recipe==$ID) 
-{
-    echo "<option value = '$ID' selected>";
-}
-else
-{
-    echo "<option value = '$ID'>";
-}
-?>
-                <?php echo($row['Recipe_ID']." | ".$row['Name']." | ".$newDate." | ".$row['Recipe']) ?>
-        <?php
-            }
-        ?>
-        </option>
-</select>
-<?php
+    echo "<select id='archive_name' name = 'archive_name'>";
+    while($row = mysqli_fetch_assoc($archive_result) )
+    {
+        $start = $row['Start_date'];
+        $newDate = date("Y-m-d", strtotime($start));
+        $ID = $row['Recipe_ID'];
+        if ($selected_recipe==$ID) 
+        {
+            echo "<option value = '$ID' selected>";
+        }
+        else
+        {
+            echo "<option value = '$ID'>";
+        }
+        echo($row['Recipe_ID']." | ".$row['Name']." | ".$newDate." | ".$row['Recipe']);
     }
+
+    echo "</option>";
+    echo "</select>";
+
+}
+echo "</td><td align='center'>";
+echo "<span title='$stop'><input type = 'submit' id='Stop' name = 'Stop' value = '$stop'></span>";
+
+echo "</td><td></td>";
+echo "<td><b>Device:</b></td>";
+echo "<td align='center'>$SpindleName</td>";
+echo "<td><b>$recipe_name</b></td>"; 
+echo "<td align='center'>$RecipeName</td>";
+echo "<td><b>Start:</b></td>";
+echo "<td align='center'>$start_date</td>";
+echo "<td><b>$txt_end :</b></td>";
+echo "<td align='center'>$end_date</td>";
+echo "</tr>";
+
+echo "<tr><td><b>Diagram :</b></td>";
+echo "<td align='center'> Different Diagram styles to be added</td><td align='center'>"; // Diagram type selection
+echo "<span title='$show_diagram'><input type = 'submit' id='Go' name = 'Go' value = '$show_diagram'></span>";
+
+echo "</td><td></td>";
+echo "<td><b>$txt_initial_gravity :</b></td>";
+echo "<td align='center'>" . number_format($initial_gravity,1) . "</td>";
+echo "<td><b>$txt_final_gravity :</b></td>";
+echo "<td align='center'>" . number_format($final_gravity,1) . " °P</td>";
+echo "<td><b>$txt_attenuation :</b></td>";
+echo "<td align='center'>" . number_format($attenuation,1) ."</td>";
+echo "<td><b>$txt_alcohol :</b></td>";
+echo "<td align='center'>". number_format($alcohol,1) ."</td>";
+
+
+echo "</tr>";
+echo "<tr><td rowspan='2'><b>$comment_text</b></td>";
+echo "<td rowspan='2' align='center'>";
+echo "<div id='Commentfield' style='display: none;'>";
+echo "<input type = 'input' id='comment' name = 'comment'>";
+echo "</div>";
+echo "</td><td rowspan='2' align='center'>";
+if($rid_end_exists == 1)
+{
+    echo "<span title='" . "$archive_end_removal" . "'><input type = 'submit' id='Remove' name = 'Remove' value = '" . "$archive_end_removal" . "'></span>";
+    echo "</br>";
+}
+else 
+{
+    echo "</br>";
+}
+
+echo "<span title='$delete_archive'><input type = 'submit' id='delete' name = 'Del' value = '$delete_archive'></span>";
+
+echo "</td><td rowspan='2'></td>";
+echo "<td><b>$txt_calibration :</b></td>";
+echo "<td align='center' colspan='7'> $const1 * tilt $separator $const2 * tilt^2 + $const3";
+echo "</td></tr>";
+echo "<tr><td align='center' colspan='8'>"; 
+echo "Export function to be added";
+echo "</td></tr>";
+echo "</table>";
+
 ?>
 
-<span title="<?php echo($show_diagram)?>"><input type = "submit" id='diagram' name = "Go" value = "<?php echo($show_diagram)?>"></span>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<span title="<?php echo($delete_archive)?>"><input type = "submit" id='delete' name = "Del" value = "<?php echo($delete_archive)?>"></span>
-</br>
-<span title="<?php echo($stop)?>"><input type = "submit" id='Stop' name = "Stop" value = "<?php echo($stop)?>"></span>
-</br>
 
 <div id="wrapper">
   <script src="include/highcharts.js"></script>
   <script src="include/modules/exporting.js"></script>
   <script src="include/modules/offline-exporting.js"></script>
-  <div id="container" style="width:90%; height:90%; position:absolute"></div>
+  <div id="container" style="width:90%; height:85%; position: absolute; top: 7em;"></div>
 </div>
 </form> 
 </body>

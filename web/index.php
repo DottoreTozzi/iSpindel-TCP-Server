@@ -364,7 +364,6 @@ include_once("./config/tables.php");
             document.getElementById('commentfield').style.display = "none";
             document.getElementById('comment').style.display = "none";
 
-
         }
     }
 
@@ -378,8 +377,6 @@ include_once("./config/tables.php");
                settings.style.display = "none";
               }
         }    
-
-
 
 </script>
 

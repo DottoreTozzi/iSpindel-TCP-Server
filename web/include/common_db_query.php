@@ -220,12 +220,19 @@ function upgrade_settings_table($conn)
     }
 }
 
+function delete_rid_flag_from_archive($conn,$selected_recipe)
+{
+    $delete_query = "UPDATE Data Set Internal = NULL WHERE Recipe_ID = '$selected_recipe' AND Internal = 'RID_END'";
+    $result = mysqli_query($conn, $delete_query) or die(mysqli_error($conn));
+}
+
+
 function  delete_recipe_from_archive($conn,$selected_recipe)
 {
-$delete_query1 = "DELETE FROM Archive WHERE Recipe_ID = '$selected_recipe'";
-$result = mysqli_query($conn, $delete_query1) or die(mysqli_error($conn));
-$delete_query2 = "DELETE FROM Data WHERE Recipe_ID = '$selected_recipe'";
-$result = mysqli_query($conn, $delete_query2) or die(mysqli_error($conn));
+    $delete_query1 = "DELETE FROM Archive WHERE Recipe_ID = '$selected_recipe'";
+    $result = mysqli_query($conn, $delete_query1) or die(mysqli_error($conn));
+    $delete_query2 = "DELETE FROM Data WHERE Recipe_ID = '$selected_recipe'";
+    $result = mysqli_query($conn, $delete_query2) or die(mysqli_error($conn));
 }
 
 
@@ -620,6 +627,89 @@ function getCurrentRecipeName($conn, $iSpindleID = 'iSpindel000', $timeFrameHour
     }
 }
 
+// Get calaculate initial gravity from database for archive. First hour after last reset will be used.
+// This can be used to calculate apparent attenuation
+
+function getArchiveInitialGravity($conn, $recipe_id)
+{
+    $isCalibrated = 0; // is there a calbration record for this iSpindle?
+    $valAngle = '';
+    $valDens = '';
+    $const1 = 0;
+    $const2 = 0;
+    $const3 = 0;
+    $where = "WHERE Recipe_ID = $recipe_id AND Timestamp > (Select MAX(Data.Timestamp) FROM Data WHERE Data.ResetFlag = true AND Recipe_id = $recipe_id) 
+              AND Timestamp < DATE_ADD((SELECT MAX(Data.Timestamp)FROM Data WHERE Recipe_ID = $recipe_id AND Data.ResetFlag = true), INTERVAL 1 HOUR)";
+
+    $q_sql = mysqli_query($conn, "SELECT AVG(Data.Angle) as angle FROM Data " . $where ) or die(mysqli_error($conn));
+
+    // retrieve number of rows
+    $rows = mysqli_num_rows($q_sql);
+    if ($rows > 0) {
+        // try to get calibration for recipe_id from archive
+        $cal_sql = mysqli_query($conn, "SELECT const1, const2, const3 FROM Archive WHERE Recipe_ID = $recipe_id") or die(mysqli_error($conn));
+        $rows_cal = mysqli_num_rows($cal_sql);
+        if ($rows_cal > 0) {
+            $isCalibrated = 1;
+            $r_cal = mysqli_fetch_array($cal_sql);
+            $const1 = $r_cal['const1'];
+            $const2 = $r_cal['const2'];
+            $const3 = $r_cal['const3'];
+        }
+    }
+    $r_row = mysqli_fetch_array($q_sql);
+    $angle = $r_row['angle'];
+    $dens = round(($const1 * pow($angle, 2) + $const2 * $angle + $const3),2); // complete polynome from database
+    return array(
+        $isCalibrated,
+        $dens,
+        $const1,
+        $const2,
+        $const3
+    );
+}
+
+// Get calaculate final gravity from database for archive. last hour will be used.
+// This can be used to calculate apparent attenuation
+
+function getArchiveFinalGravity($conn, $recipe_id, $end_date)
+{
+    $isCalibrated = 0; // is there a calbration record for this iSpindle?
+    $valAngle = '';
+    $valDens = '';
+    $const1 = 0;
+    $const2 = 0;
+    $const3 = 0;
+
+    $where = "WHERE Recipe_id = $recipe_id and Timestamp < '$end_date' and Recipe_id = $recipe_id AND Timestamp > DATE_SUB('$end_date', INTERVAL 1 HOUR)";
+
+
+    $q_sql = mysqli_query($conn, "SELECT AVG(Data.Angle) as angle FROM Data " . $where ) or die(mysqli_error($conn));
+
+    // retrieve number of rows
+    $rows = mysqli_num_rows($q_sql);
+    if ($rows > 0) {
+        // try to get calibration for recipe_id from archive
+        $cal_sql = mysqli_query($conn, "SELECT const1, const2, const3 FROM Archive WHERE Recipe_ID = $recipe_id") or die(mysqli_error($conn));
+        $rows_cal = mysqli_num_rows($cal_sql);
+        if ($rows_cal > 0) {
+            $isCalibrated = 1;
+            $r_cal = mysqli_fetch_array($cal_sql);
+            $const1 = $r_cal['const1'];
+            $const2 = $r_cal['const2'];
+            $const3 = $r_cal['const3'];
+        }
+    }
+    $r_row = mysqli_fetch_array($q_sql);
+    $angle = $r_row['angle'];
+    $dens = round(($const1 * pow($angle, 2) + $const2 * $angle + $const3),2); // complete polynome from database
+    return array(
+        $isCalibrated,
+        $dens
+    );
+}
+
+
 // Get calaculate initial gravity from database after last reset. First two hours after last reset will be used. 
 // This can be used to calculate apparent attenuation in svg_ma.php
 
@@ -933,31 +1023,39 @@ function getArchiveValuesPlato4($conn, $recipe_ID)
     $const1 = 0;
     $const2 = 0;
     $const3 = 0;
-    
+    $AND_RID = ''; 
 
     $archive_sql = "Select * FROM Archive WHERE Recipe_ID = '$recipe_ID'";
     mysqli_set_charset($conn, "utf8mb4");
     $result = mysqli_query($conn, $archive_sql) or die(mysqli_error($conn));
     $archive_result = mysqli_fetch_array($result);
-    $spindle_name = $archive_result[1];
-    $recipe_name = $archive_result[3];
-    $start_date = $archive_result[4];
-    $end_date = $archive_result[5];
-    $const1 = $archive_result[6];
-    $const2 = $archive_result[7];
-    $const3 = $archive_result[8];
+    $spindle_name = $archive_result['Name'];
+    $recipe_name = $archive_result['Recipe'];
+    $start_date = $archive_result['Start_date'];
+    $end_date = $archive_result['End_date'];
+    $const1 = $archive_result['const1'];
+    $const2 = $archive_result['const2'];
+    $const3 = $archive_result['const3'];
+
+    if($end_date == '0000-00-00 00:00:00'){
+    $get_end_date = "SELECT max(Timestamp) FROM Data WHERE Recipe_ID = '$recipe_ID'";
+    $q_sql = mysqli_query($conn, $get_end_date) or die(mysqli_error($conn));
+    $result = mysqli_fetch_array($q_sql);
+    $end_date = $result[0];
+    }
 
     $check_RID_END = "SELECT * FROM Data WHERE Recipe_ID = '$recipe_ID' AND Internal = 'RID_END'";
     $q_sql = mysqli_query($conn, $check_RID_END) or die(mysqli_error($conn));
     $rows = mysqli_fetch_array($q_sql);
     if ($rows <> 0)    
     {
+    $end_date = $rows['Timestamp'];
     $AND_RID = " AND Timestamp <= (Select max(Timestamp) FROM Data WHERE Recipe_ID='$recipe_ID' AND Internal = 'RID_END')";
     }
 
     $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe, comment
                            FROM Data WHERE Recipe_ID = '$recipe_ID'" . $AND_RID . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
-
+	$label_position = 1;
         // retrieve and store the values as CSV lists for HighCharts
         while ($r_row = mysqli_fetch_array($q_sql)) {
             $jsTime = $r_row['unixtime'] * 1000;
@@ -966,8 +1064,16 @@ function getArchiveValuesPlato4($conn, $recipe_ID)
 
             $valAngle .= '[' . $jsTime . ', ' . $angle . '],';
             if ($r_row['comment']){
-            $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $dens . ", recipe: \"" . $r_row['recipe'] . "\", text: '" . $r_row['comment'] . "'},";
-            }
+                if($label_position == 1){
+                    $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $dens . ", recipe: \"" . $r_row['recipe'] . "\", text_up: '" . $r_row['comment'] . "'},";
+                    $label_position = $label_position * -1;
+                }
+                else{
+                    $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $dens . ", recipe: \"" . $r_row['recipe'] . "\", text_down: '" . $r_row['comment'] . "'},";
+                    $label_position = $label_position * -1;
+                }
+  
+            } 
             else{
             $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $dens . ", recipe: \"" . $r_row['recipe'] . "\"},";
             }
