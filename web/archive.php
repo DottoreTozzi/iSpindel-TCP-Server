@@ -192,16 +192,15 @@ $txt_final_gravity = get_field_from_sql($conn,$file,"final_gravity");
 $txt_calibration = get_field_from_sql($conn,$file,"calibration_archive");
 $txt_end = get_field_from_sql($conn,$file,"end");
 $txt_archive = get_field_from_sql($conn,$file,"archive");
+$comment_text = get_field_from_sql($conn,$file,"comment_text");
+$txt_initial_gravity = get_field_from_sql($conn,$file,"header_initialgravity");
+$txt_alcohol = get_field_from_sql($conn,$file,"alcohol");
+
 
 
 $file = "index";
 $show_diagram = get_field_from_sql($conn,$file,"show_diagram");
-$comment_text = get_field_from_sql($conn,$file,"comment_text");
 $send_comment = get_field_from_sql($conn,$file,"send_comment");
-$txt_initial_gravity = get_field_from_sql($conn,$file,"header_initialgravity");
-
-$file="svg_ma";
-$txt_alcohol = get_field_from_sql($conn,$file,"third_y");
 
 
 // define header displayed in diagram depending on value for recipe
@@ -260,6 +259,7 @@ const tooltip_at=[<?php echo "'".$tooltip_at."'";?>]
 const tooltip_time=[<?php echo "'".$tooltip_time."'";?>]
 const archive_end=[<?php echo "'".$archive_end."'";?>]
 const time_selected=[<?php echo "'".$time_selected."'";?>]
+const RecipeName=[<?php echo "'".$RecipeName."'";?>]
 
 function reload_page(end_date,comment_text) {
     var recipe_id = '<?php echo $selected_recipe ?>';
@@ -285,11 +285,13 @@ $(function ()
                   timezone: 'Europe/Berlin'
               }
           });
-                
+        var labelText = RecipeName;
+       
         chart = new Highcharts.Chart(
-        {
+        {    
             chart:
-            {   backgroundColor: 'rgba(0,0,0,0)',
+            {   height: (7 / 16 * 100) + '%', // 16:9 ratio
+                backgroundColor: 'rgba(0,0,0,0)',
                 renderTo: 'container'
             },
             title:
@@ -497,10 +499,12 @@ $(function ()
 </script>
 </head>
 <body>
-
+<div id="wrapper">
+<div id="summary_table">
 <!-- select options for  archives-->
 <?php
 echo "<table border='1'>";
+echo "<tbody>";
 echo "<tr>";
 echo "<td><b>$txt_archive :</b></td><td>";
 
@@ -547,13 +551,13 @@ echo "<span title='$show_diagram'><input type = 'submit' id='Go' name = 'Go' val
 
 echo "</td><td></td>";
 echo "<td><b>$txt_initial_gravity :</b></td>";
-echo "<td align='center'>" . number_format($initial_gravity,1) . "</td>";
+echo "<td align='center'>" . number_format($initial_gravity,1) . " °P</td>";
 echo "<td><b>$txt_final_gravity :</b></td>";
 echo "<td align='center'>" . number_format($final_gravity,1) . " °P</td>";
 echo "<td><b>$txt_attenuation :</b></td>";
-echo "<td align='center'>" . number_format($attenuation,1) ."</td>";
+echo "<td align='center'>" . number_format($attenuation,1) ." %</td>";
 echo "<td><b>$txt_alcohol :</b></td>";
-echo "<td align='center'>". number_format($alcohol,1) ."</td>";
+echo "<td align='center'>". number_format($alcohol,1) ." Vol%</td>";
 
 
 echo "</tr>";
@@ -582,17 +586,16 @@ echo "</td></tr>";
 echo "<tr><td align='center' colspan='8'>"; 
 echo "Export function to be added";
 echo "</td></tr>";
+echo "</tbody>";
 echo "</table>";
-
 ?>
+</div>
 
-
-<div id="wrapper">
   <script src="include/highcharts.js"></script>
   <script src="include/modules/exporting.js"></script>
   <script src="include/modules/offline-exporting.js"></script>
-  <div id="container" style="width:90%; height:85%; position: absolute; top: 7em;"></div>
+  <div id="container" style="width: 95%;position: relative;"></div>
 </div>
-</form> 
 </body>
+</form>
 </html>
