@@ -788,6 +788,78 @@ function delete_mail_sent($conn, $alarm, $iSpindel)
 }
 
 // Export values from database for selected spindle, between now and timeframe in hours ago
+function ExportArchiveValues($conn, $recipe_ID, $txt_recipe_name, $txt_end, $txt_initial_gravity, $initial_gravity, $txt_final_gravity, $final_gravity, $txt_attenuation, $attenuation, $txt_alcohol, $alcohol, $txt_calibration)
+{
+    $valAngle = '';
+    $valTemperature = '';
+    $valDens = '';
+    $const1 = 0;
+    $const2 = 0;
+    $const3 = 0;
+    $AND_RID = '';
+
+    $archive_sql = "Select * FROM Archive WHERE Recipe_ID = '$recipe_ID'";
+    mysqli_set_charset($conn, "utf8mb4");
+    $result = mysqli_query($conn, $archive_sql) or die(mysqli_error($conn));
+    $archive_result = mysqli_fetch_array($result);
+    $spindle_name = $archive_result['Name'];
+    $recipe_name = $archive_result['Recipe'];
+    $start_date = $archive_result['Start_date'];
+    $end_date = $archive_result['End_date'];
+    $const1 = $archive_result['const1'];
+    $const2 = $archive_result['const2'];
+    $const3 = $archive_result['const3'];
+
+    $sql_IG=floatval($initial_gravity);
+
+
+    if($end_date == '0000-00-00 00:00:00'){
+    $get_end_date = "SELECT max(Timestamp) FROM Data WHERE Recipe_ID = '$recipe_ID'";
+    $q_sql = mysqli_query($conn, $get_end_date) or die(mysqli_error($conn));
+    $result = mysqli_fetch_array($q_sql);
+    $end_date = $result[0];
+    }
+
+    $check_RID_END = "SELECT * FROM Data WHERE Recipe_ID = '$recipe_ID' AND Internal = 'RID_END'";
+    $q_sql = mysqli_query($conn, $check_RID_END) or die(mysqli_error($conn));
+    $rows = mysqli_fetch_array($q_sql);
+    if ($rows <> 0)
+    {
+    $end_date = $rows['Timestamp'];
+    $AND_RID = " AND Timestamp <= (Select max(Timestamp) FROM Data WHERE Recipe_ID='$recipe_ID' AND Internal = 'RID_END')";
+    }
+
+    $q_sql = mysqli_query($conn, "SELECT Timestamp, Name, ID, Angle, Temperature, Battery, Gravity AS Spindle_Gravity, ($const1*Angle*Angle + $const2*Angle + $const3) AS Calculated_Gravity, 
+                                  (($sql_IG-($const1*Angle*Angle + $const2*Angle + $const3))*100 / $sql_IG) AS Attenuation, RSSI, Recipe, Comment
+                                  FROM Data WHERE Recipe_ID = '$recipe_ID'" . $AND_RID . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
+    // filename for download
+    $filename = $recipe_ID . "_" . date_format(date_create($start_date),'Y_m_d') ."_" . $spindle_name . "_" . $recipe_name . ".txt";
+    header('Content-Type: text/csv');
+    header("Content-Disposition: attachment; filename=\"$filename\"");
+    $flag = false;
+    $start_date=date_format(date_create($start_date),'Y-m-d');
+    $end_date=date_format(date_create($end_date),'Y-m-d');
+
+    echo "Device: $spindle_name | $txt_recipe_name : $recipe_name | Start: $start_date | $txt_end : $end_date \r\n";
+    echo "$txt_initial_gravity : $initial_gravity °P | $txt_final_gravity : $final_gravity °P | $txt_attenuation : $attenuation % | $txt_alcohol : $alcohol Vol% \r\n";
+    printf("$txt_calibration :  %01.5f * tilt %+01.5f * tilt^2 %+01.5f \r\n",$const1,$const2,$const3);
+    echo "\r\n";
+    // retrieve and store the values as CSV lists for HighCharts
+    while ($row = mysqli_fetch_assoc($q_sql)) {
+        if(!$flag) {
+            // display field/column names as first row
+            echo implode(",", array_keys($row)) . "\r\n";
+            $flag = true;
+        }
+        array_walk($row, __NAMESPACE__ . '\cleanData');
+        echo implode(",", array_values($row)) . "\r\n";
+    }
+    exit;
+    }
+
+
+
+// Export values from database for selected spindle, between now and timeframe in hours ago
 function ExportChartValues($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $reset = defaultReset)
 {
     if ($reset) {

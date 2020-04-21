@@ -130,6 +130,32 @@ if (isset($_POST['Remove']))
         // open the page
         header("Location: ".$url);
     }
+if (isset($_POST['Export']))
+    {
+
+        $txt_recipe_name =  $_POST['txt_recipe_name'];
+        $txt_end =  $_POST['txt_end'];
+        $txt_initial_gravity =  $_POST['txt_initial_gravity'];
+        $initial_gravity =  $_POST['initial_gravity'];
+        $txt_final_gravity =  $_POST['txt_final_gravity'];
+        $final_gravity =  $_POST['final_gravity'];
+        $txt_attenuation =  $_POST['txt_attenuation'];
+        $attenuation =  $_POST['attenuation'];
+        $txt_alcohol =  $_POST['txt_alcohol'];
+        $txt_calibration =  $_POST['txt_calibration'];
+        $alcohol =  $_POST['alcohol'];
+        $recipe_id = $_POST['archive_name'];
+
+        //export active recipe to csv file
+        ExportArchiveValues($conn,$recipe_id, $txt_recipe_name, $txt_end, $txt_initial_gravity, $initial_gravity, $txt_final_gravity, $final_gravity, $txt_attenuation, $attenuation, $txt_alcohol, $alcohol, $txt_calibration);
+        // reload page for selected archive
+        $url="http://";
+        $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
+        $url .= "archive.php?recipe_id=".$recipe_id;
+        // open the page
+        header("Location: ".$url);
+        exit;
+    }
 
 
 
@@ -153,12 +179,6 @@ $start_date = date("Y-m-d", strtotime($start_date));
 $end_date = date("Y-m-d", strtotime($end_date));
 $const1 = number_format($const1,4);
 $const2 = number_format($const2,4);
-if ($const2 < 0){
-    $separator = "";
-}
-else {
-    $separator = "+";
-}
 $const3 = number_format($const3,4);
 
 
@@ -322,7 +342,7 @@ $(function ()
                             chart = this.series.chart;
                             const timestamp = end_date;
                         if (!chart.lbl) {
-                            chart.lbl = chart.renderer.label(text, 100, 70)
+                            chart.lbl = chart.renderer.label(text, 100, 10)
                                 .attr({
                                     padding: 10,
                                     r: 5,
@@ -340,7 +360,7 @@ $(function ()
                                 text: text
                             });
                         }
-        chart.myButton = chart.renderer.button(archive_end,400,70)
+        chart.myButton = chart.renderer.button(archive_end,400,10)
             .attr({
                 zIndex: 3
             })
@@ -581,14 +601,30 @@ echo "<span title='$delete_archive'><input type = 'submit' id='delete' name = 'D
 
 echo "</td><td rowspan='2'></td>";
 echo "<td><b>$txt_calibration :</b></td>";
-echo "<td align='center' colspan='7'> $const1 * tilt $separator $const2 * tilt^2 + $const3";
+echo "<td align='center' colspan='7'>";
+printf("%01.5f * tilt %+01.5f * tilt^2 %+01.5f",$const1,$const2,$const3);
 echo "</td></tr>";
 echo "<tr><td align='center' colspan='8'>"; 
-echo "Export function to be added";
+echo "<span title='Export'><input type = 'submit' id='Export' name = 'Export' value = 'Export'></span>";
 echo "</td></tr>";
 echo "</tbody>";
 echo "</table>";
 ?>
+<input type = "hidden" name="txt_recipe_name" value="<?php echo $recipe_name; ?>">
+<input type = "hidden" name="txt_end" value="<?php echo $txt_end; ?>">
+<input type = "hidden" name="txt_initial_gravity" value="<?php echo $txt_initial_gravity; ?>">
+<input type = "hidden" name="initial_gravity" value="<?php echo  number_format($initial_gravity,1); ?>">
+<input type = "hidden" name="txt_final_gravity" value="<?php echo $txt_final_gravity; ?>">
+<input type = "hidden" name="final_gravity" value="<?php echo  number_format($final_gravity,1); ?>">
+<input type = "hidden" name="txt_attenuation" value="<?php echo $txt_attenuation; ?>">
+<input type = "hidden" name="attenuation" value="<?php echo number_format($attenuation,1); ?>">
+<input type = "hidden" name="txt_alcohol" value="<?php echo $txt_alcohol; ?>">
+<input type = "hidden" name="alcohol" value="<?php echo  number_format($alcohol,1); ?>">
+<input type = "hidden" name="txt_calibration" value="<?php echo $txt_calibration; ?>">
+
+
+
+
 </div>
 
   <script src="include/highcharts.js"></script>
