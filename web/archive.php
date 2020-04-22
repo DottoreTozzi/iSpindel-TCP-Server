@@ -262,8 +262,8 @@ $timetext .= $tfhours . ' ' . $subheader_hours;
   <script src="include/moment.min.js"></script>
   <script src="include/moment-timezone-with-data.js"></script>
   <link rel="stylesheet" type="text/css" href="./include/iSpindle.css">
-
 <script type="text/javascript">
+
 
 // define constants for data in chart. Allows for mor than two variables. Recipe information is included here and can be displayed in tooltip
 const chartDens=[<?php echo $dens;?>]
@@ -280,8 +280,10 @@ const tooltip_time=[<?php echo "'".$tooltip_time."'";?>]
 const archive_end=[<?php echo "'".$archive_end."'";?>]
 const time_selected=[<?php echo "'".$time_selected."'";?>]
 const RecipeName=[<?php echo "'".$RecipeName."'";?>]
+var end_date;
 
-function reload_page(end_date,comment_text) {
+function reload_page() {
+    var comment_text = document.getElementById('comment').value;
     var recipe_id = '<?php echo $selected_recipe ?>';
     var variable_r = '?recipe_id='.concat(recipe_id);
     var variable_end = '&RID_END='.concat(end_date);
@@ -306,7 +308,6 @@ $(function ()
               }
           });
         var labelText = RecipeName;
-       
         chart = new Highcharts.Chart(
         {    
             chart:
@@ -337,8 +338,8 @@ $(function ()
             point: {
                 events: {
                     select: function () {
-                        var text = Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', new Date(this.x)) + time_selected,
-                            end_date = this.x,
+                        var text = Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', new Date(this.x)) + time_selected;
+                            end_date = this.x;
                             chart = this.series.chart;
                             const timestamp = end_date;
                         if (!chart.lbl) {
@@ -360,16 +361,6 @@ $(function ()
                                 text: text
                             });
                         }
-        chart.myButton = chart.renderer.button(archive_end,400,10)
-            .attr({
-                zIndex: 3
-            })
-            .on('click', function () {
-            comment_text = document.getElementById('comment').value;
-            reload_page(end_date,comment_text)
-            })
-            .add();
-
                     }
                 }
             }
@@ -585,6 +576,7 @@ echo "<tr><td rowspan='2'><b>$comment_text</b></td>";
 echo "<td rowspan='2' align='center'>";
 echo "<div id='Commentfield' style='display: none;'>";
 echo "<input type = 'input' id='comment' name = 'comment'>";
+echo "<button type='button' id='send_comment'>$archive_end</button>";
 echo "</div>";
 echo "</td><td rowspan='2' align='center'>";
 if($rid_end_exists == 1)
@@ -632,6 +624,7 @@ echo "</table>";
   <script src="include/modules/offline-exporting.js"></script>
   <div id="container" style="width: 95%;position: relative;"></div>
 </div>
+<script> document.querySelector('#send_comment').addEventListener('click', reload_page); </script>
 </body>
 </form>
 </html>

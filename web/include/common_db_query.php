@@ -840,7 +840,7 @@ function ExportArchiveValues($conn, $recipe_ID, $txt_recipe_name, $txt_end, $txt
     $start_date=date_format(date_create($start_date),'Y-m-d');
     $end_date=date_format(date_create($end_date),'Y-m-d');
 
-    echo "Device: $spindle_name | $txt_recipe_name : $recipe_name | Start: $start_date | $txt_end : $end_date \r\n";
+    echo "Device: $spindle_name | $txt_recipe_name $recipe_name | Start: $start_date | $txt_end : $end_date \r\n";
     echo "$txt_initial_gravity : $initial_gravity °P | $txt_final_gravity : $final_gravity °P | $txt_attenuation : $attenuation % | $txt_alcohol : $alcohol Vol% \r\n";
     printf("$txt_calibration :  %01.5f * tilt %+01.5f * tilt^2 %+01.5f \r\n",$const1,$const2,$const3);
     echo "\r\n";

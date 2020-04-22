@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3308
--- Erstellungszeit: 21. Apr 2020 um 01:27
+-- Erstellungszeit: 22. Apr 2020 um 23:47
 -- Server-Version: 10.4.7-MariaDB-debug
 -- PHP-Version: 7.3.7
 
@@ -55,7 +55,7 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('angle_ma', 'x_axis', 'Datum / Uhrzeit', 'Date / Time', 'Data / Orario'),
 ('archive', 'alcohol', 'Alkohol', 'ABV', 'ABV'),
 ('archive', 'archive', 'Archiv', 'Archive', 'Archivio'),
-('archive', 'archive_end', 'Archiv Ende festlegen / Kommentar schreiben', 'Set Archive end / Write comment', 'Imposta fine archivio / Scrivi un commento'),
+('archive', 'archive_end', 'Archiv Ende festlegen /</br> Kommentar schreiben', 'Set Archive end /</br> Write comment', 'Imposta fine archivio /</br> Scrivi un commento'),
 ('archive', 'archive_end_removal', 'Flag \"Archiv Ende\" entfernen', 'Remove Flag Archive end', 'Rimuovere il flag \"Fine archivio\"'),
 ('archive', 'attenuation', 'Vergärungsgrad', 'Attentuation', 'Attenuazione'),
 ('archive', 'calibration_archive', 'Kalibrierung (Archiv)', 'Calibration (archive)', 'Calibrazione (archivio)'),
@@ -195,7 +195,7 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('svg_ma', 'timetext', 'Temperatur und scheinbarer Vergärungsgrad der letzten', 'Temperature and extract of the last ', 'Tenperatura e densità delle ultime'),
 ('svg_ma', 'timetext_reset', 'Temperatur und scheinbarer Vergärungsgrad seit dem letzten Reset: ', 'Temperature and apparent attenuation since last reset: ', 'Temperatura e attenuazione apparente dall\'ultimo reset: '),
 ('svg_ma', 'x_axis', 'Datum / Uhrzeit', 'Date / Time', 'Data / Orario'),
-('version', '005', '', '', ''),
+('version', '006', '', '', ''),
 ('wifi', 'header', 'Aktuelle WiFi Empfangsqualität:', 'Current Wifi reception: ', 'Qualità della ricezione attuale WiFi: ');
 
 --
