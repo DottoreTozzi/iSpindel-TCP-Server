@@ -53,6 +53,20 @@ Jan 24 2019
     }
        include_once("./config/tables.php");
 
+function write_log($data)
+{
+    try {
+        $log_to_console = CONSOLE_LOG;
+    }
+    catch (Exception $e) {
+        $log_to_console = 0;
+    } 
+    if ($log_to_console == 1 ) {
+        echo '<script>';
+        echo 'console.log('. json_encode( $data ) .')';
+        echo '</script>'; 
+    }
+}
 
 function cleanData(&$str)
   {
@@ -223,6 +237,7 @@ function upgrade_settings_table($conn)
 function delete_rid_flag_from_archive($conn,$selected_recipe)
 {
     $delete_query = "UPDATE Data Set Internal = NULL WHERE Recipe_ID = '$selected_recipe' AND Internal = 'RID_END'";
+    write_log("SELECT to delete RID_END flag:" . $delete_query);
     $result = mysqli_query($conn, $delete_query) or die(mysqli_error($conn));
 }
 
@@ -230,8 +245,10 @@ function delete_rid_flag_from_archive($conn,$selected_recipe)
 function  delete_recipe_from_archive($conn,$selected_recipe)
 {
     $delete_query1 = "DELETE FROM Archive WHERE Recipe_ID = '$selected_recipe'";
+    write_log("SELECT to delete recipe from archive table" . $delete_query1);
     $result = mysqli_query($conn, $delete_query1) or die(mysqli_error($conn));
     $delete_query2 = "DELETE FROM Data WHERE Recipe_ID = '$selected_recipe'";
+    write_log("SELECT to delete recipe from data table" . $delete_query2);
     $result = mysqli_query($conn, $delete_query2) or die(mysqli_error($conn));
 }
 

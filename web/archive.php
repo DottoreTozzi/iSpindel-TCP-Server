@@ -58,19 +58,24 @@ else {
         //if flag for end of fermenation is already existing: remove it
         if ($rid_end_exists == 1)
         {
-            $remove_recipe_ID="UPDATE Data Set Internal = NULL WHERE Recipe_ID = '$selected_recipe' AND Timestamp = '$timestamp_rid'";
+            $remove_recipe_ID="UPDATE Data Set Internal = NULL WHERE Recipe_ID = $selected_recipe AND Timestamp = $timestamp_rid";
             $q_sql = mysqli_query($conn, $remove_recipe_ID) or die(mysqli_error($conn));
+            write_log("SELECT to remove RID_END is existing: " . $remove_recipe_ID);
+
         }
 
         //add Flag for end of fermentation for archive to last datapoint of current spindle
         $timestamp_add= intval($RID_END/1000);
-        $add_recipe_ID="UPDATE Data Set Internal = 'RID_END' WHERE Recipe_ID = '$selected_recipe' AND UNIX_TIMESTAMP(Timestamp) = '$timestamp_add'";
+        $add_recipe_ID="UPDATE Data Set Internal = 'RID_END' WHERE Recipe_ID = $selected_recipe AND UNIX_TIMESTAMP(Timestamp) = $timestamp_add";
         $q_sql = mysqli_query($conn, $add_recipe_ID) or die(mysqli_error($conn));
+        write_log("SELECT to Add RID_END: " . $add_recipe_ID);
+
 
     }
     else {
         $timestamp_add= intval($RID_END/1000);
-        $add_recipe_ID="UPDATE Data Set Comment = '$comment' WHERE Recipe_ID = '$selected_recipe' AND UNIX_TIMESTAMP(Timestamp) = '$timestamp_add'";
+        $add_recipe_ID="UPDATE Data Set Comment = '$comment' WHERE Recipe_ID = $selected_recipe AND UNIX_TIMESTAMP(Timestamp) = $timestamp_add";
+        write_log("SELECT to add comment: " . $add_recipe_ID);
         mysqli_set_charset($conn, "utf8mb4");
         $q_sql = mysqli_query($conn, $add_recipe_ID) or die(mysqli_error($conn));
     
