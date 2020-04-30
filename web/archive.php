@@ -39,6 +39,15 @@ if ($rows <> 0){
     $timestamp_rid = $result[0];
 }
 
+if(!isset($_GET['type']))
+    {
+    $diagram_type = 0;
+    }
+else {
+    $diagram_type = $_GET['type'];
+    }
+
+
 if(!isset($_GET['comment']))
     {
     $comment = '';
@@ -52,7 +61,7 @@ if(!isset($_GET['RID_END']))
     $RID_END = ''; 
     }
 else {
-    $RID_END = intval($_GET['RID_END']);
+    $RID_END = ($_GET['RID_END']);
 
     if($comment == ''){
         //if flag for end of fermenation is already existing: remove it
@@ -65,7 +74,7 @@ else {
         }
 
         //add Flag for end of fermentation for archive to last datapoint of current spindle
-        $timestamp_add= intval($RID_END/1000);
+        $timestamp_add= round($RID_END/1000);
         $add_recipe_ID="UPDATE Data Set Internal = 'RID_END' WHERE Recipe_ID = $selected_recipe AND UNIX_TIMESTAMP(Timestamp) = $timestamp_add";
         $q_sql = mysqli_query($conn, $add_recipe_ID) or die(mysqli_error($conn));
         write_log("SELECT to Add RID_END: " . $add_recipe_ID);
@@ -73,7 +82,7 @@ else {
 
     }
     else {
-        $timestamp_add= intval($RID_END/1000);
+        $timestamp_add= round($RID_END/1000);
         $add_recipe_ID="UPDATE Data Set Comment = '$comment' WHERE Recipe_ID = $selected_recipe AND UNIX_TIMESTAMP(Timestamp) = $timestamp_add";
         write_log("SELECT to add comment: " . $add_recipe_ID);
         mysqli_set_charset($conn, "utf8mb4");
@@ -83,10 +92,6 @@ else {
 
 }
 
-
-
-
-
 // self called: if back button is selected, landing page is loaded
 if (isset($_POST['Stop']))
     {
@@ -95,17 +100,17 @@ if (isset($_POST['Stop']))
         $url .= "index.php";
         // open the page
         header("Location: ".$url);
-
     }
 
 // self caled function: if add button is selected, default settings for selected device will be copied and can be modified later individually
 if (isset($_POST['Go']))
     {
         $recipe_id = $_POST['archive_name'];
+        $dia_type = $_POST['diagram_type'];
         // reload page for selected archive
         $url="http://";
         $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
-        $url .= "archive.php?recipe_id=".$recipe_id;
+        $url .= "archive.php?recipe_id=".$recipe_id."&type=".$dia_type;
         // open the page
         header("Location: ".$url);
     }
@@ -126,18 +131,19 @@ if (isset($_POST['Del']))
 if (isset($_POST['Remove']))
     {
         $recipe_id = $_POST['archive_name'];
+        $dia_type = $_POST['diagram_type'];
         //delete active recipe
         delete_rid_flag_from_archive($conn,$recipe_id);
         // reload page for selected archive
         $url="http://";
         $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
-        $url .= "archive.php?recipe_id=".$recipe_id;
+        $url .= "archive.php?recipe_id=".$recipe_id."&type=".$dia_type;
         // open the page
         header("Location: ".$url);
     }
+
 if (isset($_POST['Export']))
     {
-
         $txt_recipe_name =  $_POST['txt_recipe_name'];
         $txt_end =  $_POST['txt_end'];
         $txt_initial_gravity =  $_POST['txt_initial_gravity'];
@@ -150,13 +156,14 @@ if (isset($_POST['Export']))
         $txt_calibration =  $_POST['txt_calibration'];
         $alcohol =  $_POST['alcohol'];
         $recipe_id = $_POST['archive_name'];
+        $dia_type = $_POST['diagram_type'];
 
         //export active recipe to csv file
         ExportArchiveValues($conn,$recipe_id, $txt_recipe_name, $txt_end, $txt_initial_gravity, $initial_gravity, $txt_final_gravity, $final_gravity, $txt_attenuation, $attenuation, $txt_alcohol, $alcohol, $txt_calibration);
         // reload page for selected archive
         $url="http://";
         $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
-        $url .= "archive.php?recipe_id=".$recipe_id;
+        $url .= "archive.php?recipe_id=".$recipe_id."&type=".$dia_type;
         // open the page
         header("Location: ".$url);
         exit;
@@ -164,15 +171,15 @@ if (isset($_POST['Export']))
 
 
 
-$timeFrame = defaultTimePeriod;
-$tftemp = $timeFrame;           
-$tfweeks = floor($tftemp / 168);
-$tftemp -= $tfweeks * 168;    
-$tfdays = floor($tftemp / 24);
-$tftemp -= $tfdays * 24;
-$tfhours = $tftemp;                                
+//$timeFrame = defaultTimePeriod;
+//$tftemp = $timeFrame;           
+//$tfweeks = floor($tftemp / 168);
+//$tftemp -= $tfweeks * 168;    
+//$tfdays = floor($tftemp / 24);
+//$tftemp -= $tfdays * 24;
+//$tfhours = $tftemp;                                
                                                    
-list($SpindleName, $RecipeName, $start_date, $end_date, $dens, $temperature, $angle) = getArchiveValuesPlato4($conn, $selected_recipe);
+list($SpindleName, $RecipeName, $start_date, $end_date, $dens, $temperature, $angle, $gravity, $battery, $rssi) = getArchiveValuesPlato4($conn, $selected_recipe);
 list($isCalib,$initial_gravity, $const1, $const2, $const3) = getArchiveInitialGravity($conn, $selected_recipe);
 list($isCalib,$final_gravity) = getArchiveFinalGravity($conn, $selected_recipe, $end_date);
 
@@ -185,13 +192,66 @@ $end_date = date("Y-m-d", strtotime($end_date));
 $const1 = number_format($const1,4);
 $const2 = number_format($const2,4);
 $const3 = number_format($const3,4);
+$cal = 0;
+
+if($diagram_type == 0)
+{
+    $file = "plato4";
+    $first_y_min = 0;
+    $first_y_max = 25;
+    $second_y_min = -5;
+    $second_y_max = 30;
+    $first_y_unit = " °P";
+    $second_y_unit = " °C";
+    $ChartFirst = $dens;
+    $ChartSecond = $temperature;
+    $cal = 1;
+}
+
+if($diagram_type == 2)
+{
+    $file = "plato4";
+    $first_y_min = 0;
+    $first_y_max = 25;
+    $second_y_min = -5;
+    $second_y_max = 30;
+    $first_y_unit = " °P";
+    $second_y_unit = " °C";
+    $ChartFirst = $gravity;
+    $ChartSecond = $temperature;
+}
+
+if($diagram_type == 1)
+{
+    $file = "angle";
+    $first_y_min = 15;
+    $first_y_max = 75;
+    $second_y_min = -5;
+    $second_y_max = 30;
+    $first_y_unit = " °";
+    $second_y_unit = " °C";
+    $ChartFirst = $angle;
+    $ChartSecond = $temperature;
+}
+if($diagram_type == 3)
+{
+    $file = "batterytrend";
+    $first_y_min = 0;
+    $first_y_max = 5;
+    $second_y_min = -100;
+    $second_y_max = 0;
+    $first_y_unit = " V";
+    $second_y_unit = " dB";
+    $ChartFirst = $battery;
+    $ChartSecond = $rssi;}
+
+$first_y = get_field_from_sql($conn,$file,"first_y");
+$second_y = get_field_from_sql($conn,$file,"second_y");
 
 
 // Get fields from database in language selected in settings
 $file = "plato4";
 $recipe_name = get_field_from_sql($conn,'diagram',"recipe_name");
-$first_y = get_field_from_sql($conn,$file,"first_y");
-$second_y = get_field_from_sql($conn,$file,"second_y");
 $x_axis = get_field_from_sql($conn,$file,"x_axis");
 $subheader = get_field_from_sql($conn,$file,"timetext");
 $subheader_reset = get_field_from_sql($conn,$file,"timetext_reset");
@@ -226,26 +286,10 @@ $txt_alcohol = get_field_from_sql($conn,$file,"alcohol");
 $file = "index";
 $show_diagram = get_field_from_sql($conn,$file,"show_diagram");
 $send_comment = get_field_from_sql($conn,$file,"send_comment");
-
-
-// define header displayed in diagram depending on value for recipe
-if ($RecipeName <> '') {
-    $Header=$SpindleName.' | ' . $recipe_name .' ' . $RecipeName . ' | Start: ' . $start_date;
-    }
-else {
-    $Header='iSpindel: ' . $SpindleName . ' | Start: ' . $start_date;
-    }
-
-
-// define subheader to be displayed in diagram
-$timetext = $subheader . ' ';
-if($tfweeks != 0) {
-    $timetext .= $tfweeks . ' ' . $subheader_weeks;
-    }
-if($tfdays != 0) {
-    $timetext .= $tfdays . ' ' . $subheader_days;
-    }
-$timetext .= $tfhours . ' ' . $subheader_hours;
+$chart_filename_04 = get_field_from_sql($conn,$file,"chart_filename_04");
+$chart_filename_06 = get_field_from_sql($conn,$file,"chart_filename_06");
+$chart_filename_08 = get_field_from_sql($conn,$file,"chart_filename_08");
+$chart_filename_12 = get_field_from_sql($conn,$file,"chart_filename_12");
 
 // get all spindle names to be displayed in form that have submitted data within the timeframe of $daysago
     $archive_sql = "SELECT * FROM Archive ORDER BY Recipe_ID";
@@ -271,15 +315,21 @@ $timetext .= $tfhours . ' ' . $subheader_hours;
 
 
 // define constants for data in chart. Allows for mor than two variables. Recipe information is included here and can be displayed in tooltip
-const chartDens=[<?php echo $dens;?>]
-const chartTemp=[<?php echo $temperature;?>]
+const chartDens=[<?php echo $ChartFirst;?>]
+const chartTemp=[<?php echo $ChartSecond;?>]
 // define constants to be displayed in diagram -> no php code needed in chart
 const recipe_name=[<?php echo "'".$recipe_name."'";?>]
 const first_y=[<?php echo "'".$first_y."'";?>]
 const second_y=[<?php echo "'".$second_y."'";?>]
+const first_y_min = <?php echo $first_y_min;?>;
+const second_y_min = <?php echo $second_y_min;?>;
+const first_y_max = <?php echo $first_y_max;?>;
+const second_y_max = <?php echo $second_y_max;?>;
+const first_y_unit = [<?php echo "'".$first_y_unit."'";?>]
+const second_y_unit = [<?php echo "'".$second_y_unit."'";?>]
+
+
 const x_axis=[<?php echo "'".$x_axis."'";?>]
-const chart_header=[<?php echo "'" . $Header . "'";?>]
-const chart_subheader=[<?php echo "'" . $timetext . "'";?>]
 const tooltip_at=[<?php echo "'".$tooltip_at."'";?>]
 const tooltip_time=[<?php echo "'".$tooltip_time."'";?>]
 const archive_end=[<?php echo "'".$archive_end."'";?>]
@@ -289,14 +339,16 @@ var end_date;
 
 function reload_page() {
     var comment_text = document.getElementById('comment').value;
+    var dia_type = document.getElementById('diagram_type').value;
     var recipe_id = '<?php echo $selected_recipe ?>';
     var variable_r = '?recipe_id='.concat(recipe_id);
+    var variable_t = '&type='.concat(dia_type);
     var variable_end = '&RID_END='.concat(end_date);
     var variable_c = '&comment='.concat(comment_text);
     var url = "http://";
     var server = window.location.hostname;
     var path = window.location.pathname;
-    var full_path = url.concat(server).concat(path).concat(variable_r).concat(variable_end).concat(variable_c);
+    var full_path = url.concat(server).concat(path).concat(variable_r).concat(variable_t).concat(variable_end).concat(variable_c);
     window.open(full_path,"_self");
     }
 
@@ -375,8 +427,8 @@ $(function ()
                 {
                     startOnTick: false,
                     endOnTick: false,
-                    min: 0,
-                    max: 25,
+                    min: first_y_min,
+                    max: first_y_max,
                     title:
                     {
                         text: first_y
@@ -388,7 +440,7 @@ $(function ()
                         y: 16,
                         formatter: function()
                         {
-                            return this.value + '°P'
+                            return this.value + first_y_unit
                         }
                     },
                     showFirstLabel: false
@@ -396,8 +448,8 @@ $(function ()
                     // linkedTo: 0,
                     startOnTick: true,
                     endOnTick: true,
-                    min: -5,
-                    max: 30,
+                    min: second_y_min,
+                    max: second_y_max,
                     gridLineWidth: 0,
                     opposite: true,
                     title: {
@@ -409,7 +461,7 @@ $(function ()
                         y: 16,
                         formatter: function() 
                         {
-                            return this.value +'°C'
+                            return this.value + second_y_unit
                         }
                     },
                     showFirstLabel: false
@@ -422,10 +474,10 @@ $(function ()
                 {
                     if(this.series.name == second_y) {
 			const pointData = chartTemp.find(row => row.timestamp === this.point.x)
-                        return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x)) + ' ' + tooltip_time + ' ' + this.y.toFixed(2) +'°C';
+                        return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%d.%m %H:%M', new Date(this.x)) + ' ' + tooltip_time + ' ' + this.y.toFixed(2) + second_y_unit;
                     } else {
 			const pointData = chartDens.find(row => row.timestamp === this.point.x)
-                        return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x))  + ' ' + tooltip_time + ' ' + this.y.toFixed(2) +'%';
+                        return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%d.%m %H:%M', new Date(this.x))  + ' ' + tooltip_time + ' ' + this.y.toFixed(2) + first_y_unit;
                     }
                 }
             },  
@@ -450,20 +502,28 @@ $(function ()
                         borderColor: '#000',
                         formatter: function() {
                             const Comment = chartDens.find(row => row.timestamp === this.point.x)
-                            return Comment.text_up;
+                            var label_up = Comment.text_up
+			    if (Comment.text_up){
+                            label_up = Highcharts.dateFormat('%d.%m - %H:%M', new Date(this.x))  + '<br/> ' + Comment.text_up 
+                            }
+                            return label_up;
                         }
                     },
                    {
                         enabled: true,
                         shape: 'callout',
-                        y: 35,
+                        y: 50,
                         borderRadius: 5,
                         backgroundColor: 'rgba(252, 255, 255, 0.7)',
                         borderWidth: 1,
                         borderColor: '#000',
                         formatter: function() {
                             const Comment = chartDens.find(row => row.timestamp === this.point.x)
-                            return Comment.text_down;
+                            var label_down = Comment.text_down
+                            if (Comment.text_down){
+                            label_down = Highcharts.dateFormat('%d.%m - %H:%M', new Date(this.x))  + '<br/> ' + Comment.text_down
+                            }
+                            return label_down;
                         }
                     }],
 
@@ -562,7 +622,24 @@ echo "<td align='center'>$end_date</td>";
 echo "</tr>";
 
 echo "<tr><td><b>Diagram :</b></td>";
-echo "<td align='center'> Different Diagram styles to be added</td><td align='center'>"; // Diagram type selection
+echo "<td align='center'>";
+echo "<select id='diagram_type' name='diagram_type'>";
+echo "<option value='0'";
+if ($diagram_type == 0) echo " selected";
+echo ">$chart_filename_04</option>";
+echo "<option value='1'";
+if ($diagram_type == 1) echo " selected";
+echo ">$chart_filename_06</option>";
+echo "<option value='2'";
+if ($diagram_type == 2) echo " selected";
+echo ">$chart_filename_08</option>";
+echo "<option value='3'";
+if ($diagram_type == 3) echo " selected";
+echo ">$chart_filename_12</option>";
+echo "</select>";
+
+
+echo "</td><td align='center'>"; // Diagram type selection
 echo "<span title='$show_diagram'><input type = 'submit' id='Go' name = 'Go' value = '$show_diagram'></span>";
 
 echo "</td><td></td>";
@@ -599,7 +676,12 @@ echo "<span title='$delete_archive'><input type = 'submit' id='delete' name = 'D
 echo "</td><td rowspan='2'></td>";
 echo "<td><b>$txt_calibration :</b></td>";
 echo "<td align='center' colspan='7'>";
-printf("%01.5f * tilt %+01.5f * tilt^2 %+01.5f",$const1,$const2,$const3);
+if ($cal == 1){
+    printf("%01.5f * tilt %+01.5f * tilt^2 %+01.5f",$const1,$const2,$const3);
+}
+else {
+    echo "N/A";
+}
 echo "</td></tr>";
 echo "<tr><td align='center' colspan='8'>"; 
 echo "<span title='Export'><input type = 'submit' id='Export' name = 'Export' value = 'Export'></span>";

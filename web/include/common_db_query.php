@@ -1109,6 +1109,9 @@ function getArchiveValuesPlato4($conn, $recipe_ID)
     $valAngle = '';
     $valTemperature = '';
     $valDens = '';
+    $valGravity = '';
+    $valRSSI = '';
+    $valBattery = '';
     $const1 = 0;
     $const2 = 0;
     $const3 = 0;
@@ -1142,7 +1145,7 @@ function getArchiveValuesPlato4($conn, $recipe_ID)
     $AND_RID = " AND Timestamp <= (Select max(Timestamp) FROM Data WHERE Recipe_ID='$recipe_ID' AND Internal = 'RID_END')";
     }
 
-    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe, comment
+    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, gravity, battery, rssi, recipe, comment
                            FROM Data WHERE Recipe_ID = '$recipe_ID'" . $AND_RID . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
 	$label_position = 1;
         // retrieve and store the values as CSV lists for HighCharts
@@ -1150,23 +1153,35 @@ function getArchiveValuesPlato4($conn, $recipe_ID)
             $jsTime = $r_row['unixtime'] * 1000;
             $angle = $r_row['angle'];
             $dens = $const1 * pow($angle, 2) + $const2 * $angle + $const3; // complete polynome from database
+            $gravity = $r_row['gravity'];
+            $rssi = $r_row['rssi'];
+            $battery = $r_row['battery'];
 
-            $valAngle .= '[' . $jsTime . ', ' . $angle . '],';
             if ($r_row['comment']){
                 if($label_position == 1){
                     $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $dens . ", recipe: \"" . $r_row['recipe'] . "\", text_up: '" . $r_row['comment'] . "'},";
+                    $valAngle .= '{ timestamp: ' . $jsTime . ', value: ' . $angle . ", recipe: \"" . $r_row['recipe'] . "\", text_up: '" . $r_row['comment'] . "'},";
+                    $valGravity .= '{ timestamp: ' . $jsTime . ', value: ' . $gravity . ", recipe: \"" . $r_row['recipe'] . "\", text_up: '" . $r_row['comment'] . "'},";
+                    $valBattery .= '{ timestamp: ' . $jsTime . ', value: ' . $battery . ", recipe: \"" . $r_row['recipe'] . "\", text_up: '" . $r_row['comment'] . "'},";
                     $label_position = $label_position * -1;
                 }
                 else{
                     $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $dens . ", recipe: \"" . $r_row['recipe'] . "\", text_down: '" . $r_row['comment'] . "'},";
+                    $valAngle .= '{ timestamp: ' . $jsTime . ', value: ' . $angle . ", recipe: \"" . $r_row['recipe'] . "\", text_down: '" . $r_row['comment'] . "'},";
+                    $valGravity .= '{ timestamp: ' . $jsTime . ', value: ' . $gravity . ", recipe: \"" . $r_row['recipe'] . "\", text_down: '" . $r_row['comment'] . "'},";
+                    $valBattery .= '{ timestamp: ' . $jsTime . ', value: ' . $battery . ", recipe: \"" . $r_row['recipe'] . "\", text_down: '" . $r_row['comment'] . "'},";
                     $label_position = $label_position * -1;
                 }
   
             } 
             else{
             $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $dens . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valAngle .= '{ timestamp: ' . $jsTime . ', value: ' . $angle . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valGravity .= '{ timestamp: ' . $jsTime . ', value: ' . $gravity . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valBattery .= '{ timestamp: ' . $jsTime . ', value: ' . $battery . ", recipe: \"" . $r_row['recipe'] . "\"},";
             }
             $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valRSSI .= '{ timestamp: ' . $jsTime . ', value: ' . $rssi . ", recipe: \"" . $r_row['recipe'] . "\"},";
 
 
 
@@ -1178,7 +1193,10 @@ function getArchiveValuesPlato4($conn, $recipe_ID)
             $end_date,
             $valDens,
             $valTemperature,
-            $valAngle
+            $valAngle,
+            $valGravity,
+            $valBattery,
+            $valRSSI
         );
   
 }
