@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-
+# Version 3.0
+# Modified version fpor Python 3
+# Some string handling had to be changed for python3
+#  
+# Version 2.1
+# Added Recipe_Id column while writing data to enable archive function in database
+#
 # Version 2.0
 # Made possible by Alex (avollkopf): A whole new release.
 # Now including complete graphical user interface and new charts.
@@ -213,8 +219,8 @@ REMOTECONFIG = int(get_config_from_sql('REMOTECONFIG', 'ENABLE_REMOTECONFIG'))
 ENABLE_ADDCOLS = int(get_config_from_sql('ADVANCED', 'ENABLE_ADDCOLS', 'GLOBAL'))  # Enable dynamic columns (do not use this unless you're a developer)
 # CONFIG End
 
-ACK = chr(6)  # ASCII ACK (Acknowledge)
-NAK = chr(21)  # ASCII NAK (Not Acknowledged)
+ACK = bytes([6])  # ASCII ACK (Acknowledge)
+NAK = bytes([21])  # ASCII NAK (Not Acknowledged)
 BUFF = 256  # Buffer Size
 
 # iSpindel Config Param Arrays
@@ -276,13 +282,13 @@ def handler(clientsock, addr):
         if not data: break  # client closed connection
         dbgprint(repr(addr) + ' received:' + repr(data.decode('utf-8')))
         if "close" == data.rstrip():
-            clientsock.send(ACK.encode())
+            clientsock.send(ACK)
             dbgprint(repr(addr) + ' ACK sent. Closing.')
             break  # close connection
         try:
             inpstr += str(data.decode('utf-8').rstrip())
             if inpstr[0] != "{":
-                clientsock.send(NAK.encode())
+                clientsock.send(NAK)
                 dbgprint(repr(addr) + ' Not JSON.')
                 break  # close connection
             dbgprint(repr(addr) + ' Input Str is now:' + inpstr)
@@ -334,7 +340,7 @@ def handler(clientsock, addr):
                         dbgprint(repr(addr) + " Sending ACK.")
                     clientsock.send(resp.encode())
                 else:
-                    clientsock.send(ACK.encode())
+                    clientsock.send(ACK)
                     dbgprint(repr(addr) + ' Sent ACK.')
                 #
                 dbgprint(repr(addr) + ' Time elapsed: ' + str(time.clock() - timestart))
@@ -345,7 +351,7 @@ def handler(clientsock, addr):
             # something went wrong
             # traceback.print_exc() # this would be too verbose, so let's do this instead:
             dbgprint(repr(addr) + ' Error: ' + str(e))
-            clientsock.send(NAK.encode())
+            clientsock.send(NAK)
             dbgprint(repr(addr) + ' NAK sent.')
             break  # close connection server side after non-success
     clientsock.close()
@@ -669,19 +675,19 @@ def handler(clientsock, addr):
                     'gravity': gravity,
                     'token': user_token,
                     'interval': interval,
-                    'recipe': recipe,
                     'RSSI': rssi
                 }
                 out = json.dumps(outdata)
                 dbgprint(repr(addr) + ' - sending: ' + out)
                 s = socket(AF_INET, SOCK_STREAM)
                 s.connect((FORWARDADDR, FORWARDPORT))
-                s.send(out)
+                s.send(out.encode())
                 rcv = s.recv(BUFF)
                 s.close()
-                if rcv[0].decode('utf-8') == ACK:
+                dbgprint('received:' + repr(rcv.decode()) + '|' + repr(ACK.decode()))
+                if rcv == ACK:
                     dbgprint(repr(addr) + ' - received ACK - OK!')
-                elif rcv[0].decode('utf-8') == NAK:
+                elif rcv == NAK:
                     dbgprint(repr(addr) + ' - received NAK - Not OK...')
                 else:
                     dbgprint(repr(addr) + ' - received: ' + rcv)
