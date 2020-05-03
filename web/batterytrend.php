@@ -37,7 +37,7 @@ $tfhours = $tftemp;
 
 // Array angle and temperature contain now also recipe name for each data point which will be displeayed in diagram tooltip
 // Variable RecipeName will be displayed in header depending on selected timeframe
-list($angle, $temperature,$battery,$RSSI) = getChartValues($conn, $_GET['name'], $timeFrame, $_GET['reset']);
+list($isCalib, $dens, $temperature, $angle, $gravity, $battery, $RSSI) = getChartValues($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 list($RecipeName, $show) = getCurrentRecipeName($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 
 // Get fields from database in language selected in settings
@@ -56,6 +56,21 @@ $header_no_data_2 = get_field_from_sql($conn,'diagram',"header_no_data_2");
 $header_no_data_3 = get_field_from_sql($conn,'diagram',"header_no_data_3");
 $tooltip_at = get_field_from_sql($conn,'diagram',"tooltip_at");
 $tooltip_time = get_field_from_sql($conn,'diagram',"tooltip_time");
+$PARA_FIRST_Y_MIN = "BATTERY_Y_AXIS_MIN";
+$PARA_FIRST_Y_MAX = "BATTERY_Y_AXIS_MAX";
+$PARA_SECOND_Y_MIN = "RSSI_Y_AXIS_MIN";
+$PARA_SECOND_Y_MAX = "RSSI_Y_AXIS_MAX";
+$first_y_unit = " V";
+$second_y_unit = " dB";
+$ChartFirst = $battery;
+$ChartSecond = $RSSI;
+
+$first_y_min = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_FIRST_Y_MIN));
+$first_y_max = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_FIRST_Y_MAX));
+$second_y_min = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_SECOND_Y_MIN));
+$second_y_max = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_SECOND_Y_MAX));
+
+
 $file = "settings";
 $stop = get_field_from_sql($conn,$file,"stop");
 
@@ -111,12 +126,20 @@ $timetext .= $tfhours . ' ' . $subheader_hours;
 <script type="text/javascript">
 
 // define constants for data in chart. Allows for mor than two variables. Recipe information is included here and can be displayed in tooltip
-const chartBattery = [<?php echo $battery;?>]
-const chartRSSI = [<?php echo $RSSI;?>]
+const chartBattery = [<?php echo $ChartFirst;?>]
+const chartRSSI = [<?php echo $ChartSecond;?>]
 // define constants to be displayed in diagram -> no php code needed in chart
 const recipe_name=[<?php echo "'".$recipe_name."'";?>]
 const first_y=[<?php echo "'".$first_y."'";?>]
 const second_y=[<?php echo "'".$second_y."'";?>]
+const first_y_min = <?php echo $first_y_min;?>;
+const second_y_min = <?php echo $second_y_min;?>;
+const first_y_max = <?php echo $first_y_max;?>;
+const second_y_max = <?php echo $second_y_max;?>;
+const first_y_unit = [<?php echo "'".$first_y_unit."'";?>]
+const second_y_unit = [<?php echo "'".$second_y_unit."'";?>]
+
+
 const x_axis=[<?php echo "'".$x_axis."'";?>]
 const chart_header=[<?php echo "'" . $Header . "'";?>]
 const chart_subheader=[<?php echo "'" . $timetext . "'";?>]
@@ -165,8 +188,8 @@ $(function ()
       {  
 	startOnTick: false,
 	endOnTick: false, 
-        min: 0,
-	max: 5,
+        min: first_y_min,
+	max: first_y_max,
 	title: 
         {
           text: first_y       
@@ -178,7 +201,7 @@ $(function ()
           y: 16,
           formatter: function() 
           {
-            return this.value +'V'
+            return this.value + first_y_unit
           }
         },
 	showFirstLabel: false
@@ -186,8 +209,8 @@ $(function ()
          // linkedTo: 0,
 	 startOnTick: false,
 	 endOnTick: false,
-	 min: -100,
-	 max: 0,
+	 min: second_y_min,
+	 max: second_y_max,
 	 gridLineWidth: 0,
          opposite: true,
          title: {
@@ -199,7 +222,7 @@ $(function ()
             y: 16,
           formatter: function() 
           {
-            return this.value +'dB'
+            return this.value + second_y_unit
           }
          },
 	showFirstLabel: false
@@ -213,10 +236,10 @@ $(function ()
         {
 	   if(this.series.name == first_y) {
            	const pointData = chartBattery.find(row => row.timestamp === this.point.x)
-                return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x)) + ' ' + tooltip_time + ' ' + this.y.toFixed(5) +' V';
+                return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%d.%m %H:%M', new Date(this.x)) + ' ' + tooltip_time + ' ' + this.y.toFixed(5) + first_y_unit;
 	   } else {
 		const pointData = chartRSSI.find(row => row.timestamp === this.point.x)
-                return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x))  + ' ' + tooltip_time + ' ' + this.y +' dB';
+                return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%d.%m %H:%M', new Date(this.x))  + ' ' + tooltip_time + ' ' + this.y + second_y_unit;
 	   }
         }
       },  
@@ -231,6 +254,41 @@ $(function ()
       series:
       [
 	  {
+                    dataLabels: [{
+                        enabled: true,
+                        shape: 'callout',
+                        y: -15,
+                        borderRadius: 5,
+                        backgroundColor: 'rgba(252, 255, 255, 0.7)',
+                        borderWidth: 1,
+                        borderColor: '#000',
+                        formatter: function() {
+                            const Comment = chartBattery.find(row => row.timestamp === this.point.x)
+                            var label_up = Comment.text_up
+                            if (Comment.text_up){
+                            label_up = Highcharts.dateFormat('%d.%m - %H:%M', new Date(this.x))  + '<br/> ' + Comment.text_up
+                            }
+                            return label_up;
+                        }
+                    },
+                   {
+                        enabled: true,
+                        shape: 'callout',
+                        y: 50,
+                        borderRadius: 5,
+                        backgroundColor: 'rgba(252, 255, 255, 0.7)',
+                        borderWidth: 1,
+                        borderColor: '#000',
+                        formatter: function() {
+                            const Comment = chartBattery.find(row => row.timestamp === this.point.x)
+                            var label_down = Comment.text_down
+                            if (Comment.text_down){
+                            label_down = Highcharts.dateFormat('%d.%m - %H:%M', new Date(this.x))  + '<br/> ' + Comment.text_down
+                            }
+                            return label_down;
+                        }
+                    }],
+
           name: first_y, 
 	  color: '#FF0000',
 	  data: chartBattery.map(row => [row.timestamp, row.value]),

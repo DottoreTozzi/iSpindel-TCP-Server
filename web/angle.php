@@ -35,47 +35,10 @@ $tfdays = floor($tftemp / 24);
 $tftemp -= $tfdays * 24;
 $tfhours = $tftemp;
 
-if (isset($_POST['Export']))
-    {
-        $timeFrame = $_POST['hours'] + ($_POST['days'] * 24) + ($_POST['weeks'] * 168);
-        ExportChartValues($conn, $_POST['name'], $timeFrame, $_POST['reset']);
-        // establish path by the current URL used to invoke this page
-        $url="http://";
-        $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
-        $url .= 'angle.php';
-        $url .="?name=".$_POST["name"];
-        $url .="&days=".$_POST["days"];
-        $url .="&weeks=".$_POST["weeks"];
-        $url .="&hours=".$_POST["hours"];
-        $url .="&reset=".$_POST["reset"];
-        // open the page
-        header("Location: ".$url);
-        exit;
-    }
-
 // Array angle and temperature contain now also recipe name for each data point which will be displeayed in diagram tooltip
 // Variable RecipeName will be displayed in header depending on selected timeframe
-list($angle, $temperature) = getChartValues($conn, $_GET['name'], $timeFrame, $_GET['reset']);
+list($isCalib, $dens, $temperature, $angle) = getChartValues($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 list($RecipeName, $show) = getCurrentRecipeName($conn, $_GET['name'], $timeFrame, $_GET['reset']);
-
-if (isset($_POST['Export']))
-    {
-
-        // establish path by the current URL used to invoke this page
-        $url="http://";
-        $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
-        $url .= 'angle.php';
-        $url .="?name=".$_POST["name"];
-        $url .="&days=".$_POST["days"];
-        $url .="&weeks=".$_POST["weeks"];
-        $url .="&hours=".$_POST["hours"];
-        $url .="&reset=".$_POST["reset"];
-        // open the page
-        header("Location: ".$url);
-        unset($result, $sql_q);
-        ExportChartValues($conn, $_GET['name'], $timeFrame, $_GET['reset']);
-        exit;
-    }
 
 // Get fields from database in language selected in settings
 $file = "angle";
@@ -93,6 +56,26 @@ $header_no_data_2 = get_field_from_sql($conn,'diagram',"header_no_data_2");
 $header_no_data_3 = get_field_from_sql($conn,'diagram',"header_no_data_3");
 $tooltip_at = get_field_from_sql($conn,'diagram',"tooltip_at");
 $tooltip_time = get_field_from_sql($conn,'diagram',"tooltip_time");
+$PARA_FIRST_Y_MIN = "ANGLE_Y_AXIS_MIN";
+$PARA_FIRST_Y_MAX = "ANGLE_Y_AXIS_MAX";
+$PARA_SECOND_Y_MIN = "TEMPERATURE_Y_AXIS_MIN";
+$PARA_SECOND_Y_MAX = "TEMPERATURE_Y_AXIS_MAX";
+$first_y_unit = " °";
+$second_y_unit = " °C";
+$ChartFirst = $angle;
+$ChartSecond = $temperature;
+
+$first_y = get_field_from_sql($conn,$file,"first_y");
+$second_y = get_field_from_sql($conn,$file,"second_y");
+
+$first_y_min = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_FIRST_Y_MIN));
+$first_y_max = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_FIRST_Y_MAX));
+$second_y_min = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_SECOND_Y_MIN));
+$second_y_max = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_SECOND_Y_MAX));
+
+
+
+
 
 $file = "settings";
 $stop = get_field_from_sql($conn,$file,"stop");
@@ -147,12 +130,20 @@ $timetext .= $tfhours . ' ' . $subheader_hours;
 <script type="text/javascript">
 
 // define constants for data in chart. Allows for mor than two variables. Recipe information is included here and can be displayed in tooltip
-const chartAngle = [<?php echo $angle;?>]
-const chartTemp = [<?php echo $temperature;?>]
+const chartAngle = [<?php echo $ChartFirst;?>]
+const chartTemp = [<?php echo $ChartSecond;?>]
 // define constants to be displayed in diagram -> no php code needed in chart
 const recipe_name=[<?php echo "'".$recipe_name."'";?>]
 const first_y=[<?php echo "'".$first_y."'";?>]
 const second_y=[<?php echo "'".$second_y."'";?>]
+const first_y_min = <?php echo $first_y_min;?>;
+const second_y_min = <?php echo $second_y_min;?>;
+const first_y_max = <?php echo $first_y_max;?>;
+const second_y_max = <?php echo $second_y_max;?>;
+const first_y_unit = [<?php echo "'".$first_y_unit."'";?>]
+const second_y_unit = [<?php echo "'".$second_y_unit."'";?>]
+
+
 const x_axis=[<?php echo "'".$x_axis."'";?>]
 const chart_header=[<?php echo "'" . $Header . "'";?>]
 const chart_subheader=[<?php echo "'" . $timetext . "'";?>]
@@ -202,8 +193,8 @@ $(function ()
       {  
 	startOnTick: false,
 	endOnTick: false, 
-        min: 15,
-	max: 75,
+        min: first_y_min,
+	max: first_y_max,
 	title: 
         {
           text: first_y         
@@ -215,7 +206,7 @@ $(function ()
           y: 16,
           formatter: function() 
           {
-            return this.value +'°'
+            return this.value + first_y_unit
           }
         },
 	showFirstLabel: false
@@ -223,8 +214,8 @@ $(function ()
          // linkedTo: 0,
 	 startOnTick: true,
 	 endOnTick: true,
-	 min: -5,
-	 max: 30,
+	 min: second_y_min,
+	 max: second_y_max,
 	 gridLineWidth: 0,
          opposite: true,
          title: {
@@ -236,7 +227,7 @@ $(function ()
             y: 16,
           formatter: function() 
           {
-            return this.value +'°C'
+            return this.value + second_y_unit
           }
          },
 	showFirstLabel: false
@@ -250,10 +241,10 @@ $(function ()
         {
 	   if(this.series.name == second_y) {
                const pointData = chartTemp.find(row => row.timestamp === this.point.x)
-	       return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x)) + ' ' + tooltip_time + ' ' + this.y.toFixed(2) +'°C';
+	       return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%d.%m %H:%M', new Date(this.x)) + ' ' + tooltip_time + ' ' + this.y.toFixed(2) + second_y_unit;
            } else {
 	       const pointData = chartAngle.find(row => row.timestamp === this.point.x)
-               return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%H:%M', new Date(this.x))  + ' ' + tooltip_time + ' ' + this.y.toFixed(2) +'°';
+               return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%d.%m %H:%M', new Date(this.x))  + ' ' + tooltip_time + ' ' + this.y.toFixed(2) + first_y_unit;
 	   }
         }
       },  
@@ -268,6 +259,45 @@ $(function ()
       series:
       [
 	  {
+          dataLabels: [{
+                        enabled: true,
+                        shape: 'callout',
+                        y: -15,
+                        borderRadius: 5,
+                        backgroundColor: 'rgba(252, 255, 255, 0.7)',
+                        borderWidth: 1,
+                        borderColor: '#000',
+                        formatter: function() 
+                            {
+                            const Comment = chartAngle.find(row => row.timestamp === this.point.x)
+                            var label_up = Comment.text_up
+                            if (Comment.text_up)
+                                {
+                                   label_up = Highcharts.dateFormat('%d.%m - %H:%M', new Date(this.x))  + '<br/> ' + Comment.text_up
+                                }
+                            return label_up;
+                        }
+                        },
+                        {
+                        enabled: true,
+                        shape: 'callout',
+                        y: 50,
+                        borderRadius: 5,
+                        backgroundColor: 'rgba(252, 255, 255, 0.7)',
+                        borderWidth: 1,
+                        borderColor: '#000',
+                        formatter: function() 
+                            {
+                            const Comment = chartAngle.find(row => row.timestamp === this.point.x)
+                            var label_down = Comment.text_down
+                            if (Comment.text_down)
+                                {
+                                label_down = Highcharts.dateFormat('%d.%m - %H:%M', new Date(this.x))  + '<br/> ' + Comment.text_down
+                                }
+                            return label_down;
+                        }
+                    }],
+
           name: first_y, 
 	  color: '#FF0000',
 	  data: chartAngle.map(row => [row.timestamp, row.value]),
@@ -323,9 +353,6 @@ $(function ()
 <input type = "hidden" name="hours" value="<?php echo $_GET['hours']; ?>">
 <input type = "hidden" name="weeks" value="<?php echo $_GET['weeks']; ?>">
 <input type = "hidden" name="reset" value="<?php echo $_GET['reset']; ?>">
-
-
-<input type = "submit" id='export' name = "Export" value = "Export">
 
 <div id="wrapper">
   <script src="include/highcharts.js"></script>

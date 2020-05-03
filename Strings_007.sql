@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3308
--- Erstellungszeit: 22. Apr 2020 um 23:47
+-- Erstellungszeit: 03. Mai 2020 um 20:29
 -- Server-Version: 10.4.7-MariaDB-debug
 -- PHP-Version: 7.3.7
 
@@ -55,7 +55,7 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('angle_ma', 'x_axis', 'Datum / Uhrzeit', 'Date / Time', 'Data / Orario'),
 ('archive', 'alcohol', 'Alkohol', 'ABV', 'ABV'),
 ('archive', 'archive', 'Archiv', 'Archive', 'Archivio'),
-('archive', 'archive_end', 'Archiv Ende festlegen /</br> Kommentar schreiben', 'Set Archive end /</br> Write comment', 'Imposta fine archivio /</br> Scrivi un commento'),
+('archive', 'archive_end', 'Archiv Ende festlegen /<br/> Kommentar schreiben', 'Set Archive end /<br/> Write comment', 'Imposta fine archivio /<br/> Scrivi un commento'),
 ('archive', 'archive_end_removal', 'Flag \"Archiv Ende\" entfernen', 'Remove Flag Archive end', 'Rimuovere il flag \"Fine archivio\"'),
 ('archive', 'attenuation', 'Vergärungsgrad', 'Attentuation', 'Attenuazione'),
 ('archive', 'calibration_archive', 'Kalibrierung (Archiv)', 'Calibration (archive)', 'Calibrazione (archivio)'),
@@ -102,6 +102,7 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('index', 'chart_filename_06', 'Tilt und Temperatur', 'Tilt and temperature', 'Tilt e temperatura'),
 ('index', 'chart_filename_07', 'Tilt und Temperatur, Geglättet', 'Tilt and temperature, Moving Average', 'Tilt e temperatura, Curva livellata'),
 ('index', 'chart_filename_08', 'Extrakt und Temperatur (iSpindel Polynom)', 'Gravity and temperature (iSpindle Polynom)', 'Densità e temperatura (polinomio iSpindle)'),
+('index', 'chart_filename_08_1', 'Extrakt und Temperatur (iSpindel Polynom), Geglättet', 'Gravity and temperature (iSpindle Polynom), Moving Average', 'Densità e temperatura (polinomio iSpindle), livellata'),
 ('index', 'chart_filename_09', 'Gärbeginn Zeitpunkt setzen', 'Set Fermentation Start', 'Impostazione inizio fermentazione'),
 ('index', 'chart_filename_10', 'Vergärungsgrad', 'Apparent attenuation', 'Attenuazione apparente'),
 ('index', 'chart_filename_11', 'Änderung (Delta) Extrakt innerhalb 12 Stunden Anzeigen', 'Delta gravity  (12 hrs interval)', 'Delta densità (Intervallo di 12 ore)'),
@@ -114,6 +115,7 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('index', 'days_history', 'Tage Historie\r\n', 'Days history', 'Giorni di storia'),
 ('index', 'diagram_selection', 'Diagramm Auswahl(Tage):', 'Diagram selection (days):', 'Selezione diagramma (giorni):'),
 ('index', 'expert_settings', 'Experten Einstellungen aktivieren', 'Activate expert settings', 'Attiva le impostazioni degli esperti'),
+('index', 'header_deltagravity', 'Delta Extrakt [°P]', 'Delta gravity [°P]', 'Mosto delta [°P]'),
 ('index', 'header_initialgravity', 'Stammwürze [°P]', 'Initial gravity [°P]', 'Mosto originale [°P]'),
 ('index', 'help', 'Hilfe', 'Help', 'Aiuto'),
 ('index', 'installed_version', 'Installierte Version:', 'Installed version:', 'Versione installata:'),
@@ -134,22 +136,22 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('index', 'upgrade_settings', 'Settings Tabelle durch neuste Version ersetzen', 'Replace Settings table with latest version', 'Sostituisci la tabella delle impostazioni con l\'ultima versione'),
 ('index', 'upgrade_strings', 'String Tabelle durch neuste Version ersetzen', 'Replace Strings table with latest version', 'Sostituisci la tabella delle stringhe con l\'ultima versione'),
 ('index', 'upgrade_warning', 'Achtung: Individuelle Settings werden gelöscht und mit Default Werten der Installation überschrieben. Bitte vorher ein Backup der Settings erstellen.', 'Attention: Individual settings will be deleted and replaced with the default settings of the installation.Pleas backup settings prior to upgrade.', 'Attenzione: le singole impostazioni vengono eliminate e sovrascritte con i valori predefiniti dell\'applicazione. Effettuare in anticipo un backup delle impostazioni.'),
-('plato', 'first_y', 'Extrakt % w/w (Spindel)', 'Extract % w/w (Spindle)', 'Densità % w/w (Spindle)'),
+('plato', 'first_y', 'Extrakt °P (Spindel)', 'Extract °P (Spindle)', 'Densità °P (Spindle)'),
 ('plato', 'second_y', 'Temperatur', 'Temperature', 'Temperatura'),
 ('plato', 'timetext', 'Temperatur und Extraktgehalt (Spindel) der letzten', 'Temperature and extract (Spindle) of the last ', 'Temperatura e densità delle ultime'),
 ('plato', 'timetext_reset', 'Temperatur und Extraktgehalt (Spindel) seit dem letzten Reset: ', 'Temperature and extract (Spindle) since last reset: ', 'Temperatura e densità dall\'ultimo reset: '),
 ('plato', 'x_axis', 'Datum / Uhrzeit', 'Date / Time', 'Data / Ora'),
-('plato4', 'first_y', 'Extrakt % w/w', 'Extract % w/w', 'Densità % w/w'),
+('plato4', 'first_y', 'Extrakt °P', 'Extract °P', 'Densità °P'),
 ('plato4', 'second_y', 'Temperatur', 'Temperature', 'Temperatura'),
 ('plato4', 'timetext', 'Temperatur und Extraktgehalt der letzten', 'Temperature and extract of the last ', 'Temperatura e densità di'),
 ('plato4', 'timetext_reset', 'Temperatur und Extraktgehalt seit dem letzten Reset: ', 'Temperature and extract since last reset: ', 'Temperatura e densità dall\'ultimo reset: '),
 ('plato4', 'x_axis', 'Datum / Uhrzeit', 'Date / Time', 'Data / Orario'),
-('plato4_delta', 'first_y', 'Delta Extrakt % w/w', 'Delta extract % w/w', 'Delta densità % w/w'),
+('plato4_delta', 'first_y', 'Delta Extrakt °P', 'Delta extract °P', 'Delta densità °P'),
 ('plato4_delta', 'second_y', 'Temperatur', 'Temperature', 'Temperatura'),
 ('plato4_delta', 'timetext', 'Temperatur und Delta Extraktgehalt der letzten', 'Temperature and delta extract of the last ', 'Temperatura e delta densità delle ultime'),
 ('plato4_delta', 'timetext_reset', 'Temperatur und Delta Extraktgehalt seit dem letzten Reset: ', 'Temperature and delta extract since last reset: ', 'Temperatura e delta densità dall\'ultimo reset: '),
 ('plato4_delta', 'x_axis', 'Datum / Uhrzeit', 'Date / Time', 'Data / Orario'),
-('plato4_ma', 'first_y', 'Extrakt % w/w (geglättet)', 'Extract % w/w (moving average)', 'Densità % w/w (curva livellata)'),
+('plato4_ma', 'first_y', 'Extrakt °P (geglättet)', 'Extract °P (moving average)', 'Densità °P (curva livellata)'),
 ('plato4_ma', 'second_y', 'Temperatur', 'Temperature', 'Temperatura'),
 ('plato4_ma', 'timetext', 'Temperatur und Extraktgehalt der letzten', 'Temperature and extract of the last ', 'Temperatura e densità di'),
 ('plato4_ma', 'timetext_reset', 'Temperatur und Extraktgehalt seit dem letzten Reset: ', 'Temperature and extract since last reset: ', 'Temperatura e densità dall\'ultimo reset: '),
@@ -189,14 +191,14 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('status', 'header_angle', 'Winkel', 'Angle', 'Angolo'),
 ('status', 'header_battery', 'Akku', 'Battery', 'Batteria'),
 ('status', 'header_temperature', 'Temperatur', 'Temperature', 'Temperatura'),
-('svg_ma', 'first_y', 'Scheinbarer Vergärungsgrad (%)', 'Apparent attentuation (%)', 'Attenuazione apparente (%)'),
+('svg_ma', 'first_y', 'Vergärungsgrad (%)', 'Attentuation (%)', 'Attenuazione (%)'),
 ('svg_ma', 'second_y', 'Temperatur', 'Temperature', 'Temperatura'),
 ('svg_ma', 'third_y', 'Alkohol (Vol. %)', 'ABV (%)', 'ABV (%)'),
 ('svg_ma', 'timetext', 'Temperatur und scheinbarer Vergärungsgrad der letzten', 'Temperature and extract of the last ', 'Tenperatura e densità delle ultime'),
 ('svg_ma', 'timetext_reset', 'Temperatur und scheinbarer Vergärungsgrad seit dem letzten Reset: ', 'Temperature and apparent attenuation since last reset: ', 'Temperatura e attenuazione apparente dall\'ultimo reset: '),
 ('svg_ma', 'x_axis', 'Datum / Uhrzeit', 'Date / Time', 'Data / Orario'),
-('version', '006', '', '', ''),
-('wifi', 'header', 'Aktuelle WiFi Empfangsqualität:', 'Current Wifi reception: ', 'Qualità della ricezione attuale WiFi: ');
+('version', '007', '', '', ''),
+('wifi', 'header', 'WiFi Empfangsqualität:', 'Wifi reception: ', 'Qualità della ricezione WiFi: ');
 
 --
 -- Indizes der exportierten Tabellen

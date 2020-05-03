@@ -19,7 +19,7 @@ if ((include_once './config/common_db_config.php') == FALSE){
 // Check GET parameters (for now: Spindle name and Timeframe to display) 
 if(!isset($_GET['name'])) $_GET['name'] = 'iSpindel000'; else $_GET['name'] = $_GET['name'];
 
-list($time, $temperature, $angle, $battery) = getCurrentValues($conn, $_GET['name']);
+list($isCalib, $time, $temperature, $angle, $battery) = getlastValuesPlato4($conn, $_GET['name']);
 
 
 // get description for fields in corresponding language

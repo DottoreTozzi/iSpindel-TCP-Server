@@ -41,7 +41,7 @@ if ($rows <> 0){
 
 if(!isset($_GET['type']))
     {
-    $diagram_type = 0;
+    $diagram_type = '0';
     }
 else {
     $diagram_type = $_GET['type'];
@@ -74,16 +74,14 @@ else {
         }
 
         //add Flag for end of fermentation for archive to last datapoint of current spindle
-        $timestamp_add= round($RID_END/1000);
-        $add_recipe_ID="UPDATE Data Set Internal = 'RID_END' WHERE Recipe_ID = $selected_recipe AND UNIX_TIMESTAMP(Timestamp) = $timestamp_add";
+        $add_recipe_ID="UPDATE Data Set Internal = 'RID_END' WHERE Recipe_ID = $selected_recipe AND UNIX_TIMESTAMP(Timestamp) = $RID_END";
         $q_sql = mysqli_query($conn, $add_recipe_ID) or die(mysqli_error($conn));
         write_log("SELECT to Add RID_END: " . $add_recipe_ID);
 
 
     }
     else {
-        $timestamp_add= round($RID_END/1000);
-        $add_recipe_ID="UPDATE Data Set Comment = '$comment' WHERE Recipe_ID = $selected_recipe AND UNIX_TIMESTAMP(Timestamp) = $timestamp_add";
+        $add_recipe_ID="UPDATE Data Set Comment = '$comment' WHERE Recipe_ID = $selected_recipe AND UNIX_TIMESTAMP(Timestamp) = $RID_END";
         write_log("SELECT to add comment: " . $add_recipe_ID);
         mysqli_set_charset($conn, "utf8mb4");
         $q_sql = mysqli_query($conn, $add_recipe_ID) or die(mysqli_error($conn));
@@ -169,17 +167,7 @@ if (isset($_POST['Export']))
         exit;
     }
 
-
-
-//$timeFrame = defaultTimePeriod;
-//$tftemp = $timeFrame;           
-//$tfweeks = floor($tftemp / 168);
-//$tftemp -= $tfweeks * 168;    
-//$tfdays = floor($tftemp / 24);
-//$tftemp -= $tfdays * 24;
-//$tfhours = $tftemp;                                
-                                                   
-list($SpindleName, $RecipeName, $start_date, $end_date, $dens, $temperature, $angle, $gravity, $battery, $rssi) = getArchiveValuesPlato4($conn, $selected_recipe);
+list($SpindleName, $RecipeName, $start_date, $end_date, $dens, $temperature, $angle, $gravity, $battery, $rssi) = getArchiveValues($conn, $selected_recipe);
 list($isCalib,$initial_gravity, $const1, $const2, $const3) = getArchiveInitialGravity($conn, $selected_recipe);
 list($isCalib,$final_gravity) = getArchiveFinalGravity($conn, $selected_recipe, $end_date);
 
@@ -194,13 +182,13 @@ $const2 = number_format($const2,4);
 $const3 = number_format($const3,4);
 $cal = 0;
 
-if($diagram_type == 0)
+if($diagram_type == '0')
 {
     $file = "plato4";
-    $first_y_min = 0;
-    $first_y_max = 25;
-    $second_y_min = -5;
-    $second_y_max = 30;
+    $PARA_FIRST_Y_MIN = "PLATO_Y_AXIS_MIN";
+    $PARA_FIRST_Y_MAX = "PLATO_Y_AXIS_MAX";
+    $PARA_SECOND_Y_MIN = "TEMPERATURE_Y_AXIS_MIN";
+    $PARA_SECOND_Y_MAX = "TEMPERATURE_Y_AXIS_MAX";
     $first_y_unit = " °P";
     $second_y_unit = " °C";
     $ChartFirst = $dens;
@@ -208,46 +196,51 @@ if($diagram_type == 0)
     $cal = 1;
 }
 
-if($diagram_type == 2)
+if($diagram_type == '2')
 {
     $file = "plato4";
-    $first_y_min = 0;
-    $first_y_max = 25;
-    $second_y_min = -5;
-    $second_y_max = 30;
+    $PARA_FIRST_Y_MIN = "PLATO_Y_AXIS_MIN";
+    $PARA_FIRST_Y_MAX = "PLATO_Y_AXIS_MAX";
+    $PARA_SECOND_Y_MIN = "TEMPERATURE_Y_AXIS_MIN";
+    $PARA_SECOND_Y_MAX = "TEMPERATURE_Y_AXIS_MAX";
     $first_y_unit = " °P";
     $second_y_unit = " °C";
     $ChartFirst = $gravity;
     $ChartSecond = $temperature;
 }
 
-if($diagram_type == 1)
+if($diagram_type == '1')
 {
     $file = "angle";
-    $first_y_min = 15;
-    $first_y_max = 75;
-    $second_y_min = -5;
-    $second_y_max = 30;
+    $PARA_FIRST_Y_MIN = "ANGLE_Y_AXIS_MIN";
+    $PARA_FIRST_Y_MAX = "ANGLE_Y_AXIS_MAX";
+    $PARA_SECOND_Y_MIN = "TEMPERATURE_Y_AXIS_MIN";
+    $PARA_SECOND_Y_MAX = "TEMPERATURE_Y_AXIS_MAX";
     $first_y_unit = " °";
     $second_y_unit = " °C";
     $ChartFirst = $angle;
     $ChartSecond = $temperature;
 }
-if($diagram_type == 3)
+if($diagram_type == '3')
 {
     $file = "batterytrend";
-    $first_y_min = 0;
-    $first_y_max = 5;
-    $second_y_min = -100;
-    $second_y_max = 0;
+    $PARA_FIRST_Y_MIN = "BATTERY_Y_AXIS_MIN";
+    $PARA_FIRST_Y_MAX = "BATTERY_Y_AXIS_MAX";
+    $PARA_SECOND_Y_MIN = "RSSI_Y_AXIS_MIN";
+    $PARA_SECOND_Y_MAX = "RSSI_Y_AXIS_MAX";
     $first_y_unit = " V";
     $second_y_unit = " dB";
     $ChartFirst = $battery;
-    $ChartSecond = $rssi;}
+    $ChartSecond = $rssi;
+}
 
 $first_y = get_field_from_sql($conn,$file,"first_y");
 $second_y = get_field_from_sql($conn,$file,"second_y");
 
+$first_y_min = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_FIRST_Y_MIN));
+$first_y_max = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_FIRST_Y_MAX));
+$second_y_min = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_SECOND_Y_MIN));
+$second_y_max = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_SECOND_Y_MAX));
 
 // Get fields from database in language selected in settings
 $file = "plato4";
@@ -335,7 +328,6 @@ const tooltip_time=[<?php echo "'".$tooltip_time."'";?>]
 const archive_end=[<?php echo "'".$archive_end."'";?>]
 const time_selected=[<?php echo "'".$time_selected."'";?>]
 const RecipeName=[<?php echo "'".$RecipeName."'";?>]
-var end_date;
 
 function reload_page() {
     var comment_text = document.getElementById('comment').value;
@@ -343,7 +335,7 @@ function reload_page() {
     var recipe_id = '<?php echo $selected_recipe ?>';
     var variable_r = '?recipe_id='.concat(recipe_id);
     var variable_t = '&type='.concat(dia_type);
-    var variable_end = '&RID_END='.concat(end_date);
+    var variable_end = '&RID_END='.concat(Math.round(end_date/1000));
     var variable_c = '&comment='.concat(comment_text);
     var url = "http://";
     var server = window.location.hostname;
@@ -664,11 +656,11 @@ echo "</td><td rowspan='2' align='center'>";
 if($rid_end_exists == 1)
 {
     echo "<span title='" . "$archive_end_removal" . "'><input type = 'submit' id='Remove' name = 'Remove' value = '" . "$archive_end_removal" . "'></span>";
-    echo "</br>";
+    echo "<br/>";
 }
 else 
 {
-    echo "</br>";
+    echo "<br/>";
 }
 
 echo "<span title='$delete_archive'><input type = 'submit' id='delete' name = 'Del' value = '$delete_archive'></span>";

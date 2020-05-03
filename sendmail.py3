@@ -38,6 +38,7 @@ import datetime
 import os
 import sys  
 
+
 #importlib.reload(sys)  
 #sys.setdefaultencoding('utf8')
 
@@ -49,7 +50,6 @@ import sys
 
 # CONFIG Start
 config = configparser.ConfigParser()
-
 # load config from personal ini file if available
 config_path = '~/iSpindel-Srv/config'
 
@@ -60,7 +60,6 @@ try:
 
 except IOError:
   config.read(os.path.join(os.path.expanduser(config_path),'iSpindle_default.ini'))
-
 
 
 # GENERAL
