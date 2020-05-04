@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 # V1.2
 # Improved behavior for SVG and Low Gravity Alarms. Alarm will be send now only once and not sveral times in case of fluctuations
 # Set flags will be removed through Web interface if Reset is selected
@@ -22,29 +22,34 @@ import logging
 import socket
 import fcntl
 import struct
-from ConfigParser import ConfigParser
-from cStringIO import StringIO
+import configparser
+import importlib
+
+try:
+    from cStringIO import StringIO ## for Python 2
+except ImportError:
+    from io import StringIO ## for Python 3
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.header import Header
-from email import Charset
+from email import charset
 from email.generator import Generator
 import datetime
 import os
 import sys  
 
-reload(sys)  
-sys.setdefaultencoding('utf8')
+
+#importlib.reload(sys)  
+#sys.setdefaultencoding('utf8')
 
 # function to modify newline command for csv file for transfer from / to settings db
-class MyConfigParser(ConfigParser):
-    def get(self, section, option):
-        return ConfigParser.get(self, section, option).replace('\\r\\n', '\r\n')
+#class MyConfigParser(configparser):
+#    def get(section, option):
+#        return configparser.get(section, option).replace('\\r\\n', '\r\n')
 
 
 # CONFIG Start
-config = MyConfigParser()
-
+config = configparser.ConfigParser()
 # load config from personal ini file if available
 config_path = '~/iSpindel-Srv/config'
 
@@ -55,7 +60,6 @@ try:
 
 except IOError:
   config.read(os.path.join(os.path.expanduser(config_path),'iSpindle_default.ini'))
-
 
 
 # GENERAL
@@ -79,7 +83,7 @@ def get_ip():
         s.close()
     return IP
 
-server_ip = get_ip()
+server_ip = str(get_ip())
 
 dbgprint(server_ip)
 
@@ -147,7 +151,7 @@ excludedevice = get_config_from_sql('EMAIL','EXCLUDESTRING','GLOBAL')
 #  calculation of 30 minutes time window for status alarm email.
 timestatuslow = datetime.time(timestatus-1, 45)
 timestatushigh = datetime.time(timestatus, 15)
-# get current date and time to check against alarmsettings
+# current date and time to check against alarmsettings
 currentdate = datetime.datetime.now()
 currenttime = datetime.datetime.time(currentdate)
 
@@ -225,7 +229,7 @@ def delete_mail_sent(alarm,iSpindel):
 
 # Function to send the email with defined subject and body. Connection details are taken from ini file
 def sendemail(subject, body):
-    Charset.add_charset('utf-8', Charset.QP, Charset.QP, 'utf-8')
+    charset.add_charset('utf-8', charset.QP, charset.QP, 'utf-8')
     msg = MIMEMultipart()
     msg['From'] = Header(fromaddr.encode('utf-8'), 'UTF-8').encode()
     msg['To'] = Header(toaddr.encode('utf-8'), 'UTF-8').encode()
@@ -264,7 +268,8 @@ def get_string_from_sql(section, parameter):
         parameter = list(parameter[0])
         cur.close()
         cnx.close()
-        return parameter[0].encode('utf8', 'replace')
+#        dbgprint(parameter[0])
+        return parameter[0]
     except Exception as e:
         dbgprint(e)
 
@@ -438,7 +443,23 @@ try:
     dsendemail.clear ()
     spindeldataavailable = 0
     for i in ispindles:
-        id = str(i[3])  # ID
+#        dbgprint(i[0])
+#        dbgprint(i[1])
+#        dbgprint(i[2])
+#        dbgprint(i[3])
+#        dbgprint(i[4])
+#        dbgprint(i[5])
+#        dbgprint(i[6])
+#        dbgprint(i[7])
+#        dbgprint(i[8])
+#        dbgprint(i[9])
+#        dbgprint(i[10])
+#        dbgprint(i[11])
+#        dbgprint(i[12])
+        try:
+            id = i[3].decode('utf-8') # ID
+        except:
+            id = i[3]
         sID = str(id)
         lSpindleID.append(sID)
         dlasttimetrue[sID] = 0
@@ -450,7 +471,10 @@ try:
         d24hgravity[sID]='N/A'
         d12hgravity[sID]='N/A'
         dlasttemp[sID] = i[5]  # temperature
-        dName[sID] = i[2] # Spindelname
+        try:
+            dName[sID] = i[2].decode('utf8') # Spindelname
+        except:
+            dName[sID] = i[2]
         dbattery[sID] = i[6] # batteryvoltage
         dRecipe[sID] = i[12] # current recipename
         timeframestatus = int(get_config_from_sql('EMAIL','TIMEFRAMESTATUS',dName[sID]))
@@ -509,7 +533,7 @@ try:
                     dbgprint('Status for %s has been already sent' %(currentdate.strftime("%Y-%m-%d")))
                 else:
                     dbgprint('Prepare Email content for status email')
-                    Content = get_string_from_sql('sendmail','content_status_1') %str(timeframestatus)
+                    Content = str(get_string_from_sql('sendmail','content_status_1') %str(timeframestatus))
                     i = 0
                     while i < len(lSpindleID):
                         if dlasttimetrue[lSpindleID[i]] == 1:
@@ -538,7 +562,7 @@ try:
                             dbgprint('Data for Spindel ' + str(dName[lSpindleID[i]]) + ' is older than ' + str(timeframestatus) + ' days')
                         i += 1
 
-                    subject = get_string_from_sql('sendmail', 'subject_status') %str(server_ip)
+                    subject = str(get_string_from_sql('sendmail', 'subject_status') %str(server_ip))
                     info = get_string_from_sql('sendmail', 'content_info') %(str(alarmlow), alarmdelta, datetime.time(timestatus), currentdate.strftime("%Y-%m-%d %H:%M:%S"))
 
                     body = """
@@ -628,7 +652,7 @@ try:
 
 # send alarm mail if gravity is below threshold limit from settings
 #        if enablealarmsvg == 1:
-        subject = get_string_from_sql('sendmail', 'subject_alarm_svg') %(server_ip)
+        subject = get_string_from_sql('sendmail', 'subject_alarm_svg') %str(server_ip)
         Content = get_string_from_sql('sendmail','content_alarm_svg') %str(alarmsvg)
         isreset = 0
         i = 0

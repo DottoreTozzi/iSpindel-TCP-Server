@@ -63,6 +63,8 @@ include_once("./config/tables.php");
 	$url .="&reset=".$_POST["fromreset"];}
         if ($_POST["recipename"]<>''){
         $url .="&recipe=".$_POST["recipename"];}
+        if ($_POST["comment_text"]<>''){
+        $url .="&comment=".$_POST["comment_text"];}
 
         // open the page
         header("Location: ".$url);
@@ -119,6 +121,23 @@ include_once("./config/tables.php");
         exit;
     }
 
+// Self-called by archive button
+// calls php script to load archive data in TCP-Server
+
+    if (isset($_POST['archive']))
+    {
+
+        // establish path by the current URL used to invoke this page
+        $url="http://";
+        $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
+        $url .= 'archive.php';
+        // open the page
+        header("Location: ".$url);
+        unset($result, $sql_q);
+        exit;
+    }
+
+
 // Self-called by update_strings button
 // updates strings table with latest version and calls index page
 
@@ -151,6 +170,19 @@ include_once("./config/tables.php");
         exit;
     }
 
+    if (isset($_POST['Up_DataTab']))
+    {
+      upgrade_data_table($conn);
+        // establish path by the current URL used to invoke this page
+        $url="http://";
+        $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
+        $url .= 'index.php';
+        // open the page
+        header("Location: ".$url);
+        unset($result, $sql_q);
+        exit;
+    }
+
     
 
 // sql queries to get language dependent fields to be displayed
@@ -163,11 +195,14 @@ include_once("./config/tables.php");
     $chart_filename_06 = get_field_from_sql($conn,$file,"chart_filename_06");
     $chart_filename_07 = get_field_from_sql($conn,$file,"chart_filename_07");
     $chart_filename_08 = get_field_from_sql($conn,$file,"chart_filename_08");
+    $chart_filename_08_1 = get_field_from_sql($conn,$file,"chart_filename_08_1");
     $chart_filename_09 = get_field_from_sql($conn,$file,"chart_filename_09");
     $chart_filename_10 = get_field_from_sql($conn,$file,"chart_filename_10");
     $chart_filename_11 = get_field_from_sql($conn,$file,"chart_filename_11");
     $chart_filename_12 = get_field_from_sql($conn,$file,"chart_filename_12");
     $chart_filename_13 = get_field_from_sql($conn,$file,"chart_filename_13");
+    $chart_filename_14 = get_field_from_sql($conn,$file,"chart_filename_14");
+    $chart_filename_15 = get_field_from_sql($conn,$file,"chart_filename_15");
     $show_diagram = get_field_from_sql($conn,$file,"show_diagram");
     $calibrate_spindle = get_field_from_sql($conn,$file,"calibrate_spindle");
     $server_settings = get_field_from_sql($conn,$file,"server_settings");
@@ -179,6 +214,7 @@ include_once("./config/tables.php");
     $days_history = get_field_from_sql($conn,$file,"days_history");
     $or = get_field_from_sql($conn,$file,"or");
     $send_reset = get_field_from_sql($conn,$file,"send_reset"); 
+    $send_rdi_end = get_field_from_sql($conn,$file,"send_rdi_end");
     $no_data = get_field_from_sql($conn,$file,"no_data"); 
     $header_initialgravity = get_field_from_sql($conn,$file,"header_initialgravity");
     $change_history = get_field_from_sql($conn,$file,"change_history");
@@ -191,7 +227,14 @@ include_once("./config/tables.php");
     $upgrade_warning = get_field_from_sql($conn,$file,"upgrade_warning");
     $installed_version = get_field_from_sql($conn,$file,"installed_version");
     $available_version = get_field_from_sql($conn,$file,"available_version");
+    $upgrade_data_table = get_field_from_sql($conn,$file,"upgrade_data_table");
+    $show_archive = get_field_from_sql($conn,$file,"show_archive");
+    $send_comment = get_field_from_sql($conn,$file,"send_comment");
+    $comment_text = get_field_from_sql($conn,$file,"comment_text");
+    $header_deltagravity = get_field_from_sql($conn,$file,"header_deltagravity");
 
+
+    $hours_ago = 12;
 
     $header_recipe = get_field_from_sql($conn,'diagram',"recipe_name");
 
@@ -257,6 +300,13 @@ include_once("./config/tables.php");
     $result=mysqli_query($conn, $sql_q) or die(mysqli_error($conn));
     $len = mysqli_num_rows($result);
     $result1=mysqli_query($conn, $sql_q) or die(mysqli_error($conn)); 
+
+//  check if data table has column recipe_id
+    $q_sql1 = "SHOW COLUMNS FROM Data WHERE FIELD LIKE 'Recipe_ID'";
+    $lines = mysqli_query($conn, $q_sql1) or die(mysqli_error($conn));
+    $exists = mysqli_num_rows($lines);
+
+
 ?>
 
 <!DOCTYPE html>
@@ -267,22 +317,58 @@ include_once("./config/tables.php");
     <meta name="Description" content="iSpindle Fermentation Chart Selection Screen">
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8"> 
     <link rel="stylesheet" type="text/css" href="./include/iSpindle.css">
+</head>
 <script type="text/javascript">
 // Function to hide or display elements. Used for recipe name. Only displayed if reset_now is selected in options
     function einblenden(){
         var select = document.getElementById('chart_filename').selectedIndex;
-        if(select == 11 ){
-           document.getElementById('ResetNow').style.display = "block";
-           document.getElementById('send').style.display = "block";
-           document.getElementById('show').style.display = "none";
+        if(select == 12){
+           document.getElementById('ResetNow').style.display = "block"; // Name for recipe
+           document.getElementById('send').style.display = "block"; //send_reset
+           document.getElementById('show').style.display = "none"; // show diagram button
            document.getElementById('diagrams').style.display = "none";
+           document.getElementById('archive').style.display = "none";
+           document.getElementById('end').style.display = "none";
+           document.getElementById('commentfield').style.display = "none";
+           document.getElementById('comment').style.display = "none";
+
 
         }
+        else if(select == 13){
+           document.getElementById('ResetNow').style.display = "none"; // Name for recipe
+           document.getElementById('send').style.display = "none"; //send_reset
+           document.getElementById('show').style.display = "none"; // show diagram button
+           document.getElementById('diagrams').style.display = "none";
+           document.getElementById('archive').style.display = "none";
+           document.getElementById('end').style.display = "block";
+           document.getElementById('commentfield').style.display = "none";
+           document.getElementById('comment').style.display = "none";
+
+
+        }
+        else if(select == 14){
+           document.getElementById('ResetNow').style.display = "none"; // Name for recipe
+           document.getElementById('send').style.display = "none"; //send_reset
+           document.getElementById('show').style.display = "none"; // show diagram button
+           document.getElementById('diagrams').style.display = "none";
+           document.getElementById('archive').style.display = "none";
+           document.getElementById('end').style.display = "none";
+           document.getElementById('commentfield').style.display = "block";
+           document.getElementById('comment').style.display = "block";
+
+
+        }
+
+
         else {
             document.getElementById('ResetNow').style.display = "none";        
             document.getElementById('send').style.display = "none";
             document.getElementById('show').style.display = "block";
             document.getElementById('diagrams').style.display = "block";
+            document.getElementById('archive').style.display = "block";
+            document.getElementById('end').style.display = "none";
+            document.getElementById('commentfield').style.display = "none";
+            document.getElementById('comment').style.display = "none";
 
         }
     }
@@ -298,13 +384,9 @@ include_once("./config/tables.php");
               }
         }    
 
-
-
 </script>
 
-</head>
 <body>
-<!-- <body bgcolor="#E6E6FA"> -->
 <form name="main" action="<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method="post">
 <h1>RasPySpindel</h1>
 <h3><?php echo($diagram_selection .' '. $daysago)?></h3>
@@ -336,10 +418,14 @@ include_once("./config/tables.php");
         <option value="angle.php"><?php echo $chart_filename_06 ?></option>
         <option value="angle_ma.php"><?php echo $chart_filename_07 ?></option>
         <option value="plato.php"><?php echo $chart_filename_08 ?></option>
+        <option value="plato_ma.php"><?php echo $chart_filename_08_1 ?></option>
         <option value="batterytrend.php"><?php echo $chart_filename_12 ?></option>>
         <option value="svg_ma.php"><?php echo $chart_filename_10 ?></option>
         <option value="plato4_delta.php"><?php echo $chart_filename_11 ?></option>	
         <option value="reset_now.php"><?php echo $chart_filename_09 ?></option>
+        <option value="ferment_end.php"><?php echo $chart_filename_14 ?></option>
+        <option value="add_comment.php"><?php echo $chart_filename_15 ?></option>
+
 </select>
 
 <br />
@@ -365,32 +451,48 @@ include_once("./config/tables.php");
 <input type = "text" name = "recipename" /> </p>
 </div>
 
+<div id="commentfield" style="display: none;">
+<p><?php echo($comment_text)?>
+<input type = "text" name = "comment_text" /> </p>
+</div>
+
+
 <div id="show" style="display: block;">
 <span title="<?php echo($show_diagram)?>"><input type = "submit" id='diagram' name = "Go" value = "<?php echo($show_diagram)?>"></span>
 </div>
 <div id="send" style="display: none;">
 <span title="<?php echo($send_reset)?>"><input type = "submit" id='reset' name = "Go" value = "<?php echo($send_reset)?>"></span>
 </div>
+<div id="end" style="display: none;">
+<span title="<?php echo($send_rdi_end)?>"><input type = "submit" id='rdi_end' name = "Go" value = "<?php echo($send_rdi_end)?>"></span>
+</div>
+<div id="comment" style="display: none;">
+<span title="<?php echo($send_comment)?>"><input type = "submit" id='send_comment' name = "Go" value = "<?php echo($send_comment)?>"></span>
+</div>
+
 
 <?php
 # endif len !=0
 }
 else {
     echo sprintf($no_data, $daysago);
-    echo "<br />";
+    echo "<br/>";
     echo"<input type = 'number' name = 'changedefaultdays' min = '1' max = '365' step = '1' value = '$daysago'>";
     echo($days_history);
-    echo "<br /><br />";
+    echo "<br/><br/>";
 
     echo "<div id='change' style='display: block;'>";
     echo "<span title='$change_history'><input type = 'submit' id='changehistory' name = 'Change' value = '$change_history'></span>";
     echo "</div>";
 
 }
-
 ?>
-<br />
-<br />
+<br/>
+<div id="archive" style="display: block;">
+<span title="<?php echo($show_archive)?>"><input type = "submit" id='archive' name = "archive" value = "<?php echo($show_archive)?>"></span>
+</div>
+<br/>
+<br/>
 <?php
 
 // if a section is selected (default is 0), table will be defined
@@ -409,6 +511,7 @@ echo "<h2>$current_data</h2>";
     echo "<td><b>$header_temperature [°C]</b></td>";
     echo "<td><b>$header_initialgravity</b></td>";
     echo "<td><b>$header_density</b></td>";
+    echo "<td><b>$header_deltagravity ($hours_ago h)</b></td>";
     echo "<td><b>$header_svg</b></td>";
     echo "<td><b>$header_alcohol</b></td>";
     echo "<td><b>$header_battery [Volt]</b></td>";
@@ -418,7 +521,7 @@ echo "<h2>$current_data</h2>";
         $show_device=get_settings_from_sql($conn, 'GENERAL', $row['Name'],'SHOWSUMMARY'); 
         if ($show_device == 1){
         list($iscalibrated, $time, $temperature, $angle, $battery, $recipe, $dens, $RSSI) = getlastValuesPlato4($conn, $row['Name']);
-
+        list($iscalibrated, $time_ago, $temperature_ago, $angle_ago, $battery_ago, $recipe_ago, $dens_ago, $RSSI_ago) = getValuesHoursAgoPlato4($conn, $row['Name'], $time, $hours_ago);
         $gravity=getInitialGravity($conn, $row['Name']);
         if ($gravity[0]==1){
         $initialgravity=$gravity[1];
@@ -428,7 +531,7 @@ echo "<h2>$current_data</h2>";
         $realdens = 0.1808 * $initialgravity + 0.8192 * $dens;
         # calculate alcohol by weigth and by volume (fabbier calcfabbier calc for link see above)
         $ABV = (( 100 * ($realdens - $initialgravity) / (1.0665 * $initialgravity- 206.65))/0.795);
-
+        $Ddens = $dens_ago-$dens;
         }
         else {
         $initialgravity=0;
@@ -436,12 +539,13 @@ echo "<h2>$current_data</h2>";
         }
         echo "<tr>";
         echo "<td><b>" . $row['Name'] . "</b></td>";
-        echo "<td>" . date("Y-m-d\ H:i:s\ ",$time) . "</td>";
+        echo "<td>" . date("Y-m-d\ H:i:s\ ", $time) . "</td>";
         echo "<td>" .  $recipe . "</td>";
         echo "<td style='text-align:center'>" . number_format($angle,1) . "</td>";
         echo "<td style='text-align:center'>" . number_format($temperature,1) . "</td>";
         echo "<td style='text-align:center'>" . number_format($initialgravity,1) . "</td>";
         echo "<td style='text-align:center'>" . number_format($dens,1) . "</td>";
+        echo "<td style='text-align:center'>" . number_format($Ddens,1) . "</td>";
         echo "<td style='text-align:center'>" . number_format($SVG,1) . "</td>";
         echo "<td style='text-align:center'>" . number_format($ABV,1) . "</td>";
         echo "<td style='text-align:center'>" . number_format($battery,2) . "</td>";
@@ -452,36 +556,42 @@ echo "<h2>$current_data</h2>";
 echo "</table>";
 }
 ?>
-</br>
-</br>
+<br/>
+<br/>
 <h2><?php echo $settings_header; ?></h2>
 
 
 <span title="<?php echo($calibrate_spindle)?>"> <input type = "submit" id='calibrate' name = "Cal" value="<?php echo($calibrate_spindle)?>"></span>
 <span title="<?php echo($server_settings)?>"><input type = "submit" id='settings' name = "Set" value = "<?php echo($server_settings)?>"></span>
-</br>
-</br>
+<br/>
+<br/>
 <input type = "checkbox" id="expert" value="0"  onchange="activate_expert()">
 <?php echo $expert_settings; ?> 
-</br>
-</br>
+<br/>
+<br/>
 <div id="expert_settings" style="display: none;">
-<span title="<?php echo('Upgrade Stringtable')?>"> <input type = "submit" id='up_strings' name = "Up_Str" value="<?php echo($upgrade_strings)?>"></span>
+<span title="<?php echo($upgrade_strings)?>"> <input type = "submit" id='up_strings' name = "Up_Str" value="<?php echo($upgrade_strings)?>"></span>
 <?php echo($installed_version)?> <?php echo($installed_strings_version)?> | <?php echo($available_version)?> <?php echo(LATEST_STRINGS_TABLE)?>
-</br>
-</br>
-</br> <b><?php echo($upgrade_warning)?></b></br></br>
+<br/>
+<br/>
+<br/> <b><?php echo($upgrade_warning)?></b><br/><br/>
 <span title="<?php echo($upgrade_settings)?>"><input type = "submit" id='up_settings' name = "Up_Set" value = "<?php echo($upgrade_settings)?>"></span>
 <?php echo($installed_version)?> <?php echo($installed_settings_version)?> | <?php echo($available_version)?> <?php echo(LATEST_SETTINGS_TABLE)?>
 
+<?php if ($exists == 0) { ?>
+<br/>
+<br/>
+<span title="<?php echo($upgrade_data_table)?>"><input type = "submit" id='up_data_table' name = "Up_DataTab" value = "<?php echo($upgrade_data_table)?>"></span>
+<?php } ?>
 </div>
+
 
 
 <footer>
 <?php echo"<div><a href='help.php' title='$help'>$help</a></div>"; ?>
-</br><?php echo($iSpindleServerRunning)?>
+<br/><?php echo($iSpindleServerRunning)?>
 <!-- <div>Icons made by <a href="https://www.flaticon.com/authors/prosymbols" title="Prosymbols">Prosymbols</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div> -->
 </footer>
-
-</body>
 </form>
+</body>
+</html>

@@ -1,5 +1,11 @@
-#!/usr/bin/env python2.7
-
+#!/usr/bin/env python3
+# Version 3.0
+# Modified version fpor Python 3
+# Some string handling had to be changed for python3
+#  
+# Version 2.1
+# Added Recipe_Id column while writing data to enable archive function in database
+#
 # Version 2.0
 # Made possible by Alex (avollkopf): A whole new release.
 # Now including complete graphical user interface and new charts.
@@ -59,26 +65,19 @@
 
 from socket import socket, AF_INET, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 from datetime import datetime
-import thread
+import _thread
+import reprlib
 import json
 import time
-from ConfigParser import ConfigParser
+import configparser
 import os
 import sys
-
-reload(sys)
-sys.setdefaultencoding('utf8')
-
-class MyConfigParser(ConfigParser):
-    def get(self, section, option):
-      return ConfigParser.get(self, section, option).replace('\\r\\n', '\r\n')
-
 
 # CONFIG Start
 # Config is now completely being stored inside the database.
 # So there shouldn't be anything here for you to adjust anymore.
 
-config = MyConfigParser()
+config = configparser.ConfigParser()
 config_path = '~/iSpindel-Srv/config'
 
 try:
@@ -220,8 +219,8 @@ REMOTECONFIG = int(get_config_from_sql('REMOTECONFIG', 'ENABLE_REMOTECONFIG'))
 ENABLE_ADDCOLS = int(get_config_from_sql('ADVANCED', 'ENABLE_ADDCOLS', 'GLOBAL'))  # Enable dynamic columns (do not use this unless you're a developer)
 # CONFIG End
 
-ACK = chr(6)  # ASCII ACK (Acknowledge)
-NAK = chr(21)  # ASCII NAK (Not Acknowledged)
+ACK = bytes([6])  # ASCII ACK (Acknowledge)
+NAK = bytes([21])  # ASCII NAK (Not Acknowledged)
 BUFF = 256  # Buffer Size
 
 # iSpindel Config Param Arrays
@@ -281,13 +280,13 @@ def handler(clientsock, addr):
     while 1:
         data = clientsock.recv(BUFF)
         if not data: break  # client closed connection
-        dbgprint(repr(addr) + ' received:' + repr(data))
+        dbgprint(repr(addr) + ' received:' + repr(data.decode('utf-8')))
         if "close" == data.rstrip():
             clientsock.send(ACK)
             dbgprint(repr(addr) + ' ACK sent. Closing.')
             break  # close connection
         try:
-            inpstr += str(data.rstrip())
+            inpstr += str(data.decode('utf-8').rstrip())
             if inpstr[0] != "{":
                 clientsock.send(NAK)
                 dbgprint(repr(addr) + ' Not JSON.')
@@ -339,7 +338,7 @@ def handler(clientsock, addr):
                         dbgprint(repr(addr) + " Can't send config response. Something went wrong:")
                         dbgprint(repr(addr) + " Error: " + str(e))
                         dbgprint(repr(addr) + " Sending ACK.")
-                    clientsock.send(resp)
+                    clientsock.send(resp.encode())
                 else:
                     clientsock.send(ACK)
                     dbgprint(repr(addr) + ' Sent ACK.')
@@ -676,19 +675,19 @@ def handler(clientsock, addr):
                     'gravity': gravity,
                     'token': user_token,
                     'interval': interval,
-                    'recipe': recipe,
                     'RSSI': rssi
                 }
                 out = json.dumps(outdata)
                 dbgprint(repr(addr) + ' - sending: ' + out)
                 s = socket(AF_INET, SOCK_STREAM)
                 s.connect((FORWARDADDR, FORWARDPORT))
-                s.send(out)
+                s.send(out.encode())
                 rcv = s.recv(BUFF)
                 s.close()
-                if rcv[0] == ACK:
+                dbgprint('received:' + repr(rcv.decode()) + '|' + repr(ACK.decode()))
+                if rcv == ACK:
                     dbgprint(repr(addr) + ' - received ACK - OK!')
-                elif rcv[0] == NAK:
+                elif rcv == NAK:
                     dbgprint(repr(addr) + ' - received NAK - Not OK...')
                 else:
                     dbgprint(repr(addr) + ' - received: ' + rcv)
@@ -838,8 +837,8 @@ def main():
         dbgprint('waiting for connection... listening on port: ' + str(PORT))
         clientsock, addr = serversock.accept()
         dbgprint('...connected from: ' + str(addr))
-        thread.start_new_thread(handler, (clientsock, addr))
-        thread.start_new_thread(sendmail, ())
+        _thread.start_new_thread(handler, (clientsock, addr))
+        _thread.start_new_thread(sendmail, ())
 
 if __name__ == "__main__":
     main()

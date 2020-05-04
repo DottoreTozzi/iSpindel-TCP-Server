@@ -53,6 +53,20 @@ Jan 24 2019
     }
        include_once("./config/tables.php");
 
+function write_log($data)
+{
+    try {
+        $log_to_console = CONSOLE_LOG;
+    }
+    catch (Exception $e) {
+        $log_to_console = 0;
+    } 
+    if ($log_to_console == 1 ) {
+        echo '<script>';
+        echo 'console.log('. json_encode( $data ) .')';
+        echo '</script>'; 
+    }
+}
 
 function cleanData(&$str)
   {
@@ -60,6 +74,105 @@ function cleanData(&$str)
     if($str == 'f') $str = 'FALSE';
     if(strstr($str, '"')) $str = '"' . str_replace('"', '""', $str) . '"';
   }
+
+function upgrade_data_table($conn)
+{
+    $max_time = ini_get("max_execution_time");
+    // set max php execution time to 1 hr for this task
+    set_time_limit (3600);
+    // Create Archive Table
+    $create_recipe_table = "CREATE TABLE `Archive` ( `Recipe_ID` INT NOT NULL AUTO_INCREMENT , 
+                                         `Name` VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL , 
+                                         `ID` VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL, 
+                                         `Recipe` VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL, 
+                                         `Start_date` DATETIME NOT NULL , 
+                                         `End_date` DATETIME NULL DEFAULT NULL, 
+                                         `const1` DOUBLE NULL DEFAULT NULL, 
+                                         `const2` DOUBLE NULL DEFAULT NULL, 
+                                         `const3` DOUBLE NULL DEFAULT NULL, 
+                                         PRIMARY KEY (`Recipe_ID`)) ENGINE = InnoDB CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;";
+    $result = mysqli_query($conn, $create_recipe_table) or die(mysqli_error($conn));
+
+    // Add Recipe_ID and Comment columns to Data table
+    $q_sql="ALTER TABLE `Data` ADD COLUMN `Recipe_ID` INT NOT NULL AFTER `Recipe`";
+    $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
+    $q_sql="ALTER TABLE `Data` ADD `Internal` VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL AFTER `Recipe_ID`";
+    $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
+    $q_sql="ALTER TABLE `Data` ADD `Comment` VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL AFTER `Internal`";
+    $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
+
+
+    // Select all entries with resetflag and sort them with ascending data to write nitial recipe_ID
+    $q_sql="Select * FROM Data WHERE ResetFlag = '1' ORDER BY Timestamp ASC";
+    $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
+    $rows = mysqli_num_rows($result);
+    if($rows > 0) {
+        $recipe_id = 1;
+        while ($row = mysqli_fetch_array($result)){
+        $timestamp = $row[0];
+        $name = $row[1];
+        $ID = $row[2];
+        $recipe = $row[11];
+        
+        $update_sql = "UPDATE Data SET Recipe_ID = '".$recipe_id."' WHERE Timestamp = '".$timestamp."' AND Name = '".$name."';";
+        $update = mysqli_query($conn, $update_sql) or die(mysqli_error($conn));
+
+        $const1=NULL;
+        $const2=NULL;
+        $const3=NULL;
+
+        $valCalib = getSpindleCalibration($conn, $name );
+
+        if ($valCalib[0])
+        {
+            $const1=$valCalib[1];
+            $const2=$valCalib[2];
+            $const3=$valCalib[3];
+        }
+        
+        $entry_recipe_table_sql = "INSERT INTO `Archive` 
+                                 (`Recipe_ID`, `Name`, `ID`, `Recipe`, `Start_date`, `End_date`, `const1`, `const2`, `const3`) 
+                                 VALUES (NULL, '".$name."', '".$ID."', '".$recipe."', '".$timestamp."', NULL, '".$const1."', '".$const2."', '".$const3."')";
+        $entry_result = mysqli_query($conn, $entry_recipe_table_sql) or die(mysqli_error($conn));
+        $recipe_id++;
+        }
+    //now select all entries with resetflag again
+    $q_sql = "Select Timestamp,Name,Recipe_ID FROM Data WHERE ResetFlag = '1' ORDER BY Timestamp ASC";
+    $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
+    //and work on these entries one by one
+    while ($row = mysqli_fetch_array($result)){
+        $Timestamp = $row[0];
+        $Name = $row[1];
+        $Recipe_ID = $row[2];
+        // select the current entry and the next for this particular SPindle with a reset 
+        $timestamp_sql="SELECT Timestamp,Recipe FROM Data WHERE Name= '".$Name."' AND Timestamp >= '$Timestamp' AND ResetFlag = '1' ORDER BY Timestamp ASC limit 2";
+        $timestamp_result = mysqli_query($conn, $timestamp_sql) or die(mysqli_error($conn));
+        $timestamp_rows = mysqli_num_rows($timestamp_result);
+        $timestamp_array = mysqli_fetch_array($timestamp_result);
+        //define start time to write Recipe_ID
+        $timestamp_1 = $timestamp_array[0];
+        $recipe = $timestamp_array[1];
+        //define end time for Recipe_ID if not last entry in database for this spindle
+        if ($timestamp_rows == 2 ){
+            $timestamp_array = mysqli_fetch_array($timestamp_result);
+            $timestamp_2 = $timestamp_array[0];
+        }
+        // if no further reset flag available, use current time
+        else {
+            $timestamp_2 = date("Y-m-d H:i:s");
+        }
+        $rolloutID_SQL = "UPDATE Data Set Recipe_ID = '".$Recipe_ID."' WHERE NAME = '".$Name."' AND Timestamp BETWEEN '".$timestamp_1."' AND '".$timestamp_2."'";
+        $rolloutID_result = mysqli_query($conn, $rolloutID_SQL) or die(mysqli_error($conn));
+        $update_archive_table = "UPDATE Archive Set End_date = '".$timestamp_2."' WHERE Recipe_ID = '".$Recipe_ID."'";
+        $update_archive_result = mysqli_query($conn, $update_archive_table) or die(mysqli_error($conn));
+
+    }
+        echo "Table modified";
+    }
+    set_time_limit($max_time);
+
+}
+
 
 function upgrade_strings_table($conn)
 {
@@ -121,6 +234,24 @@ function upgrade_settings_table($conn)
     }
 }
 
+function delete_rid_flag_from_archive($conn,$selected_recipe)
+{
+    $delete_query = "UPDATE Data Set Internal = NULL WHERE Recipe_ID = '$selected_recipe' AND Internal = 'RID_END'";
+    write_log("SELECT to delete RID_END flag:" . $delete_query);
+    $result = mysqli_query($conn, $delete_query) or die(mysqli_error($conn));
+}
+
+
+function  delete_recipe_from_archive($conn,$selected_recipe)
+{
+    $delete_query1 = "DELETE FROM Archive WHERE Recipe_ID = '$selected_recipe'";
+    write_log("SELECT to delete recipe from archive table" . $delete_query1);
+    $result = mysqli_query($conn, $delete_query1) or die(mysqli_error($conn));
+    $delete_query2 = "DELETE FROM Data WHERE Recipe_ID = '$selected_recipe'";
+    write_log("SELECT to delete recipe from data table" . $delete_query2);
+    $result = mysqli_query($conn, $delete_query2) or die(mysqli_error($conn));
+}
+
 
 function export_data_table($table,$file="iSpindle_Backup.sql")
 {
@@ -131,8 +262,12 @@ function export_data_table($table,$file="iSpindle_Backup.sql")
     $name               = DB_NAME;
     $port               = DB_PORT;
     $backup_name        = $file;
-    $tables             = array($table,"none");
-
+    if(count($table) == 1){
+    $tables              = array($table,"none");
+    }  
+    else {
+    $tables             = $table;
+    }
    //or add 5th parameter(array) of specific tables:    array("mytable1","mytable2","mytable3") for multiple tables
 
 
@@ -211,7 +346,7 @@ function export_data_table($table,$file="iSpindle_Backup.sql")
 function import_table($conn,$table,$filename)
 {
 // Drop table first
-$drop_table="DROP TABLE ".$table;
+$drop_table="DROP TABLE IF EXISTS ".$table;
 $result = mysqli_query($conn, $drop_table) or die(mysqli_error($conn));
 
 $auto_increment="SET sql_mode='NO_AUTO_VALUE_ON_ZERO'";
@@ -264,6 +399,7 @@ function export_settings($conn,$table='Settings',$filename)
 
 function import_settings($conn,$table='Settings',$filename)
 {
+$Devices='';
 $settings_table_exists="SHOW TABLES LIKE '".$table."'";
 $result = mysqli_query($conn, $settings_table_exists) or die(mysqli_error($conn));
 
@@ -301,22 +437,24 @@ $i=0;
             }
         
         }
-    foreach($Devices as $Device)
+    if($Devices !='') {
+        foreach($Devices as $Device)
         {
-        CopySettingsToDevice($conn, $Device);
+            CopySettingsToDevice($conn, $Device);
         } 
-    $file = fopen($filename, "r");
-    while (($column = fgetcsv($file, 10000, ",")) !== FALSE)
+        $file = fopen($filename, "r");
+        while (($column = fgetcsv($file, 10000, ",")) !== FALSE)
         { 
-        if ($column[0]<>"")
+            if ($column[0]<>"")
             {
-            if ($column[3] != 'GLOBAL' && $column[3] != '_DEFAULT')
+                if ($column[3] != 'GLOBAL' && $column[3] != '_DEFAULT')
                 {
-                $sqlUpdate = "UPDATE $table SET value = '$column[2]' WHERE DeviceName = '$column[3]' AND Section = '$column[0]' AND Parameter = '$column[1]'";
-                $result = mysqli_query($conn, $sqlUpdate) or die(mysqli_error($conn));
+                    $sqlUpdate = "UPDATE $table SET value = '$column[2]' WHERE DeviceName = '$column[3]' AND Section = '$column[0]' AND Parameter = '$column[1]'";
+                    $result = mysqli_query($conn, $sqlUpdate) or die(mysqli_error($conn));
                 }
             }
         }
+    }
  echo "Settings imported successfully";
 }
 
@@ -509,6 +647,89 @@ function getCurrentRecipeName($conn, $iSpindleID = 'iSpindel000', $timeFrameHour
     }
 }
 
+// Get calaculate initial gravity from database for archive. First hour after last reset will be used.
+// This can be used to calculate apparent attenuation
+
+function getArchiveInitialGravity($conn, $recipe_id)
+{
+    $isCalibrated = 0; // is there a calbration record for this iSpindle?
+    $valAngle = '';
+    $valDens = '';
+    $const1 = 0;
+    $const2 = 0;
+    $const3 = 0;
+    $where = "WHERE Recipe_ID = $recipe_id AND Timestamp > (Select MAX(Data.Timestamp) FROM Data WHERE Data.ResetFlag = true AND Recipe_id = $recipe_id) 
+              AND Timestamp < DATE_ADD((SELECT MAX(Data.Timestamp)FROM Data WHERE Recipe_ID = $recipe_id AND Data.ResetFlag = true), INTERVAL 1 HOUR)";
+
+    $q_sql = mysqli_query($conn, "SELECT AVG(Data.Angle) as angle FROM Data " . $where ) or die(mysqli_error($conn));
+
+    // retrieve number of rows
+    $rows = mysqli_num_rows($q_sql);
+    if ($rows > 0) {
+        // try to get calibration for recipe_id from archive
+        $cal_sql = mysqli_query($conn, "SELECT const1, const2, const3 FROM Archive WHERE Recipe_ID = $recipe_id") or die(mysqli_error($conn));
+        $rows_cal = mysqli_num_rows($cal_sql);
+        if ($rows_cal > 0) {
+            $isCalibrated = 1;
+            $r_cal = mysqli_fetch_array($cal_sql);
+            $const1 = $r_cal['const1'];
+            $const2 = $r_cal['const2'];
+            $const3 = $r_cal['const3'];
+        }
+    }
+    $r_row = mysqli_fetch_array($q_sql);
+    $angle = $r_row['angle'];
+    $dens = round(($const1 * pow($angle, 2) + $const2 * $angle + $const3),2); // complete polynome from database
+    return array(
+        $isCalibrated,
+        $dens,
+        $const1,
+        $const2,
+        $const3
+    );
+}
+
+// Get calaculate final gravity from database for archive. last hour will be used.
+// This can be used to calculate apparent attenuation
+
+function getArchiveFinalGravity($conn, $recipe_id, $end_date)
+{
+    $isCalibrated = 0; // is there a calbration record for this iSpindle?
+    $valAngle = '';
+    $valDens = '';
+    $const1 = 0;
+    $const2 = 0;
+    $const3 = 0;
+
+    $where = "WHERE Recipe_id = $recipe_id and Timestamp < '$end_date' and Recipe_id = $recipe_id AND Timestamp > DATE_SUB('$end_date', INTERVAL 1 HOUR)";
+
+
+    $q_sql = mysqli_query($conn, "SELECT AVG(Data.Angle) as angle FROM Data " . $where ) or die(mysqli_error($conn));
+
+    // retrieve number of rows
+    $rows = mysqli_num_rows($q_sql);
+    if ($rows > 0) {
+        // try to get calibration for recipe_id from archive
+        $cal_sql = mysqli_query($conn, "SELECT const1, const2, const3 FROM Archive WHERE Recipe_ID = $recipe_id") or die(mysqli_error($conn));
+        $rows_cal = mysqli_num_rows($cal_sql);
+        if ($rows_cal > 0) {
+            $isCalibrated = 1;
+            $r_cal = mysqli_fetch_array($cal_sql);
+            $const1 = $r_cal['const1'];
+            $const2 = $r_cal['const2'];
+            $const3 = $r_cal['const3'];
+        }
+    }
+    $r_row = mysqli_fetch_array($q_sql);
+    $angle = $r_row['angle'];
+    $dens = round(($const1 * pow($angle, 2) + $const2 * $angle + $const3),2); // complete polynome from database
+    return array(
+        $isCalibrated,
+        $dens
+    );
+}
+
+
 // Get calaculate initial gravity from database after last reset. First two hours after last reset will be used. 
 // This can be used to calculate apparent attenuation in svg_ma.php
 
@@ -587,242 +808,189 @@ function delete_mail_sent($conn, $alarm, $iSpindel)
 }
 
 // Export values from database for selected spindle, between now and timeframe in hours ago
-function ExportChartValues($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $reset = defaultReset)
+function ExportArchiveValues($conn, $recipe_ID, $txt_recipe_name, $txt_end, $txt_initial_gravity, $initial_gravity, $txt_final_gravity, $final_gravity, $txt_attenuation, $attenuation, $txt_alcohol, $alcohol, $txt_calibration)
 {
-    if ($reset) {
-        $where = "WHERE Name = '" . $iSpindleID . "'                                                                                                                                                                                         
-                  AND Timestamp >= (Select max(Timestamp) FROM Data  WHERE ResetFlag = true AND Name = '" . $iSpindleID . "')";
-    } else {
-        $where = "WHERE Name = '" . $iSpindleID . "' AND Timestamp >= date_sub(NOW(), INTERVAL " . $timeFrameHours . " HOUR) AND Timestamp <= NOW()";
-    }
-    mysqli_set_charset($conn, "utf8mb4");
-
-    $result = mysqli_query($conn, "SELECT Timestamp as Date, Name, Recipe, Temperature, Angle, Gravity, Battery, RSSI                                                                                                                    
-                         FROM Data " . $where . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
-  // filename for download
-  $filename = "website_data_" . date('Ymd') . ".txt";
-  header('Content-Type: text/csv');
-  header("Content-Disposition: attachment; filename=\"$filename\"");
-  $flag = false;
-  while($row = mysqli_fetch_assoc($result)) {
-    if(!$flag) {
-      // display field/column names as first row
-      echo implode(",", array_keys($row)) . "\r\n";
-      $flag = true;
-    }
-    array_walk($row, __NAMESPACE__ . '\cleanData');
-    echo implode(",", array_values($row)) . "\r\n";
-}
-  exit;
-
-}
-
-// Get values from database for selected spindle, between now and timeframe in hours ago  
-function getChartValues($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $reset = defaultReset)
-{
-    if ($reset) {
-        $where = "WHERE Name = '" . $iSpindleID . "'                                                                                                                                                                                                    
-                  AND Timestamp >= (Select max(Timestamp) FROM Data  WHERE ResetFlag = true AND Name = '" . $iSpindleID . "')";
-    } else {
-        $where = "WHERE Name = '" . $iSpindleID . "'                                                                                                                                                                                                    
-            AND Timestamp >= date_sub(NOW(), INTERVAL " . $timeFrameHours . " HOUR)                                                                                                                                                              
-            AND Timestamp <= NOW()";
-    }
-    mysqli_set_charset($conn, "utf8mb4");
-
-    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe, battery, rssi                                                                                                                                    
-                         FROM Data " . $where . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
-    
-    // retrieve number of rows                                                                                                                                                                                                                  
-    $rows = mysqli_num_rows($q_sql);
-    if ($rows > 0) {
-        $valAngle = '';
-        $valTemperature = '';
-        $valBattery = '';
-        $valRSSI = '';
-        // retrieve and store the values as CSV lists for HighCharts                                                                                                                                                                              
-        while ($r_row = mysqli_fetch_array($q_sql)) {
-            $jsTime = $r_row['unixtime'] * 1000;
-            $valAngle .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['angle'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
-            $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
-            $valBattery .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['battery'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
-            if ($r_row['rssi']) {
-                $valRSSI .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['rssi'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
-            }
-
-        }
-
-
-        return array(
-            $valAngle,
-            $valTemperature,
-            $valBattery,
-            $valRSSI
-        );
-    }
-}
-// Get values from database for selected spindle, between now and timeframe in hours ago and calculate Moving average 
-function getChartValues_ma($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $movingtime, $reset = defaultReset)
-{
-
-// get interval and calculate number of rows for movig average calculation if windows function can be used    
-    $Interval = (getCurrentInterval($conn, $iSpindleID));
-    $Rows = round($movingtime / ($Interval / 60));
-
-
-    $where_ma = '';
-    if ($reset) {
-        $where = "Data.Timestamp > (Select max(Timestamp) FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.ResetFlag = true)";
-        $where_oldDB = "WHERE Data1.Name = '" . $iSpindleID . "'
-                                                AND Data1.Timestamp > (Select max(Timestamp) FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.ResetFlag = true)";
-        $where_ma = "Data2.Timestamp > (Select max(Data2.Timestamp) FROM Data AS Data2  WHERE Data2.ResetFlag = true AND Data2.Name = '" . $iSpindleID . "') AND";
-
-
-    } else {
-        $where = "Data.Timestamp >= date_sub(NOW(), INTERVAL " . $timeFrameHours . " HOUR) AND Data.Timestamp <= NOW()";
-        $where_oldDB = "WHERE Data1.Name = '" . $iSpindleID . "'
-                                                AND Data1.Timestamp >= date_sub(NOW(), INTERVAL " . $timeFrameHours . " HOUR)
-                                                and Data1.Timestamp <= NOW()";
-
-    }
-// test if sql windows functions are working. Therefore newer sql server version is required
-    mysqli_set_charset($conn, "utf8mb4");
-
-    if (!$q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data.Timestamp) as unixtime, Data.temperature, Data.angle, Data.recipe,
-                                AVG(Data.Angle) OVER (ORDER BY Data.Timestamp ASC ROWS " . $Rows . " PRECEDING) AS mv_angle 
-                FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND " . $where)) 
-//if this is not working fall back to old calculation which is more cpu intensive
-    {
-        $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data1.Timestamp) as unixtime, Data1.temperature, Data1.angle, Data1.recipe,
-                                (SELECT SUM(Data2.Angle) / COUNT(Data2.Angle)
-                                                                FROM Data AS Data2
-                                WHERE Data2.Name = '" . $iSpindleID . "' AND " . $where_ma . " TIMESTAMPDIFF(MINUTE, Data2.Timestamp, Data1.Timestamp) BETWEEN 0 and " . $movingtime . " ) AS mv_angle
-                                                                FROM Data AS Data1 " . $where_oldDB . " ORDER BY Data1.Timestamp ASC") or die(mysqli_error($conn));
-
-
-    }
-    
-    // retrieve number of rows              
-    $rows = mysqli_num_rows($q_sql);
-    if ($rows > 0) {
-        $valAngle = '';
-        $valTemperature = '';
-        // retrieve and store the values as CSV lists for HighCharts          
-        while ($r_row = mysqli_fetch_array($q_sql)) {
-            $jsTime = $r_row['unixtime'] * 1000;
-            $valAngle .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['mv_angle'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
-            $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
-        }
-        return array(
-            $valAngle,
-            $valTemperature
-        );
-    }
-}
-
-// Get values from database including gravity (Fw 5.0.1 required) for selected spindle, between now and timeframe in hours ago
-function getChartValuesPlato($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $reset = defaultReset)
-{
-    if ($reset) {
-        $where = "WHERE Name = '" . $iSpindleID . "' 
-            AND Timestamp >= (Select max(Timestamp) FROM Data WHERE ResetFlag = true AND Name = '" . $iSpindleID . "')";
-    } else {
-        $where = "WHERE Name = '" . $iSpindleID . "' 
-            AND Timestamp >= date_sub(NOW(), INTERVAL " . $timeFrameHours . " HOUR) 
-            AND Timestamp <= NOW()";
-    }
-    mysqli_set_charset($conn, "utf8mb4");
-
-    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, gravity, recipe
-                          FROM Data " . $where . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
-    
-    // retrieve number of rows
-    $rows = mysqli_num_rows($q_sql);
-    if ($rows > 0) {
-        $valAngle = '';
-        $valTemperature = '';
-        $valGravity = '';
-        
-        // retrieve and store the values as CSV lists for HighCharts
-        while ($r_row = mysqli_fetch_array($q_sql)) {
-            $jsTime = $r_row['unixtime'] * 1000;
-            $valAngle .= '[' . $jsTime . ', ' . $r_row['angle'] . '],';
-            $valGravity .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['gravity'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
-            $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
-        }
-
-        return array(
-            $valAngle,
-            $valTemperature,
-            $valGravity
-        );
-    }
-}
-
-// Get current values (angle, temperature, battery)
-function getCurrentValues($conn, $iSpindleID = 'iSpindel000')
-{
-    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, battery
-                FROM Data
-                WHERE Name = '" . $iSpindleID . "'
-                ORDER BY Timestamp DESC LIMIT 1") or die(mysqli_error($conn));
-    $rows = mysqli_num_rows($q_sql);
-    if ($rows > 0) {
-        $r_row = mysqli_fetch_array($q_sql);
-        $valTime = $r_row['unixtime'];
-        $valTemperature = $r_row['temperature'];
-        $valAngle = $r_row['angle'];
-        $valBattery = $r_row['battery'];
-        return array(
-            $valTime,
-            $valTemperature,
-            $valAngle,
-            $valBattery
-        );
-    }
-}
-
-// Get current values (angle, temperature, battery, rssi)
-// Keeping original function unchanged in order to preserve backwards compatibility.
-// RSSI is brand new with this version and version 5.8.x of iSpindle Firmware.
-function getCurrentValues2($conn, $iSpindleID = 'iSpindel000')
-{
-    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, battery, `interval`, rssi
-                FROM Data                                                                                
-                WHERE Name = '" . $iSpindleID . "'              
-                ORDER BY Timestamp DESC LIMIT 1") or die(mysqli_error($conn));
-
-    $rows = mysqli_num_rows($q_sql);
-    if ($rows > 0) {
-        $r_row = mysqli_fetch_array($q_sql);
-        $valTime = $r_row['unixtime'];
-        $valTemperature = $r_row['temperature'];
-        $valAngle = $r_row['angle'];
-        $valBattery = $r_row['battery'];
-        $valInterval = $r_row['interval'];
-        $valRSSI = $r_row['rssi'];
-        return array(
-            $valTime,
-            $valTemperature,
-            $valAngle,
-            $valBattery,
-            $valInterval,
-            $valRSSI
-        );
-    }
-}
-
-// Get calibrated values from database for selected spindle, between now and [number of hours] ago
-// Old Method for Firmware before 5.x
-function getChartValuesPlato4($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $reset = defaultReset)
-{
-    $isCalibrated = 0; // is there a calbration record for this iSpindle?
     $valAngle = '';
     $valTemperature = '';
     $valDens = '';
     $const1 = 0;
     $const2 = 0;
     $const3 = 0;
+    $AND_RID = '';
+
+    $archive_sql = "Select * FROM Archive WHERE Recipe_ID = '$recipe_ID'";
+    mysqli_set_charset($conn, "utf8mb4");
+    $result = mysqli_query($conn, $archive_sql) or die(mysqli_error($conn));
+    $archive_result = mysqli_fetch_array($result);
+    $spindle_name = $archive_result['Name'];
+    $recipe_name = $archive_result['Recipe'];
+    $start_date = $archive_result['Start_date'];
+    $end_date = $archive_result['End_date'];
+    $const1 = $archive_result['const1'];
+    $const2 = $archive_result['const2'];
+    $const3 = $archive_result['const3'];
+
+    $sql_IG=floatval($initial_gravity);
+
+
+    if($end_date == '0000-00-00 00:00:00'){
+    $get_end_date = "SELECT max(Timestamp) FROM Data WHERE Recipe_ID = '$recipe_ID'";
+    $q_sql = mysqli_query($conn, $get_end_date) or die(mysqli_error($conn));
+    $result = mysqli_fetch_array($q_sql);
+    $end_date = $result[0];
+    }
+
+    $check_RID_END = "SELECT * FROM Data WHERE Recipe_ID = '$recipe_ID' AND Internal = 'RID_END'";
+    $q_sql = mysqli_query($conn, $check_RID_END) or die(mysqli_error($conn));
+    $rows = mysqli_fetch_array($q_sql);
+    if ($rows <> 0)
+    {
+    $end_date = $rows['Timestamp'];
+    $AND_RID = " AND Timestamp <= (Select max(Timestamp) FROM Data WHERE Recipe_ID='$recipe_ID' AND Internal = 'RID_END')";
+    }
+
+    $q_sql = mysqli_query($conn, "SELECT Timestamp, Name, ID, Angle, Temperature, Battery, Gravity AS Spindle_Gravity, ($const1*Angle*Angle + $const2*Angle + $const3) AS Calculated_Gravity, 
+                                  (($sql_IG-($const1*Angle*Angle + $const2*Angle + $const3))*100 / $sql_IG) AS Attenuation, RSSI, Recipe, Comment
+                                  FROM Data WHERE Recipe_ID = '$recipe_ID'" . $AND_RID . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
+    // filename for download
+    $filename = $recipe_ID . "_" . date_format(date_create($start_date),'Y_m_d') ."_" . $spindle_name . "_" . $recipe_name . ".txt";
+    header('Content-Type: text/csv');
+    header("Content-Disposition: attachment; filename=\"$filename\"");
+    $flag = false;
+    $start_date=date_format(date_create($start_date),'Y-m-d');
+    $end_date=date_format(date_create($end_date),'Y-m-d');
+
+    echo "Device: $spindle_name | $txt_recipe_name $recipe_name | Start: $start_date | $txt_end : $end_date \r\n";
+    echo "$txt_initial_gravity : $initial_gravity °P | $txt_final_gravity : $final_gravity °P | $txt_attenuation : $attenuation % | $txt_alcohol : $alcohol Vol% \r\n";
+    printf("$txt_calibration :  %01.5f * tilt %+01.5f * tilt^2 %+01.5f \r\n",$const1,$const2,$const3);
+    echo "\r\n";
+    // retrieve and store the values as CSV lists for HighCharts
+    while ($row = mysqli_fetch_assoc($q_sql)) {
+        if(!$flag) {
+            // display field/column names as first row
+            echo implode(",", array_keys($row)) . "\r\n";
+            $flag = true;
+        }
+        array_walk($row, __NAMESPACE__ . '\cleanData');
+        echo implode(",", array_values($row)) . "\r\n";
+    }
+    exit;
+    }
+
+// Get archive values from database for selected recipe_ID. 
+function getArchiveValues($conn, $recipe_ID)
+{
+    $valAngle = '';
+    $valTemperature = '';
+    $valDens = '';
+    $valGravity = '';
+    $valRSSI = '';
+    $valBattery = '';
+    $const1 = 0;
+    $const2 = 0;
+    $const3 = 0;
+    $AND_RID = ''; 
+
+    $archive_sql = "Select * FROM Archive WHERE Recipe_ID = '$recipe_ID'";
+    mysqli_set_charset($conn, "utf8mb4");
+    $result = mysqli_query($conn, $archive_sql) or die(mysqli_error($conn));
+    $archive_result = mysqli_fetch_array($result);
+    $spindle_name = $archive_result['Name'];
+    $recipe_name = $archive_result['Recipe'];
+    $start_date = $archive_result['Start_date'];
+    $end_date = $archive_result['End_date'];
+    $const1 = $archive_result['const1'];
+    $const2 = $archive_result['const2'];
+    $const3 = $archive_result['const3'];
+
+    if($end_date == '0000-00-00 00:00:00'){
+    $get_end_date = "SELECT max(Timestamp) FROM Data WHERE Recipe_ID = '$recipe_ID'";
+    $q_sql = mysqli_query($conn, $get_end_date) or die(mysqli_error($conn));
+    $result = mysqli_fetch_array($q_sql);
+    $end_date = $result[0];
+    }
+
+    $check_RID_END = "SELECT * FROM Data WHERE Recipe_ID = '$recipe_ID' AND Internal = 'RID_END'";
+    $q_sql = mysqli_query($conn, $check_RID_END) or die(mysqli_error($conn));
+    $rows = mysqli_fetch_array($q_sql);
+    if ($rows <> 0)    
+    {
+    $end_date = $rows['Timestamp'];
+    $AND_RID = " AND Timestamp <= (Select max(Timestamp) FROM Data WHERE Recipe_ID='$recipe_ID' AND Internal = 'RID_END')";
+    }
+
+    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, gravity, battery, rssi, recipe, comment
+                           FROM Data WHERE Recipe_ID = '$recipe_ID'" . $AND_RID . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
+	$label_position = 1;
+        // retrieve and store the values as CSV lists for HighCharts
+        while ($r_row = mysqli_fetch_array($q_sql)) {
+            $jsTime = $r_row['unixtime'] * 1000;
+            $angle = $r_row['angle'];
+            $dens = $const1 * pow($angle, 2) + $const2 * $angle + $const3; // complete polynome from database
+            $gravity = $r_row['gravity'];
+            $rssi = $r_row['rssi'];
+            $battery = $r_row['battery'];
+
+            if ($r_row['comment']){
+                if($label_position == 1){
+                    $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $dens . ", recipe: \"" . $r_row['recipe'] . "\", text_up: '" . $r_row['comment'] . "'},";
+                    $valAngle .= '{ timestamp: ' . $jsTime . ', value: ' . $angle . ", recipe: \"" . $r_row['recipe'] . "\", text_up: '" . $r_row['comment'] . "'},";
+                    $valGravity .= '{ timestamp: ' . $jsTime . ', value: ' . $gravity . ", recipe: \"" . $r_row['recipe'] . "\", text_up: '" . $r_row['comment'] . "'},";
+                    $valBattery .= '{ timestamp: ' . $jsTime . ', value: ' . $battery . ", recipe: \"" . $r_row['recipe'] . "\", text_up: '" . $r_row['comment'] . "'},";
+                    $label_position = $label_position * -1;
+                }
+                else{
+                    $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $dens . ", recipe: \"" . $r_row['recipe'] . "\", text_down: '" . $r_row['comment'] . "'},";
+                    $valAngle .= '{ timestamp: ' . $jsTime . ', value: ' . $angle . ", recipe: \"" . $r_row['recipe'] . "\", text_down: '" . $r_row['comment'] . "'},";
+                    $valGravity .= '{ timestamp: ' . $jsTime . ', value: ' . $gravity . ", recipe: \"" . $r_row['recipe'] . "\", text_down: '" . $r_row['comment'] . "'},";
+                    $valBattery .= '{ timestamp: ' . $jsTime . ', value: ' . $battery . ", recipe: \"" . $r_row['recipe'] . "\", text_down: '" . $r_row['comment'] . "'},";
+                    $label_position = $label_position * -1;
+                }
+  
+            } 
+            else{
+            $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $dens . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valAngle .= '{ timestamp: ' . $jsTime . ', value: ' . $angle . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valGravity .= '{ timestamp: ' . $jsTime . ', value: ' . $gravity . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valBattery .= '{ timestamp: ' . $jsTime . ', value: ' . $battery . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            }
+            $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valRSSI .= '{ timestamp: ' . $jsTime . ', value: ' . $rssi . ", recipe: \"" . $r_row['recipe'] . "\"},";
+
+
+
+        }
+        return array(
+            $spindle_name,
+            $recipe_name,
+            $start_date,
+            $end_date,
+            $valDens,
+            $valTemperature,
+            $valAngle,
+            $valGravity,
+            $valBattery,
+            $valRSSI
+        );
+  
+}
+
+
+// Get calibrated values from database for selected spindle, between now and [number of hours] ago
+// Old Method for Firmware before 5.x
+function getChartValues($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $reset = defaultReset)
+{
+    $isCalibrated = 0; // is there a calbration record for this iSpindle?
+    $valAngle = '';
+    $valTemperature = '';
+    $valDens = '';
+    $valGravity = '';
+    $valRSSI = '';
+    $valBattery = '';
+    $const1 = 0;
+    $const2 = 0;
+    $const3 = 0;
+
     if ($reset) {
         $where = "WHERE Name = '" . $iSpindleID . "' 
             AND Timestamp >= (Select max(Timestamp) FROM Data  WHERE ResetFlag = true AND Name = '" . $iSpindleID . "')";
@@ -834,7 +1002,7 @@ function getChartValuesPlato4($conn, $iSpindleID = 'iSpindel000', $timeFrameHour
 
     mysqli_set_charset($conn, "utf8mb4");
 
-    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe
+    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe, battery, rssi, gravity, comment
                            FROM Data " . $where . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
     
     // retrieve number of rows
@@ -858,32 +1026,58 @@ function getChartValuesPlato4($conn, $iSpindleID = 'iSpindel000', $timeFrameHour
             }
         }
         // retrieve and store the values as CSV lists for HighCharts
+        $label_position = 1;
         while ($r_row = mysqli_fetch_array($q_sql)) {
             $jsTime = $r_row['unixtime'] * 1000;
             $angle = $r_row['angle'];
             $dens = $const1 * pow($angle, 2) + $const2 * $angle + $const3; // complete polynome from database
+            $gravity = $r_row['gravity'];
+            $rssi = $r_row['rssi'];
+            $battery = $r_row['battery'];
 
-            $valAngle .= '[' . $jsTime . ', ' . $angle . '],';
+            if ($r_row['comment']){
+                if($label_position == 1){
+                    $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $dens . ", recipe: \"" . $r_row['recipe'] . "\", text_up: '" . $r_row['comment'] . "'},";
+                    $valAngle .= '{ timestamp: ' . $jsTime . ', value: ' . $angle . ", recipe: \"" . $r_row['recipe'] . "\", text_up: '" . $r_row['comment'] . "'},";
+                    $valGravity .= '{ timestamp: ' . $jsTime . ', value: ' . $gravity . ", recipe: \"" . $r_row['recipe'] . "\", text_up: '" . $r_row['comment'] . "'},";
+                    $valBattery .= '{ timestamp: ' . $jsTime . ', value: ' . $battery . ", recipe: \"" . $r_row['recipe'] . "\", text_up: '" . $r_row['comment'] . "'},";
+                    $label_position = $label_position * -1;
+                }
+                else{
+                    $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $dens . ", recipe: \"" . $r_row['recipe'] . "\", text_down: '" . $r_row['comment'] . "'},";
+                    $valAngle .= '{ timestamp: ' . $jsTime . ', value: ' . $angle . ", recipe: \"" . $r_row['recipe'] . "\", text_down: '" . $r_row['comment'] . "'},";
+                    $valGravity .= '{ timestamp: ' . $jsTime . ', value: ' . $gravity . ", recipe: \"" . $r_row['recipe'] . "\", text_down: '" . $r_row['comment'] . "'},";
+                    $valBattery .= '{ timestamp: ' . $jsTime . ', value: ' . $battery . ", recipe: \"" . $r_row['recipe'] . "\", text_down: '" . $r_row['comment'] . "'},";
+                    $label_position = $label_position * -1;
+                }
+
+            }
+            else{
             $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $dens . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valAngle .= '{ timestamp: ' . $jsTime . ', value: ' . $angle . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valGravity .= '{ timestamp: ' . $jsTime . ', value: ' . $gravity . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valBattery .= '{ timestamp: ' . $jsTime . ', value: ' . $battery . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            }
             $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
-
-
+            $valRSSI .= '{ timestamp: ' . $jsTime . ', value: ' . $rssi . ", recipe: \"" . $r_row['recipe'] . "\"},";
 
         }
         return array(
             $isCalibrated,
             $valDens,
             $valTemperature,
-            $valAngle
+            $valAngle,
+            $valGravity,
+            $valBattery,
+            $valRSSI
         );
     }
 }
+
 // Get calibrated gravity value from database for selected spindle
 function getlastValuesPlato4($conn, $iSpindleID = 'iSpindel000')
 {
     $isCalibrated = 0; // is there a calbration record for this iSpindle?
-    $valAngle = '';
-    $valTemperature = '';
     $valDens = '';
     $const1 = 0;
     $const2 = 0;
@@ -891,7 +1085,7 @@ function getlastValuesPlato4($conn, $iSpindleID = 'iSpindel000')
 
     mysqli_set_charset($conn, "utf8mb4");
 
-    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe, battery, rssi
+    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe, battery, 'interval', rssi, gravity
                 FROM Data
                 WHERE Name = '" . $iSpindleID . "'
                 ORDER BY Timestamp DESC LIMIT 1") or die(mysqli_error($conn));
@@ -924,8 +1118,10 @@ function getlastValuesPlato4($conn, $iSpindleID = 'iSpindel000')
         $valAngle = $r_row['angle'];
         $valDens = $const1 * pow($valAngle, 2) + $const2 * $valAngle + $const3; // complete polynome from database
         $valRecipe = $r_row['recipe'];
+        $valInterval = $r_row['interval'];
         $valBattery = $r_row['battery'];
         $valRSSI = $r_row['rssi'];
+        $valGravity = $r_row['gravity'];
         return array(
             $isCalibrated,
             $valTime,
@@ -934,10 +1130,76 @@ function getlastValuesPlato4($conn, $iSpindleID = 'iSpindel000')
             $valBattery,
             $valRecipe,
             $valDens,
-            $valRSSI
+            $valRSSI,
+            $valInterval,
+            $valGravity
         );
     }
 }
+
+function getValuesHoursAgoPlato4($conn, $iSpindleID = 'iSpindel000', $lasttime, $hours)
+{
+    $isCalibrated = 0; // is there a calbration record for this iSpindle?
+    $valDens = '';
+    $const1 = 0;
+    $const2 = 0;
+    $const3 = 0;
+    
+    mysqli_set_charset($conn, "utf8mb4");
+    $select="SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe, battery, 'interval', rssi, gravity
+                FROM Data
+                WHERE Name = '" . $iSpindleID . "' AND Timestamp > DATE_SUB(FROM_UNIXTIME($lasttime), INTERVAL $hours HOUR) limit 1";
+
+    write_log($select);
+
+    $q_sql = mysqli_query($conn, $select) or die(mysqli_error($conn));
+
+    // retrieve number of rows
+    $rows = mysqli_num_rows($q_sql);
+    if ($rows > 0) {
+        // get unique hardware ID for calibration
+        $u_sql = mysqli_query($conn, "SELECT ID FROM Data WHERE Name = '" . $iSpindleID . "' ORDER BY Timestamp DESC LIMIT 1") or die(mysqli_error($conn));
+        $rowsID = mysqli_num_rows($u_sql);
+        if ($rowsID > 0) {
+            // try to get calibration for iSpindle hardware ID
+            $r_id = mysqli_fetch_array($u_sql);
+            $uniqueID = $r_id['ID'];
+            $f_sql = mysqli_query($conn, "SELECT const1, const2, const3 FROM Calibration WHERE ID = '$uniqueID' ") or die(mysqli_error($conn));
+            $rows_cal = mysqli_num_rows($f_sql);
+            if ($rows_cal > 0) {
+                $isCalibrated = 1;
+                $r_cal = mysqli_fetch_array($f_sql);
+                $const1 = $r_cal['const1'];
+                $const2 = $r_cal['const2'];
+                $const3 = $r_cal['const3'];
+            }
+        }
+        // retrieve and store the values as CSV lists for HighCharts
+        $r_row = mysqli_fetch_array($q_sql);
+        $valTime = $r_row['unixtime'];
+        $valTemperature = $r_row['temperature'];
+        $valAngle = $r_row['angle'];
+        $valDens = $const1 * pow($valAngle, 2) + $const2 * $valAngle + $const3; // complete polynome from database
+        $valRecipe = $r_row['recipe'];
+        $valInterval = $r_row['interval'];
+        $valBattery = $r_row['battery'];
+        $valRSSI = $r_row['rssi'];
+        $valGravity = $r_row['gravity'];
+        return array(
+            $isCalibrated,
+            $valTime,
+            $valTemperature,
+            $valAngle,
+            $valBattery,
+            $valRecipe,
+            $valDens,
+            $valRSSI,
+            $valInterval,
+            $valGravity
+        );
+    }
+}
+
 
 function getChartValuesPlato4_delta($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $movingtime = 720, $reset = defaultReset)
 {
@@ -945,7 +1207,6 @@ function getChartValuesPlato4_delta($conn, $iSpindleID = 'iSpindel000', $timeFra
     $Rows = round($movingtime / ($Interval / 60));
     
     $isCalibrated = 0; // is there a calbration record for this iSpindle?
-    $valAngle = '';
     $valTemperature = '';
     $valDens = '';
     $const1 = 0;
@@ -997,20 +1258,29 @@ function getChartValuesPlato4_delta($conn, $iSpindleID = 'iSpindel000', $timeFra
          $rows = mysqli_num_rows($q_sql);
          while ($r_row = mysqli_fetch_array($q_sql)) {
              $jsTime = $r_row['unixtime'] * 1000;
-             $angle = $r_row['angle'];
              $Ddens = $r_row['DeltaPlato'];
              if ($Ddens == '') {
                  $Ddens= 0;
              }
-             $valAngle .= '[' . $jsTime . ', ' . $angle . '],';
+             if ($r_row['comment']){
+                if($label_position == 1){
+                    $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $Ddens . ", recipe: \"" . $r_row['recipe'] . "\", text_up: '" . $r_row['comment'] . "'},";
+                    $label_position = $label_position * -1;
+                }
+                else{
+                    $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $Ddens . ", recipe: \"" . $r_row['recipe'] . "\", text_down: '" . $r_row['comment'] . "'},";
+                    $label_position = $label_position * -1;
+                }
+             }
+             else{
              $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $Ddens . ", recipe: \"" . $r_row['recipe'] . "\"},";
+             }
              $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
              }
          return array(
              $isCalibrated,
              $valDens,
-             $valTemperature,
-             $valAngle
+             $valTemperature
          );
          }
          else {
@@ -1024,12 +1294,15 @@ function getChartValuesPlato4_delta($conn, $iSpindleID = 'iSpindel000', $timeFra
 
 // Get calibrated values from database for selected spindle, between now and [number of hours] ago
 // Old Method for Firmware before 5.x
-function getChartValuesPlato4_ma($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $movingtime, $reset = defaultReset)
+function getChartValues_ma($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $movingtime, $reset = defaultReset)
 {
     $isCalibrated = 0; // is there a calbration record for this iSpindle?
     $valAngle = '';
     $valTemperature = '';
+    $valGravity = '';
     $valDens = '';
+    $valSVG = '';
+    $valABV = '';
     $const1 = 0;
     $const2 = 0;
     $const3 = 0;
@@ -1037,8 +1310,7 @@ function getChartValuesPlato4_ma($conn, $iSpindleID = 'iSpindel000', $timeFrameH
 
     $Interval = (getCurrentInterval($conn, $iSpindleID));
     $Rows = round($movingtime / ($Interval / 60));
-
-
+    list($isCalibrated, $InitialGravity) = (getInitialGravity($conn, $iSpindleID));
 
     if ($reset) {
         $where = "Data.Timestamp > (Select max(Timestamp) FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.ResetFlag = true)";
@@ -1052,15 +1324,16 @@ function getChartValuesPlato4_ma($conn, $iSpindleID = 'iSpindel000', $timeFrameH
                                                 and Data1.Timestamp <= NOW()";
     }
     mysqli_set_charset($conn, "utf8mb4");
-    if (!$q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data.Timestamp) as unixtime, Data.temperature, Data.angle, Data.recipe,
-                                AVG(Data.Angle) OVER (ORDER BY Data.Timestamp ASC ROWS " . $Rows . " PRECEDING) AS mv_angle
+    if (!$q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data.Timestamp) as unixtime, Data.temperature, Data.angle, Data.recipe, Data.comment,
+                                AVG(Data.Angle) OVER (ORDER BY Data.Timestamp ASC ROWS " . $Rows . " PRECEDING) AS mv_angle, 
+                                AVG(Data.gravity) OVER (ORDER BY Data.Timestamp ASC ROWS " . $Rows . " PRECEDING) AS mv_gravity
                                 FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND " . $where)) {
-        $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data1.Timestamp) as unixtime, Data1.temperature, Data1.angle, Data1.recipe,
-                                (SELECT SUM(Data2.Angle) / COUNT(Data2.Angle)
-                                                                FROM Data AS Data2
-                                WHERE Data2.Name = '" . $iSpindleID . "' AND " . $where_ma . " TIMESTAMPDIFF(MINUTE, Data2.Timestamp, Data1.Timestamp) BETWEEN 0 and " . $movingtime . " ) AS mv_angle
-                                                                FROM Data AS Data1 " . $where_oldDB . " ORDER BY Data1.Timestamp ASC") or die(mysqli_error($conn));
-    }
+
+
+             echo "Select for this diagram is using 'SQL Windows functions'. Either your Data table is still empty, or your Database does not seem to support it. If you want to use these functions you need to upgrade to a newer version of your SQL installation.<br/><br/><a href=/iSpindle/index.php><img src=include/icons8-home-26.png></a>";
+             exit;
+    
+}
     
     
     // retrieve number of rows
@@ -1083,16 +1356,46 @@ function getChartValuesPlato4_ma($conn, $iSpindleID = 'iSpindel000', $timeFrameH
                 $const3 = $r_cal['const3'];
             }
         }
+        $label_position = 1;
         // retrieve and store the values as CSV lists for HighCharts
         while ($r_row = mysqli_fetch_array($q_sql)) {
             $jsTime = $r_row['unixtime'] * 1000;
             $angle = $r_row['mv_angle'];
+            $gravity = $r_row['mv_gravity'];
             $dens = $const1 * pow($angle, 2) + $const2 * $angle + $const3; // complete polynome from database
+            // real density differs fro aparent density
+            $real_dens = 0.1808 * $InitialGravity + 0.8192 * $dens;
+            // calculte apparent attenuation
+            $SVG = ($InitialGravity-$dens)*100/$InitialGravity;
+            // calculate alcohol by weigth and by volume (fabbier calcfabbier calc for link see above)
+            $alcohol_by_weight = ( 100 * ($real_dens - $InitialGravity) / (1.0665 * $InitialGravity - 206.65));
+            $alcohol_by_volume = ($alcohol_by_weight / 0.795);
 
-            $valAngle .= '[' . $jsTime . ', ' . $angle . '],';
+            if ($r_row['comment']){
+                if($label_position == 1){
+                    $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $dens . ", recipe: \"" . $r_row['recipe'] . "\", text_up: '" . $r_row['comment'] . "'},";
+                    $valAngle .= '{ timestamp: ' . $jsTime . ', value: ' . $angle . ", recipe: \"" . $r_row['recipe'] . "\", text_up: '" . $r_row['comment'] . "'},";
+                    $valGravity .= '{ timestamp: ' . $jsTime . ', value: ' . $gravity . ", recipe: \"" . $r_row['recipe'] . "\", text_up: '" . $r_row['comment'] . "'},";
+                    $valSVG .= '{ timestamp: ' . $jsTime . ', value: ' . $SVG . ", recipe: \"" . $r_row['recipe'] . "\", text_up: '" . $r_row['comment'] . "'},";
+                    $label_position = $label_position * -1;
+                }
+                else{
+                    $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $dens . ", recipe: \"" . $r_row['recipe'] . "\", text_down: '" . $r_row['comment'] . "'},";
+                    $valAngle .= '{ timestamp: ' . $jsTime . ', value: ' . $angle . ", recipe: \"" . $r_row['recipe'] . "\", text_down: '" . $r_row['comment'] . "'},";
+                    $valGravity .= '{ timestamp: ' . $jsTime . ', value: ' . $gravity . ", recipe: \"" . $r_row['recipe'] . "\", text_down: '" . $r_row['comment'] . "'},";
+                    $valSVG .= '{ timestamp: ' . $jsTime . ', value: ' . $SVG . ", recipe: \"" . $r_row['recipe'] . "\", text_down: '" . $r_row['comment'] . "'},";
+                    $label_position = $label_position * -1;
+                }
+
+            }
+            else{
             $valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $dens . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valAngle .= '{ timestamp: ' . $jsTime . ', value: ' . $angle . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valGravity .= '{ timestamp: ' . $jsTime . ', value: ' . $gravity . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valSVG .= '{ timestamp: ' . $jsTime . ', value: ' . $SVG . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            }
             $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
-
+            $valABV .= '{ timestamp: ' . $jsTime . ', value: ' . $alcohol_by_volume . ", recipe: \"" . $r_row['recipe'] . "\"},";
 
         }
 
@@ -1100,103 +1403,12 @@ function getChartValuesPlato4_ma($conn, $iSpindleID = 'iSpindel000', $timeFrameH
             $isCalibrated,
             $valDens,
             $valTemperature,
-            $valAngle
-        );
-    }
-}
-
-// calculate apparent attenuation and alcohol by volume over time
-// formulars were taken from http://fabier.de/biercalcs.html and https://brauerei.mueggelland.de/refracto.html
-// only available with start from last reset
-function getChartValuesSVG_ma($conn, $iSpindleID = 'iSpindel000', $movingtime)
-{
-    $isCalibrated = 0; // is there a calbration record for this iSpindle?
-    $valAngle = '';
-    $valTemperature = '';
-    $valSVG = '';
-    $valABV = '';
-    $const1 = 0;
-    $const2 = 0;
-    $const3 = 0;
-    $where_ma = '';
-
-// get current interval for spindel to derive required rows for calculation if initial gravity
-    $Interval = (getCurrentInterval($conn, $iSpindleID));
-    $Rows = round($movingtime / ($Interval / 60));
-    list($isCalibrated, $InitialGravity) = (getInitialGravity($conn, $iSpindleID));
-
-// use moving average when retrieving data from database
-        $where = "Data.Timestamp > (Select max(Timestamp) FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.ResetFlag = true)";
-        $where_oldDB = "WHERE Data1.Name = '" . $iSpindleID . "'
-                                                AND Data1.Timestamp > (Select max(Timestamp) FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.ResetFlag = true)";
-        $where_ma = "Data2.Timestamp > (Select max(Data2.Timestamp) FROM Data AS Data2  WHERE Data2.ResetFlag = true AND Data2.Name = '" . $iSpindleID . "') AND";
-// test if windows functions are working (way faster but only available in newer SQL installations)
-    mysqli_set_charset($conn, "utf8mb4");
-
-    if (!$q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data.Timestamp) as unixtime, Data.temperature, Data.angle, Data.recipe,
-                                AVG(Data.Angle) OVER (ORDER BY Data.Timestamp ASC ROWS " . $Rows . " PRECEDING) AS mv_angle
-                                FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND " . $where)) {
-// if winows finctions are not working, use 'manual' calculation of moving average
-        $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data1.Timestamp) as unixtime, Data1.temperature, Data1.angle, Data1.recipe,
-                                (SELECT SUM(Data2.Angle) / COUNT(Data2.Angle)
-                                                                FROM Data AS Data2
-                                WHERE Data2.Name = '" . $iSpindleID . "' AND " . $where_ma . " TIMESTAMPDIFF(MINUTE, Data2.Timestamp, Data1.Timestamp) BETWEEN 0 and " . $movingtime . " ) AS mv_angle
-                                                                FROM Data AS Data1 " . $where_oldDB . " ORDER BY Data1.Timestamp ASC") or die(mysqli_error($conn));
-    }
-
-
-    // retrieve number of rows
-    $rows = mysqli_num_rows($q_sql);
-    if ($rows > 0) {
-        // get unique hardware ID for calibration
-        $u_sql = mysqli_query($conn, "SELECT ID FROM Data WHERE Name = '" . $iSpindleID . "' ORDER BY Timestamp DESC LIMIT 1") or die(mysqli_error($conn));
-        $rowsID = mysqli_num_rows($u_sql);
-        if ($rowsID > 0) {
-            // try to get calibration for iSpindle hardware ID
-            $r_id = mysqli_fetch_array($u_sql);
-            $uniqueID = $r_id['ID'];
-            $f_sql = mysqli_query($conn, "SELECT const1, const2, const3 FROM Calibration WHERE ID = '$uniqueID' ") or die(mysqli_error($conn));
-            $rows_cal = mysqli_num_rows($f_sql);
-            if ($rows_cal > 0) {
-                $isCalibrated = 1;
-                $r_cal = mysqli_fetch_array($f_sql);
-                $const1 = $r_cal['const1'];
-                $const2 = $r_cal['const2'];
-                $const3 = $r_cal['const3'];
-            }
-        }
-        // retrieve and store the values as CSV lists for HighCharts
-        while ($r_row = mysqli_fetch_array($q_sql)) {
-            $jsTime = $r_row['unixtime'] * 1000;
-            $angle = $r_row['mv_angle'];
-            // calulcation aparent density based on calibration data
-            $dens = $const1 * pow($angle, 2) + $const2 * $angle + $const3; // complete polynome from database
-            // real density differs fro aparent density
-            $real_dens = 0.1808 * $InitialGravity + 0.8192 * $dens;
-            // calculte apparent attenuation
-            $SVG = ($InitialGravity-$dens)*100/$InitialGravity;   
-            // calculate alcohol by weigth and by volume (fabbier calcfabbier calc for link see above)
-            $alcohol_by_weight = ( 100 * ($real_dens - $InitialGravity) / (1.0665 * $InitialGravity - 206.65));
-            $alcohol_by_volume = ($alcohol_by_weight / 0.795);
-            // append values to csv list
-            $valAngle .= '[' . $jsTime . ', ' . $angle . '],';
-            $valSVG .= '{ timestamp: ' . $jsTime . ', value: ' . $SVG . ", recipe: \"" . $r_row['recipe'] . "\"},";
-            $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
-            $valABV .= '{ timestamp: ' . $jsTime . ', value: ' . $alcohol_by_volume . ", recipe: \"" . $r_row['recipe'] . "\"},";
-            
-
-        }
-
-        return array(
-            $isCalibrated,
-            $valSVG,
-            $valTemperature,
             $valAngle,
+            $valGravity,
+            $valSVG,
             $valABV
         );
     }
 }
-
-
 
 ?>

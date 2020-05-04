@@ -74,7 +74,8 @@ if (isset($_POST['Export_Data']))
     {
         $today = date("Y_m_d");
         $export_name=$today."_iSpindle_Data.sql";
-        export_data_table("Data",$export_name);
+        $tables = array("Data","Archive");
+        export_data_table($tables,$export_name);
     }
 
 if (isset($_POST['Export_Settings']))
@@ -103,7 +104,7 @@ if (isset($_POST['Import_Data']))
          echo "Wrong Database Filename. Must end with iSpindle_Data.sql";
          exit;
       }
-      import_table($conn,"Data",$filename_tmp);
+      import_table($conn,"Data, Archive",$filename_tmp);
     }
 
 if (isset($_POST['Import_Settings']))

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3308
--- Erstellungszeit: 29. Feb 2020 um 05:34
+-- Erstellungszeit: 03. Mai 2020 um 20:31
 -- Server-Version: 10.4.7-MariaDB-debug
 -- PHP-Version: 7.3.7
 
@@ -65,6 +65,22 @@ INSERT INTO `Settings` (`Section`, `Parameter`, `value`, `Description_DE`, `Desc
 ('CSV', 'ENABLE_CSV', '0', 'Schreiben der Daten in CSV File (1: ja 0: nein)', 'Write Data to CSV file (1: yes 0: no)', 'Scrivere dati in un file CSV (1: si 0: no) ', '_DEFAULT'),
 ('CSV', 'NEWLINE', '\\r\\n', 'Zeichen fuer Zeilenumbruch', 'Newline characters', 'Caratteri Newline', 'GLOBAL'),
 ('CSV', 'OUTPATH', '/home/pi/iSpindl-srv/csv/', 'Pfad zum schreiben des CSV files. Der filename lautet dann name_id.csv', 'CSV output file path; filename will be name_id.csv', 'Percorso file per CSV; il nome del file sarà name_id.csv', '_DEFAULT'),
+('DIAGRAM', 'ALCOHOL_Y_AXIS_MAX', '20', 'Max Wert für y-Achse des Alkohol Diagrams', 'Max value for y-axis of the alcohol diagram', '', 'GLOBAL'),
+('DIAGRAM', 'ALCOHOL_Y_AXIS_MIN', '0', 'Min Wert für y-Achse des Alkohol Diagrams', 'Min value for y-axis of the alcohol diagram', '', 'GLOBAL'),
+('DIAGRAM', 'ANGLE_Y_AXIS_MAX', '75', 'Max Wert für y-Achse des Winkel Diagrams', 'Max value for y-axis of the angle diagram', '', 'GLOBAL'),
+('DIAGRAM', 'ANGLE_Y_AXIS_MIN', '15', 'Min Wert für y-Achse des Winkel Diagrams', 'Min value for y-axis of the angle diagram', '', 'GLOBAL'),
+('DIAGRAM', 'BATTERY_Y_AXIS_MAX', '5', 'Max Wert für y-Achse des Batterie Diagrams', 'Max value for y-axis of the battery diagram', '', 'GLOBAL'),
+('DIAGRAM', 'BATTERY_Y_AXIS_MIN', '0', 'Min Wert für y-Achse des Batterie Diagrams', 'Min value for y-axis of the battery diagram', '', 'GLOBAL'),
+('DIAGRAM', 'DELTA_Y_AXIS_MAX', '2', 'Max Wert für y-Achse des Deta Diagrams', 'Max value for y-axis of the delta diagram', '', 'GLOBAL'),
+('DIAGRAM', 'DELTA_Y_AXIS_MIN', '-5', 'Min Wert für y-Achse des Delta Diagrams', 'Min value for y-axis of the delta diagram', '', 'GLOBAL'),
+('DIAGRAM', 'PLATO_Y_AXIS_MAX', '25', 'Max Wert für y-Achse des Plato Diagrams', 'Max value for y-axis of the gravity diagram', '', 'GLOBAL'),
+('DIAGRAM', 'PLATO_Y_AXIS_MIN', '0', 'Min Wert für y-Achse des Plato Diagrams', 'Min value for y-axis of the gravity diagram', '', 'GLOBAL'),
+('DIAGRAM', 'RSSI_Y_AXIS_MAX', '0', 'Max Wert für y-Achse des Wifi Signal Diagrams', 'Max value for y-axis of the WiFi signal diagram', '', 'GLOBAL'),
+('DIAGRAM', 'RSSI_Y_AXIS_MIN', '-100', 'Min Wert für y-Achse des Wifi Signal Diagrams', 'Min value for y-axis of the WiFi signal diagram', '', 'GLOBAL'),
+('DIAGRAM', 'SVG_Y_AXIS_MAX', '100', 'Max Wert für y-Achse des Vergärungsgrades', 'Max value for y-axis of the attenuation diagram', '', 'GLOBAL'),
+('DIAGRAM', 'SVG_Y_AXIS_MIN', '0', 'Min Wert für y-Achse des Vergärungsgrades', 'Min value for y-axis of the attenuation diagram', '', 'GLOBAL'),
+('DIAGRAM', 'TEMPERATURE_Y_AXIS_MAX', '30', 'Max Wert für y-Achse des Temperatur Diagrams', 'Max value for y-axis of the temperature diagram', '', 'GLOBAL'),
+('DIAGRAM', 'TEMPERATURE_Y_AXIS_MIN', '-5', 'Min Wert für y-Achse des Temperatur Diagrams', 'Min value for y-axis of the temperature diagram', '', 'GLOBAL'),
 ('EMAIL', 'ALARMDELTA', '1', 'Limit für Delta Plato Alarm. Ist die Änderung der letzten 12 Stunden ist, als diese Wert wird ein email Alarm gesendet.', 'Limit for Delta Plato alarm. If change within past 12 hours becomes lower, Alarm will be sent.', 'Limite delta allarme plato. Se nelle ultime 12 ore la variazione e inferiore, viene inviata una mail.', '_DEFAULT'),
 ('EMAIL', 'ALARMLOW', '4.5', 'Gravity Limit (Plato) für Email Alarm (z.B. 4 -> Alarm, wenn Gravity unter 4 fällt)', 'Lower Gravity Limit for Email Alarm in case acutal gravity is below limit', 'Linite inferiore densità (plato) (p.es. 4 -> allarme quando densità scende al di sotto di quel valore) ', '_DEFAULT'),
 ('EMAIL', 'ALARMSVG', '60', 'Vergärungsgrad Limit (%) für Email Alarm (z.B. 60 Alarm, wenn SVG 60 Prozent erreicht)', 'Limit for Email Alarm of apparent attenuation (e.g. 60 raises an alarm once apparent attenuation reaches 60 percent)', 'Limite superiore allarme attenuazione apparente (p.es. 60 -> allarme quando viene raggiunto il 60 per cento)', '_DEFAULT'),
@@ -80,7 +96,7 @@ INSERT INTO `Settings` (`Section`, `Parameter`, `value`, `Description_DE`, `Desc
 ('EMAIL', 'SMTPPORT', '587', 'SMTP Server Port (z.B. 587)', 'smpt server port', 'Porta SMTP server (p. es. 587)', 'GLOBAL'),
 ('EMAIL', 'SMTPSERVER', 'smtp.gmail.com', 'SMTP Server Adresse (z.B. smtp.gmail.com)', 'smtp server addresss', 'Indirizzo server SMTP', 'GLOBAL'),
 ('EMAIL', 'TIMEFRAMESTATUS', '3', 'Zeitraum der letzten Datenübermittlung in Tagen, wenn ein Statusalarm gesendet werden soll', 'Timeframe in days when last spindel data was send and should be displayed.', 'Periodo in giorni dall\'ultimo invio di una mail di allarme', '_DEFAULT'),
-('EMAIL', 'TIMESTATUS', '6', 'Uhrzeit in vollen Stunden für tägliche Status Email (z.B. 6 fuer 6 Uhr morgens)', 'Set time for Status email around full hour. e.g. 6 means 6:00', 'Ora per l\'invio della mail di stato giornaliera p. es. 6 sono le 6:00', 'GLOBAL'),
+('EMAIL', 'TIMESTATUS', '7', 'Uhrzeit in vollen Stunden für tägliche Status Email (z.B. 6 fuer 6 Uhr morgens)', 'Set time for Status email around full hour. e.g. 6 means 6:00', 'Ora per l\'invio della mail di stato giornaliera p. es. 6 sono le 6:00', 'GLOBAL'),
 ('EMAIL', 'TOADDR', 'your.email@gmail.com', 'Email Adresse, an die eine Nachricht gesendet werden soll', 'email address to which the alarm email is sent', 'Indirizzo email a cui inviare la mail di stato/allarme', 'GLOBAL'),
 ('FERMENTRACK', 'ENABLE_FERMENTRACK', '0', 'Weiterleitung der Daten an Fermentrack', 'Forward data to Fermentrack', 'Inoltro dati a Fermentrack', '_DEFAULT'),
 ('FERMENTRACK', 'FERMENTRACKADDR', '0.0.0.0', 'IP Adresse des Fermentrack Servers', 'IP Address of the Fermentrack Server', 'Indirizzo IP del server Fermentrack', '_DEFAULT'),
@@ -104,7 +120,7 @@ INSERT INTO `Settings` (`Section`, `Parameter`, `value`, `Description_DE`, `Desc
 ('UBIDOTS', 'ENABLE_UBIDOTS', '0', 'Weiterleitung der Daten an Ubidots (1: an 0: aus)', '1 to enable output to ubidots', '1 per abilitare l\'inoltro a ubidots ', '_DEFAULT'),
 ('UBIDOTS', 'UBI_TOKEN', 'my_token', 'UBIDOTS Token. Siehe Anleitung oder ubidots.com', 'global ubidots token, see manual or ubidots.com', 'Token ubidots vedi istruzioni o ubidots.com', '_DEFAULT'),
 ('UBIDOTS', 'UBI_USE_ISPINDLE_TOKEN', '0', 'Benutzung des in der Spindel gespeicherten Tokens zur Weiterleitung an Ubidots ', '1 to use \"token\" field in iSpindle config (overrides UBI_TOKEN)', 'Utilizzo del token salvato nella iSpindle per l\'inoltro a ubidots', '_DEFAULT'),
-('VERSION', '', '001', NULL, NULL, NULL, 'GLOBAL');
+('VERSION', '', '002', NULL, NULL, NULL, 'GLOBAL');
 
 --
 -- Indizes der exportierten Tabellen

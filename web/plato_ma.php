@@ -1,6 +1,4 @@
 <?php
-ini_set('display_errors', 'On');
-error_reporting(E_ALL | E_STRICT);
 
 // Show the Density/Temperature chart
 // GET Parameters:
@@ -8,14 +6,15 @@ error_reporting(E_ALL | E_STRICT);
 // days = hours x 24   
 // weeks = days x 7    
 // name = iSpindle name
- 
+// moving = time in minutes for moving average calculation
+
 // DB config values will be pulled from differtent location and user can personalize this file: common_db_config.php
 // If file does not exist, values will be pulled from default file
  
 if ((include_once './config/common_db_config.php') == FALSE){
        include_once("./config/common_db_default.php");
-      }
-     include_once("include/common_db_query.php");
+      } 
+      include_once("include/common_db_query.php");
 
 // Check GET parameters (for now: Spindle name and Timeframe to display) 
 if(!isset($_GET['hours'])) $_GET['hours'] = 0; else $_GET['hours'] = $_GET['hours'];
@@ -23,7 +22,8 @@ if(!isset($_GET['name'])) $_GET['name'] = 'iSpindel001'; else $_GET['name'] = $_
 if(!isset($_GET['reset'])) $_GET['reset'] = defaultReset; else $_GET['reset'] = $_GET['reset'];
 if(!isset($_GET['days'])) $_GET['days'] = 0; else $_GET['days'] = $_GET['days'];    
 if(!isset($_GET['weeks'])) $_GET['weeks'] = 0; else $_GET['weeks'] = $_GET['weeks'];
-                                                                            
+if(!isset($_GET['moving'])) $_GET['moving'] = 120; else $_GET['moving'] = $_GET['moving'];                         
+                                                    
 // Calculate Timeframe in Hours                                             
 $timeFrame = $_GET['hours'] + ($_GET['days'] * 24) + ($_GET['weeks'] * 168);
 if($timeFrame == 0) $timeFrame = defaultTimePeriod;
@@ -33,12 +33,16 @@ $tftemp -= $tfweeks * 168;
 $tfdays = floor($tftemp / 24);
 $tftemp -= $tfdays * 24;
 $tfhours = $tftemp;                                
+$minTemp = 0;
+$maxTemp = 30;
+$mindens = 0;
+$maxdens = 20;
                                                    
-list($isCalib, $dens, $temperature, $angle) = getChartValues($conn, $_GET['name'], $timeFrame, $_GET['reset']);
+list($isCalib, $dens, $temperature, $angle, $gravity) = getChartValues_ma($conn, $_GET['name'], $timeFrame, $_GET['moving'],  $_GET['reset']);
 list($RecipeName, $show) = getCurrentRecipeName($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 
 // Get fields from database in language selected in settings
-$file = "plato4";
+$file = "plato4_ma";
 $recipe_name = get_field_from_sql($conn,'diagram',"recipe_name");
 $first_y = get_field_from_sql($conn,$file,"first_y");
 $second_y = get_field_from_sql($conn,$file,"second_y");
@@ -51,7 +55,7 @@ $subheader_hours = get_field_from_sql($conn,'diagram',"timetext_hours");
 $header_no_data_1 = get_field_from_sql($conn,'diagram',"header_no_data_1");
 $header_no_data_2 = get_field_from_sql($conn,'diagram',"header_no_data_2");
 $header_no_data_3 = get_field_from_sql($conn,'diagram',"header_no_data_3");
-$not_calibrated = get_field_from_sql($conn,'diagram',"not_calibrated"); 
+$not_calibrated = get_field_from_sql($conn,'diagram',"not_calibrated");
 $tooltip_at = get_field_from_sql($conn,'diagram',"tooltip_at");
 $tooltip_time = get_field_from_sql($conn,'diagram',"tooltip_time");
 $PARA_FIRST_Y_MIN = "PLATO_Y_AXIS_MIN";
@@ -60,15 +64,13 @@ $PARA_SECOND_Y_MIN = "TEMPERATURE_Y_AXIS_MIN";
 $PARA_SECOND_Y_MAX = "TEMPERATURE_Y_AXIS_MAX";
 $first_y_unit = " °P";
 $second_y_unit = " °C";
-$ChartFirst = $dens;
+$ChartFirst = $gravity;
 $ChartSecond = $temperature;
 
 $first_y_min = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_FIRST_Y_MIN));
 $first_y_max = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_FIRST_Y_MAX));
 $second_y_min = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_SECOND_Y_MIN));
 $second_y_max = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_SECOND_Y_MAX));
-
-
 
 
 $file = "settings";
@@ -108,10 +110,10 @@ $timetext .= $tfhours . ' ' . $subheader_hours;
 
 ?>
 
+
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
   <title>iSpindle Data</title>
   <meta http-equiv="refresh" content="120">
   <meta name="Keywords" content="iSpindle, iSpindel, Chart, genericTCP">
@@ -136,7 +138,6 @@ const first_y_max = <?php echo $first_y_max;?>;
 const second_y_max = <?php echo $second_y_max;?>;
 const first_y_unit = [<?php echo "'".$first_y_unit."'";?>]
 const second_y_unit = [<?php echo "'".$second_y_unit."'";?>]
-
 
 
 const x_axis=[<?php echo "'".$x_axis."'";?>]
@@ -167,8 +168,7 @@ $(function ()
         chart = new Highcharts.Chart(
         {
             chart:
-            {   //styledMode: true,
-                backgroundColor: 'rgba(0,0,0,0)',
+            {   backgroundColor: 'rgba(0,0,0,0)',
                 renderTo: 'container'
             },
             title:
@@ -177,7 +177,7 @@ $(function ()
             },
             subtitle:
             { 
-                      text: chart_subheader                 
+                text: chart_subheader                  
             },                                                                
             xAxis:
             {
@@ -211,8 +211,8 @@ $(function ()
                     showFirstLabel: false
                     },{
                     // linkedTo: 0,
-                    startOnTick: true,
-                    endOnTick: true,
+                    startOnTick: false,
+                    endOnTick: false,
                     min: second_y_min,
                     max: second_y_max,
                     gridLineWidth: 0,
@@ -238,10 +238,10 @@ $(function ()
                 formatter: function() 
                 {
                     if(this.series.name == second_y) {
-			const pointData = chartTemp.find(row => row.timestamp === this.point.x)
-                        return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%d.%m %H:%M', new Date(this.x)) + ' ' + tooltip_time + ' ' + this.y.toFixed(2) + second_y_unit;
+                        const pointData = chartTemp.find(row => row.timestamp === this.point.x)
+                        return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%d.%m %H:%M', new Date(this.x)) + ' ' + tooltip_time + ' ' + this.y.toFixed(2) +second_y_unit;
                     } else {
-			const pointData = chartDens.find(row => row.timestamp === this.point.x)
+                        const pointData = chartDens.find(row => row.timestamp === this.point.x)
                         return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%d.%m %H:%M', new Date(this.x))  + ' ' + tooltip_time + ' ' + this.y.toFixed(2) + first_y_unit;
                     }
                 }
@@ -269,7 +269,7 @@ $(function ()
                             const Comment = chartDens.find(row => row.timestamp === this.point.x)
                             var label_up = Comment.text_up
                             if (Comment.text_up){
-                            label_up = Highcharts.dateFormat('%d.%m - %H:%M', new Date(this.x))  + '<br> ' + Comment.text_up
+                            label_up = Highcharts.dateFormat('%d.%m - %H:%M', new Date(this.x))  + '<br/> ' + Comment.text_up
                             }
                             return label_up;
                         }
@@ -286,7 +286,7 @@ $(function ()
                             const Comment = chartDens.find(row => row.timestamp === this.point.x)
                             var label_down = Comment.text_down
                             if (Comment.text_down){
-                            label_down = Highcharts.dateFormat('%d.%m - %H:%M', new Date(this.x))  + '<br> ' + Comment.text_down
+                            label_down = Highcharts.dateFormat('%d.%m - %H:%M', new Date(this.x))  + '<br/> ' + Comment.text_down
                             }
                             return label_down;
                         }
@@ -294,7 +294,7 @@ $(function ()
 
                     name: first_y,
                     color: '#FF0000',
-                    data: chartDens.map(row => [row.timestamp, row.value, row.text]),
+                    data: chartDens.map(row => [row.timestamp, row.value]),
                     marker: 
                     {
                         symbol: 'square',
@@ -346,9 +346,6 @@ $(function ()
   <script src="include/highcharts.js"></script>
   <script src="include/modules/exporting.js"></script>
   <script src="include/modules/offline-exporting.js"></script>
-  <script src="include/modules/annotations.js"></script>
-  <script src="include/modules/accessibility.js"></script>
-
   <div id="container" style="width:90%; height:90%; position:absolute"></div>
 </div>
  

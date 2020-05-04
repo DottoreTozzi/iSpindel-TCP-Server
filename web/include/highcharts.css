@@ -48,7 +48,9 @@
 }
 
 .highcharts-label-box {
-  fill: none;
+	fill: #a4edba;
+	stroke: gray;
+	stroke-width: 1px;
 }
 
 .highcharts-button-box {
@@ -301,8 +303,9 @@ g.highcharts-series,
 }
 
 .highcharts-data-label-box {
-  fill: none;
-  stroke-width: 0;
+  fill: #a4edba;
+  stroke: gray;
+  stroke-width: 1px;
 }
 
 .highcharts-data-label text, text.highcharts-data-label {

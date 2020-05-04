@@ -15,5 +15,7 @@
     define("defaultTimePeriod", 24);    // Timeframe for chart (backwards from now)
     define("defaultReset",  false);     // Flag for Timeframe Start (beginning of chart display)
     define("defaultDaysAgo", 7);        // Default number of days past to look for active iSpindels
+
+    define("CONSOLE_LOG", 0);		// 0: disabled; 1 to allow some internal log to brwoser console
 ?>
 
