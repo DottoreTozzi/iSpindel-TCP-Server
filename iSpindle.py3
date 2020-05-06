@@ -84,7 +84,8 @@ try:
   with open(os.path.join(os.path.expanduser(config_path),'iSpindle_config.ini')) as f:
     config.readfp(f)
 except IOError:
-  config.read(os.path.join(os.path.expanduser(config_path),'iSpindle_default.ini'))
+    config.read(os.path.join(os.path.expanduser(config_path),'iSpindle_default.ini'))
+  
 
 # General
 DEBUG = config.get('GENERAL', 'DEBUG') # Set to 1 to enable debug output on console (usually devs only)
@@ -276,6 +277,9 @@ def handler(clientsock, addr):
     rssi = 0
     timestart = time.clock()
     config_sent = 0
+    pressure = 0.0
+    carbondioxid = 0.0
+    gauge = 0
 
     while 1:
         data = clientsock.recv(BUFF)
@@ -295,24 +299,39 @@ def handler(clientsock, addr):
             if inpstr.find("}") != -1:
                 jinput = json.loads(inpstr)
                 spindle_name = jinput['name']
-                spindle_id = jinput['ID']
-                angle = jinput['angle']
-                temperature = jinput['temperature']
-                battery = jinput['battery']
+                if 'type' in jinput:
+                    dbgprint("detected eManometer")
+                    gauge = 1
+                else:
+                    gauge = 0
+                    dbgprint("detected iSpindel")
+                if gauge == 0:
+                    spindle_id = jinput['ID']
+                    angle = jinput['angle']
+                    temperature = jinput['temperature']
+                    battery = jinput['battery']
 
-                try:
-                    gravity = jinput['gravity']
-                    interval = jinput['interval']
+                    try:
+                        gravity = jinput['gravity']
+                        interval = jinput['interval']
+                        rssi = jinput['RSSI']
+                    except:
+                        # older firmwares might not be transmitting all of these
+                        dbgprint("Consider updating your iSpindel's Firmware.")
+                    try:
+                        # get user token for connection to ispindle.de public server
+                        user_token = jinput['token']
+                    except:
+                        # older firmwares < 5.4 or field not filled in
+                        user_token = '*'
+                else:
+                    spindle_id = jinput['ID']
+                    pressure = jinput['pressure']
+                    temperature = jinput['temperature']
+                    carbondioxid = jinput['co2']
+                    #interval = jinput['interval']
                     rssi = jinput['RSSI']
-                except:
-                    # older firmwares might not be transmitting all of these
-                    dbgprint("Consider updating your iSpindel's Firmware.")
-                try:
-                    # get user token for connection to ispindle.de public server
-                    user_token = jinput['token']
-                except:
-                    # older firmwares < 5.4 or field not filled in
-                    user_token = '*'
+                    gauge = 1
                 # looks like everything went well :)
                 #
                 # Should we reply with a config JSON?
@@ -522,9 +541,12 @@ def handler(clientsock, addr):
                 import mysql.connector
                 dbgprint(repr(addr) + ' - writing to database')
                 # standard field definitions:
-                fieldlist = ['Timestamp', 'Name', 'ID', 'Angle', 'Temperature', 'Battery', 'Gravity', 'Recipe', 'Recipe_ID']
-                valuelist = [datetime.now(), spindle_name, spindle_id, angle, temperature, battery, gravity, recipe, recipe_id]
-
+                if gauge == 0 :
+                    fieldlist = ['Timestamp', 'Name', 'ID', 'Angle', 'Temperature', 'Battery', 'Gravity', 'Recipe', 'Recipe_ID']
+                    valuelist = [datetime.now(), spindle_name, spindle_id, angle, temperature, battery, gravity, recipe, recipe_id]
+                else:
+                    fieldlist = ['Timestamp', 'Name', 'ID', 'Pressure', 'Temperature', 'Carbondioxid', 'Recipe']
+                    valuelist = [datetime.now(), spindle_name, spindle_id, pressure, temperature, carbondioxid, recipe]
                 # do we have a user token defined? (Fw > 5.4.x)
                 # this is for later use (public server) but if it exists, let's store it for testing purposes
                 # this also should ensure compatibility with older fw versions and not-yet updated databases
@@ -576,7 +598,10 @@ def handler(clientsock, addr):
                 # gather the data now and send it to the database
                 fieldstr = ', '.join(fieldlist)
                 valuestr = ', '.join(['%s' for x in valuelist])
-                add_sql = 'INSERT INTO Data (' + fieldstr + ')'
+                if gauge == 0 :
+                    add_sql = 'INSERT INTO Data (' + fieldstr + ')'
+                else :
+                    add_sql = 'INSERT INTO iGauge (' + fieldstr + ')'
                 add_sql += ' VALUES (' + valuestr + ')'
                 #dbgprint(add_sql)
                 #dbgprint(valuelist)
@@ -588,7 +613,7 @@ def handler(clientsock, addr):
             except Exception as e:
                 dbgprint(repr(addr) + ' Database Error: ' + str(e) + NEWLINE + 'Did you update your database?')
 
-        if BREWPILESS:
+        if BREWPILESS and gauge == 0:
             try:
                 dbgprint(repr(addr) + ' - forwarding to BREWPILESS at http://' + BREWPILESSADDR)
                 import urllib2
@@ -611,7 +636,7 @@ def handler(clientsock, addr):
             except Exception as e:
                 dbgprint(repr(addr) + ' Error while forwarding to URL ' + url + ' : ' + str(e))
 
-        if CRAFTBEERPI3:
+        if CRAFTBEERPI3 and gauge == 0:
             try:
                 dbgprint(repr(addr) + ' - forwarding to CraftBeerPi3 at http://' + CRAFTBEERPI3ADDR)
                 import urllib2
@@ -634,7 +659,7 @@ def handler(clientsock, addr):
                 dbgprint(repr(addr) + ' Error while forwarding to URL ' + url + ' : ' + str(e))
 
 
-        if UBIDOTS:
+        if UBIDOTS and gauge == 0:
             try:
                 if UBI_USE_ISPINDLE_TOKEN:
                     token = user_token
@@ -663,7 +688,7 @@ def handler(clientsock, addr):
             except Exception as e:
                 dbgprint(repr(addr) + ' Ubidots Error: ' + str(e))
 
-        if FORWARD:
+        if FORWARD and gauge == 0:
             try:
                 dbgprint(repr(addr) + ' - forwarding to ' + FORWARDADDR)
                 outdata = {
@@ -694,7 +719,7 @@ def handler(clientsock, addr):
             except Exception as e:
                 dbgprint(repr(addr) + ' Error while forwarding to ' + FORWARDADDR + ': ' + str(e))
 
-        if FERMENTRACK:
+        if FERMENTRACK and gauge == 0:
             try:
                 if FERM_USE_ISPINDLE_TOKEN:
                     token = user_token
@@ -725,7 +750,7 @@ def handler(clientsock, addr):
             except Exception as e:
                 dbgprint(repr(addr) + ' Fermentrack Error: ' + str(e))
 
-        if INFLUXDB:
+        if INFLUXDB and gauge == 0:
             try:
                 dbgprint(repr(addr) + ' - forwarding to InfluxDB ' + INFLUXDBADDR)
                 import urllib2
@@ -755,7 +780,7 @@ def handler(clientsock, addr):
             except Exception as e:
                 dbgprint(repr(addr) + ' InfluxDB Error: ' + str(e))
 
-        if BREWSPY:
+        if BREWSPY and gauge == 0:
             try:
                 if SPY_USE_ISPINDLE_TOKEN:
                     token = user_token
@@ -787,7 +812,7 @@ def handler(clientsock, addr):
             except Exception as e:
                 dbgprint(repr(addr) + ' Brewspy Error: ' + str(e))
 
-        if BREWFATHER:
+        if BREWFATHER and gauge == 0:
             try:
                 if FAT_USE_ISPINDLE_TOKEN:
                     token = user_token
