@@ -406,6 +406,24 @@ include_once("./config/tables.php");
             }
         ?>
         </option>
+        <?php
+        $sql_q = "SELECT DISTINCT Name FROM iGauge
+        WHERE Timestamp > date_sub(NOW(), INTERVAL ".$daysago." DAY)
+        ORDER BY Name";
+    	$result=mysqli_query($conn, $sql_q) or die(mysqli_error($conn));
+            while($row = mysqli_fetch_assoc($result) )
+            {
+                ?>
+                <option value = "<?php echo($row['Name'])?>">
+                <?php echo($row['Name']) ?>
+        <?php
+            }
+            $sql_q = "SELECT DISTINCT Name FROM iGauge
+        WHERE Timestamp > date_sub(NOW(), INTERVAL ".$daysago." DAY)
+        ORDER BY Name";
+    	$result=mysqli_query($conn, $sql_q) or die(mysqli_error($conn));
+        ?>
+        </option>
 </select>
 
 <!-- select options for diagrams to be loaded -->
@@ -425,6 +443,8 @@ include_once("./config/tables.php");
         <option value="reset_now.php"><?php echo $chart_filename_09 ?></option>
         <option value="ferment_end.php"><?php echo $chart_filename_14 ?></option>
         <option value="add_comment.php"><?php echo $chart_filename_15 ?></option>
+        <option value="iGauge.php">iGauge Daten</option>
+        <option value="reset_now_igauge.php">Nachgärbeginn Zeitpunkt setzen</option>
 
 </select>
 
