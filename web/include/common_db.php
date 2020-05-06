@@ -3,8 +3,8 @@
     // configure your database connection here:
     define('DB_SERVER',"localhost");
     define('DB_NAME',"iSpindel");
-    define('DB_USER',"root");
-    define('DB_PASSWORD',"wolfram6+");
+    define('DB_USER',"");
+    define('DB_PASSWORD',"");
 
     $conn = mysqli_connect(DB_SERVER, DB_USER, DB_PASSWORD, DB_NAME);
     if (!$conn) {
