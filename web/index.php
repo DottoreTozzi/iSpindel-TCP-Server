@@ -440,6 +440,7 @@ include_once("./config/tables.php");
         <option value="batterytrend.php"><?php echo $chart_filename_12 ?></option>>
         <option value="svg_ma.php"><?php echo $chart_filename_10 ?></option>
         <option value="plato4_delta.php"><?php echo $chart_filename_11 ?></option>	
+        <option value="plato6.php">Easy delta</option>
         <option value="reset_now.php"><?php echo $chart_filename_09 ?></option>
         <option value="ferment_end.php"><?php echo $chart_filename_14 ?></option>
         <option value="add_comment.php"><?php echo $chart_filename_15 ?></option>
