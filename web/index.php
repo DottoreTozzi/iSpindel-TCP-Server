@@ -203,6 +203,8 @@ include_once("./config/tables.php");
     $chart_filename_13 = get_field_from_sql($conn,$file,"chart_filename_13");
     $chart_filename_14 = get_field_from_sql($conn,$file,"chart_filename_14");
     $chart_filename_15 = get_field_from_sql($conn,$file,"chart_filename_15");
+    $chart_filename_16 = get_field_from_sql($conn,$file,"chart_filename_16");
+    $chart_filename_17 = get_field_from_sql($conn,$file,"chart_filename_17");
     $show_diagram = get_field_from_sql($conn,$file,"show_diagram");
     $calibrate_spindle = get_field_from_sql($conn,$file,"calibrate_spindle");
     $server_settings = get_field_from_sql($conn,$file,"server_settings");
@@ -306,6 +308,14 @@ include_once("./config/tables.php");
     $lines = mysqli_query($conn, $q_sql1) or die(mysqli_error($conn));
     $exists = mysqli_num_rows($lines);
 
+write_log('Recipe_ID Column exixst: '. $exists);
+
+//  check if data table has column recipe_id
+    $q_sql1 = "SHOW TABLES LIKE 'iGauge'";
+    $lines = mysqli_query($conn, $q_sql1) or die(mysqli_error($conn));
+    $iGauge_exists = mysqli_num_rows($lines);
+
+write_log('iGauge Table exixst: '. $iGauge_exists);
 
 ?>
 
@@ -394,59 +404,53 @@ include_once("./config/tables.php");
 <!-- select options for spindle names -->
 <?php
     if ($len != 0){
-?>
-<select id="ispindel_name" name = 'ispindel_name'>
-        <?php
-            while($row = mysqli_fetch_assoc($result) )
+        echo "<select id='ispindel_name' name = 'ispindel_name'>";
+        while($row = mysqli_fetch_assoc($result))
             {
-                ?>
-                <option value = "<?php echo($row['Name'])?>">
-                <?php echo($row['Name']) ?>
-        <?php
+                $iSpindle_Name=$row['Name'];
+                echo "<option value = '$iSpindle_Name'>$iSpindle_Name";
             }
-        ?>
-        </option>
-        <?php
+        echo "</option>";
+    if ($iGauge_exists != 0) {
         $sql_q = "SELECT DISTINCT Name FROM iGauge
         WHERE Timestamp > date_sub(NOW(), INTERVAL ".$daysago." DAY)
         ORDER BY Name";
-    	$result=mysqli_query($conn, $sql_q) or die(mysqli_error($conn));
-            while($row = mysqli_fetch_assoc($result) )
-            {
-                ?>
-                <option value = "<?php echo($row['Name'])?>">
-                <?php echo($row['Name']) ?>
-        <?php
-            }
-            $sql_q = "SELECT DISTINCT Name FROM iGauge
-        WHERE Timestamp > date_sub(NOW(), INTERVAL ".$daysago." DAY)
-        ORDER BY Name";
-    	$result=mysqli_query($conn, $sql_q) or die(mysqli_error($conn));
-        ?>
-        </option>
-</select>
+        $result=mysqli_query($conn, $sql_q) or die(mysqli_error($conn));
+        while($row = mysqli_fetch_assoc($result)){
+            $iGauge_name=$row['Name'];
+            echo"<option value = '$iGauge_Name'>$iGauge_Name";
+        }
+//                    $sql_q = "SELECT DISTINCT Name FROM iGauge
+//                          WHERE Timestamp > date_sub(NOW(), INTERVAL ".$daysago." DAY)
+//                          ORDER BY Name";
+//                    $result=mysqli_query($conn, $sql_q) or die(mysqli_error($conn));
+    }
+    echo"</option>";
+    echo"</select>";
 
-<!-- select options for diagrams to be loaded -->
-<select id="chart_filename" name='chart_filename' onchange="einblenden()">;
-        <option value="status.php" selected><?php echo $chart_filename_01 ?></option>
-        <option value="battery.php"><?php echo $chart_filename_02 ?></option>
-        <option value="wifi.php"><?php echo $chart_filename_03 ?></option>
-        <option value="plato4.php"><?php echo $chart_filename_04 ?></option>
-        <option value="plato4_ma.php"><?php echo $chart_filename_05 ?></option>
-        <option value="angle.php"><?php echo $chart_filename_06 ?></option>
-        <option value="angle_ma.php"><?php echo $chart_filename_07 ?></option>
-        <option value="plato.php"><?php echo $chart_filename_08 ?></option>
-        <option value="plato_ma.php"><?php echo $chart_filename_08_1 ?></option>
-        <option value="batterytrend.php"><?php echo $chart_filename_12 ?></option>>
-        <option value="svg_ma.php"><?php echo $chart_filename_10 ?></option>
-        <option value="plato4_delta.php"><?php echo $chart_filename_11 ?></option>	
-        <option value="plato6.php">Easy delta</option>
-        <option value="reset_now.php"><?php echo $chart_filename_09 ?></option>
-        <option value="ferment_end.php"><?php echo $chart_filename_14 ?></option>
-        <option value="add_comment.php"><?php echo $chart_filename_15 ?></option>
-        <option value="iGauge.php">iGauge Daten</option>
-        <option value="reset_now_igauge.php">Nachgärbeginn Zeitpunkt setzen</option>
-
+//select options for diagrams to be loaded 
+echo "<select id='chart_filename' name='chart_filename' onchange='einblenden()'>";
+echo "<option value='status.php' selected>$chart_filename_01</option>";
+echo "<option value='battery.php'>$chart_filename_02</option>";
+echo "<option value='wifi.php'>$chart_filename_03</option>";
+echo "<option value='plato4.php'>$chart_filename_04</option>";
+echo "<option value='plato4_ma.php'>$chart_filename_05</option>";
+echo "<option value='angle.php'>$chart_filename_06</option>";
+echo "<option value='angle_ma.php'>$chart_filename_07</option>";
+echo "<option value='plato.php'>$chart_filename_08</option>";
+echo "n value='plato_ma.php'>$chart_filename_08_1</option>";
+echo "<option value='batterytrend.php'>$chart_filename_12</option>";
+echo "<option value='svg_ma.php'>$chart_filename_10</option>";
+echo "<option value='plato4_delta.php'>$chart_filename_11</option>";
+//echo "<option value='plato6.php'>Easy delta</option>";
+echo "<option value='reset_now.php'>$chart_filename_09</option>";
+echo "<option value='ferment_end.php'>$chart_filename_14</option>";
+echo "<option value='add_comment.php'>$chart_filename_15</option>";
+if ($iGauge_exists != 0) {
+    echo "<option value='iGauge.php'>$chart_filename_16</option>";
+    echo "<option value='reset_now_igauge.php'>$chart_filename_17</option>";
+}
+?>
 </select>
 
 <br />
