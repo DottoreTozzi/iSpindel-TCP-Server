@@ -1,6 +1,6 @@
 <?php
 
-/* 
+/*  
 Visualizer for iSpindle using genericTCP with mySQL
 Shows mySQL iSpindle data on the browser as a graph via Highcharts:
 http://www.highcharts.com
@@ -647,6 +647,75 @@ function getCurrentRecipeName($conn, $iSpindleID = 'iSpindel000', $timeFrameHour
     }
 }
 
+function getCurrentRecipeName_iGauge($conn, $iSpindleID = 'iGauge000', $timeFrameHours = defaultTimePeriod, $reset = defaultReset)
+{
+    $q_sql1 = mysqli_query($conn, "SELECT iGauge.Recipe, iGauge.Timestamp FROM iGauge WHERE iGauge.Name = '" . $iSpindleID . "' AND iGauge.Timestamp >= (SELECT max( iGauge.Timestamp )FROM iGauge WHERE iGauge.Name = '" . $iSpindleID . "' AND iGauge.ResetFlag = true) LIMIT 1") or die(mysqli_error($conn));
+
+
+    $q_sql2 = mysqli_query($conn, "SELECT iGauge.Timestamp FROM iGauge WHERE iGauge.Name = '" . $iSpindleID . "' AND Timestamp >= date_sub(NOW(), INTERVAL " . $timeFrameHours . " HOUR)                                                                                                                                                                          AND Timestamp <= NOW() LIMIT 1") or die(mysqli_error($conn));
+
+    $rows = mysqli_num_rows($q_sql1);
+
+
+    if ($rows > 0) {
+        $r_row = mysqli_fetch_array($q_sql1);
+        $t_row = mysqli_fetch_array($q_sql2);
+        $RecipeName = '';
+        $showCurrentRecipe = false;
+        $TimeFrame = $t_row['Timestamp'];
+        $ResetTime = $r_row['Timestamp'];
+        if ($reset == true) {
+            $RecipeName = $r_row['Recipe'];
+            $showCurrentRecipe = true;
+        } else {
+            if ($ResetTime < $TimeFrame) {
+                $RecipeName = $r_row['Recipe'];
+                $showCurrentRecipe = true;
+            }
+        }
+        return array(
+            $RecipeName,
+            $showCurrentRecipe
+        );
+
+    }
+}
+
+//Returns name of Recipe for current fermentation - Name can be set with reset.
+function getCurrentRecipeName_ids2($conn, $iSpindleID = 'IDS000', $timeFrameHours = defaultTimePeriod, $reset = defaultReset)
+{
+    $q_sql1 = mysqli_query($conn, "SELECT heizen.Recipe, heizen.Timestamp FROM heizen WHERE heizen.Name = '" . $iSpindleID . "' AND heizen.Timestamp >= (SELECT max( heizen.Timestamp )FROM heizen WHERE heizen.Name = '" . $iSpindleID . "' AND heizen.ResetFlag = true) LIMIT 1") or die(mysqli_error($conn));
+
+
+    $q_sql2 = mysqli_query($conn, "SELECT heizen.Timestamp FROM heizen WHERE heizen.Name = '" . $iSpindleID . "' AND Timestamp >= date_sub(NOW(), INTERVAL " . $timeFrameHours . " HOUR)                                                                                                                                                                          AND Timestamp <= NOW() LIMIT 1") or die(mysqli_error($conn));
+
+    $rows = mysqli_num_rows($q_sql1);
+
+
+    if ($rows > 0) {
+        $r_row = mysqli_fetch_array($q_sql1);
+        $t_row = mysqli_fetch_array($q_sql2);
+        $RecipeName = '';
+        $showCurrentRecipe = false;
+        $TimeFrame = $t_row['Timestamp'];
+        $ResetTime = $r_row['Timestamp'];
+        if ($reset == true) {
+            $RecipeName = $r_row['Recipe'];
+            $showCurrentRecipe = true;
+        } else {
+            if ($ResetTime < $TimeFrame) {
+                $RecipeName = $r_row['Recipe'];
+                $showCurrentRecipe = true;
+            }
+        }
+        return array(
+            $RecipeName,
+            $showCurrentRecipe
+        );
+
+    }
+}
+
 // Get calaculate initial gravity from database for archive. First hour after last reset will be used.
 // This can be used to calculate apparent attenuation
 
@@ -1070,6 +1139,110 @@ function getChartValues($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = de
             $valGravity,
             $valBattery,
             $valRSSI
+        );
+    }
+}
+
+function getChartValuesiGauge($conn, $iSpindleID = 'iGauge000', $timeFrameHours = defaultTimePeriod, $reset = defaultReset)
+{
+    $isCalibrated = 1; // is there a calbration record for this iSpindle?
+    $valCarbondioxide = '';
+    $valTemperature = '';
+    $valpressure = '';
+    $const1 = 0;
+    $const2 = 0;
+    $const3 = 0;
+    if ($reset) {
+        $where = "WHERE Name = '" . $iSpindleID . "' 
+            AND Timestamp >= (Select max(Timestamp) FROM iGauge  WHERE ResetFlag = true AND Name = '" . $iSpindleID . "')";
+    } else {
+        $where = "WHERE Name = '" . $iSpindleID . "' 
+            AND Timestamp >= date_sub(NOW(), INTERVAL " . $timeFrameHours . " HOUR) 
+            AND Timestamp <= NOW()";
+    }
+	//$q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, Temperature, Pressure , Carbondioxid, recipe
+                           //FROM iGauge " . $where . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
+ 	
+	$q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, Temperature, Pressure , Carbondioxid, recipe
+                           FROM iGauge " . $where . " ORDER BY Timestamp ASC");
+    
+    // retrieve number of rows
+    $rows = mysqli_num_rows($q_sql);
+    if ($rows > 0) {
+        // get unique hardware ID for calibration
+        $u_sql = mysqli_query($conn, "SELECT ID FROM Data WHERE Name = '" . $iSpindleID . "' ORDER BY Timestamp DESC LIMIT 1") or die(mysqli_error($conn));
+        $rowsID = mysqli_num_rows($u_sql);
+        // retrieve and store the values as CSV lists for HighCharts
+        while ($r_row = mysqli_fetch_array($q_sql)) {
+            $jsTime = $r_row['unixtime'] * 1000;
+            $carbondioxixde = $r_row['Carbondioxid'];
+            $pressure = $r_row['Pressure']; 
+
+            $valCarbondioxide .= '{ timestamp: ' . $jsTime . ', value: ' . $carbondioxixde . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valpressure .= '{ timestamp: ' . $jsTime . ', value: ' . $pressure . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['Temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
+
+
+
+        }
+        return array(
+            $isCalibrated,
+            $valpressure,
+            $valTemperature,
+            $valCarbondioxide,
+        );
+    }
+}
+
+function getChartValuesids2($conn, $iSpindleID = 'IDS000', $timeFrameHours = defaultTimePeriod, $reset = defaultReset)
+{
+    $isCalibrated = 1; // is there a calbration record for this iSpindle?
+    $valCarbondioxide = '';
+    $valTemperature = '';
+    $valpressure = '';
+    $const1 = 0;
+    $const2 = 0;
+    $const3 = 0;
+    if ($reset) {
+        $where = "WHERE Name = '" . $iSpindleID . "' 
+            AND Timestamp >= (Select max(Timestamp) FROM heizen  WHERE ResetFlag = true AND Name = '" . $iSpindleID . "')";
+    } else {
+        $where = "WHERE Name = '" . $iSpindleID . "' 
+            AND Timestamp >= date_sub(NOW(), INTERVAL " . $timeFrameHours . " HOUR) 
+            AND Timestamp <= NOW()";
+    }
+
+    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, Temperature, Stellgrad , Sollwert, Gradient,Restzeit, recipe
+                           FROM heizen " . $where . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
+    
+    // retrieve number of rows
+    $rows = mysqli_num_rows($q_sql);
+    if ($rows > 0) {
+        // get unique hardware ID for calibration
+        $u_sql = mysqli_query($conn, "SELECT ID FROM Data WHERE Name = '" . $iSpindleID . "' ORDER BY Timestamp DESC LIMIT 1") or die(mysqli_error($conn));
+        $rowsID = mysqli_num_rows($u_sql);
+        // retrieve and store the values as CSV lists for HighCharts
+        while ($r_row = mysqli_fetch_array($q_sql)) {
+            $jsTime = $r_row['unixtime'] * 1000;
+            $gradient = $r_row['Gradient'];
+            $Sollwert = $r_row['Sollwert']; 
+
+            $valgradient .= '{ timestamp: ' . $jsTime . ', value: ' . $gradient . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valsollwert .= '{ timestamp: ' . $jsTime . ', value: ' . $Sollwert . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['Temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valStellgrad .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['Stellgrad'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valRestzeit .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['Restzeit'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
+
+
+
+        }
+        return array(
+            $isCalibrated,
+            $valTemperature,
+            $valsollwert,
+            $valStellgrad,
+            $valgradient,
+			$valRestzeit        
         );
     }
 }
