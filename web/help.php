@@ -2,6 +2,7 @@
 ini_set('display_errors', 'On');
 error_reporting(E_ALL | E_STRICT);
 $mainpage=strtoupper("Hauptseite");
+$document_class = get_color_scheme($conn);
 
 // Loads personal config file for db connection details. If not found, default file will be used
 if ((include_once './config/common_db_config.php') == FALSE){
@@ -253,7 +254,7 @@ include_once("./include/common_db_query.php");
 --></style>
 
 </head>
-<body>
+<body class='<?php echo $document_class ?>'>
 <form name="main" action="<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method="post">
 
 <ul class="nav navbar-nav">

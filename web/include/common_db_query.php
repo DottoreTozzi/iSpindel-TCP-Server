@@ -204,6 +204,7 @@ function upgrade_strings_table($conn)
     }
 }
 
+
 function upgrade_settings_table($conn)
 {
     $upgrade                    = false;
@@ -233,6 +234,21 @@ function upgrade_settings_table($conn)
     import_table($conn,'Settings',$file_name);
     }
 }
+
+function get_color_scheme($conn)
+{
+    $colorscheme_query = "Select Parameter FROM Settings WHERE Parameter LIKE 'COLORSCHEME_%' AND Value = '1'";
+    $result = mysqli_query($conn, $colorscheme_query) or die(mysqli_error($conn));
+    $row = mysqli_fetch_array($result);
+    $colorscheme=$row[0];
+    if($colorscheme != null){    
+        return substr_replace($colorscheme,'',0,12); 
+    }
+    else {
+        return 'blue';
+    }
+}
+
 
 function delete_rid_flag_from_archive($conn,$selected_recipe)
 {
@@ -1319,11 +1335,9 @@ function getValuesHoursAgoPlato4($conn, $iSpindleID = 'iSpindel000', $lasttime, 
     $const3 = 0;
     
     mysqli_set_charset($conn, "utf8mb4");
-    $select="SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe, battery, 'interval', rssi, gravity
-                FROM Data
-                WHERE Name = '" . $iSpindleID . "' AND Timestamp > DATE_SUB(FROM_UNIXTIME($lasttime), INTERVAL $hours HOUR) limit 1";
+    $select="SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe, battery, 'interval', rssi, gravity FROM Data WHERE Name = '" . $iSpindleID . "' AND Timestamp > DATE_SUB(FROM_UNIXTIME($lasttime), INTERVAL $hours HOUR) limit 1";
 
-    write_log($select);
+//    write_log($select);
 
     $q_sql = mysqli_query($conn, $select) or die(mysqli_error($conn));
 

@@ -17,6 +17,7 @@ if(!isset($_GET['name'])) $_GET['name'] = 'iSpindel000'; else $_GET['name'] = $_
 
 list($isCalib, $time, $temperature, $angle, $battery, $recipe, $dens, $rssi, $interval, $gravity) = getlastValuesPlato4($conn, $_GET['name']);
 
+$document_class = get_color_scheme($conn);
 // Get fields from database in language selected in settings
 $file = "wifi";
 $header = get_field_from_sql($conn,$file,"header");
@@ -146,7 +147,7 @@ $(function ()
 });
 </script>
 </head>
-<body>
+<body class='<?php echo $document_class ?>'>
 <a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt="<?php echo $stop; ?>"></a>
 <div id="wrapper">
 <script src="include/highcharts.js"></script>

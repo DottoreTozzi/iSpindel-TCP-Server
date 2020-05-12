@@ -1,18 +1,83 @@
-body {
-  background-color: lightblue;
+
+body.blue {
+  background-color: lightblue; 
   padding-bottom:3em;
 
 }
 
-h1 {
+body.blue h1 {
   color: white;
-  background-color: black;
+  background: #1C6EA4;
+  background: linear-gradient(to bottom, #5592bb 0%, #327cad 66%, #1C6EA4 100%);
   text-align: center;
 }
 
-h2 {
+body.blue h2 {
   color: white;
-  background-color: black;
+  background: #1C6EA4;
+  background: linear-gradient(to bottom, #5592bb 0%, #327cad 66%, #1C6EA4 100%);
+  text-align: center;
+}
+
+body.green {
+  background-color: #CEE0CC;
+  padding-bottom:3em;
+
+}
+
+body.green h1 {
+  color: white;
+  background: #4F7849;
+  background: linear-gradient(to bottom, #7b9a76 0%, #60855b 66%, #4F7849 100%);
+  border-bottom: 2px solid #444444;
+  text-align: center;
+}
+
+body.green h2 {
+  color: white;
+  background: #4F7849;
+  background: linear-gradient(to bottom, #7b9a76 0%, #60855b 66%, #4F7849 100%);
+  border-bottom: 2px solid #444444;
+  text-align: center;
+}
+
+body.wheat {
+  background-color: #F5DEB3;
+  padding-bottom:3em;
+
+}
+
+body.wheat h1 {
+  color: black;
+  background: rgb(245,222,179);
+  background: linear-gradient(to bottom, rgba(245,222,179,1) 0%, rgba(208,179,6,1) 66%, rgba(182,156,1,1) 100%);
+  text-align: center;
+}
+
+body.wheat h2 {
+  color: black;
+  background: rgb(245,222,179);
+  background: linear-gradient(to bottom, rgba(245,222,179,1) 0%, rgba(208,179,6,1) 66%, rgba(182,156,1,1) 100%);
+  text-align: center;
+}
+
+body.red {
+  background-color: #F7D4EC;
+  padding-bottom:3em;
+
+}
+
+body.red h1 {
+  color: black;
+  background: #F7D4EC;
+  background: linear-gradient(to bottom, #F7D4EC 0%, #EA202C 66%, #AE0D7A 100%);
+  text-align: center;
+}
+
+body.red h2 {
+  color: black;
+  background: #F7D4EC;
+  background: linear-gradient(to bottom, #F7D4EC 0%, #EA202C 66%, #AE0D7A 100%);
   text-align: center;
 }
 
@@ -68,6 +133,138 @@ li a:hover:not(.active) {
   height: auto;
 }
 
+table.blue {
+  border: 1px solid #1C6EA4;
+  background-color: #EEEEEE;
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+}
+table.blue td, table.blue th {
+  border: 1px solid #AAAAAA;
+  padding: 3px 2px;
+}
+table.blue tbody td {
+  font-size: 15px;
+  text-align: center;
+}
+table.blue tbody tr:nth-child(even) {
+  background: #D0E4F5;
+}
+table.blue thead {
+  background: #1C6EA4;
+  background: linear-gradient(to bottom, #5592bb 0%, #327cad 66%, #1C6EA4 100%);
+  border-bottom: 2px solid #444444;
+}
+table.blue thead th {
+  font-size: 15px;
+  font-weight: bold;
+  color: #FFFFFF;
+  border-left: 2px solid #D0E4F5;
+}
+table.blue thead th:first-child {
+  border-left: none;
+}
+
+table.green {
+  border: 1px solid #4F7849;
+  background-color: #EEEEEE;
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+}
+table.green td, table.green th {
+  border: 1px solid #4F7849;
+  padding: 3px 2px;
+}
+table.green tbody td {
+  font-size: 15px;
+  text-align: center;
+}
+table.green tbody tr:nth-child(even) {
+  background: #CEE0CC;
+}
+table.green thead {
+  background: #4F7849;
+  background: linear-gradient(to bottom, #7b9a76 0%, #60855b 66%, #4F7849 100%);
+  border-bottom: 2px solid #444444;
+}
+table.green thead th {
+  font-size: 15px;
+  font-weight: bold;
+  color: #FFFFFF;
+  border-left: 2px solid #D0E4F5;
+}
+table.green thead th:first-child {
+  border-left: none;
+}
+
+table.wheat {
+  border: 1px solid rgba(245,222,179,1);
+  background-color: #EEEEEE;
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+}
+table.wheat td, table.wheat th {
+  border: 1px solid rgba(182,156,1,1);
+  padding: 3px 2px;
+}
+table.wheat tbody td {
+  font-size: 15px;
+  text-align: center;
+}
+table.wheat tbody tr:nth-child(even) {
+  background: rgba(245,222,179,0.6);
+}
+table.wheat thead {
+  background: rgb(245,222,179);
+  background: linear-gradient(to bottom, rgba(245,222,179,1) 0%, rgba(208,179,6,1) 66%, rgba(182,156,1,1) 100%);
+  border-bottom: 2px solid rgba(208,179,6,1);
+}
+table.wheat thead th {
+  font-size: 15px;
+  font-weight: bold;
+  font-color: black;
+  border-left: 2px solid rgba(245,222,179,1);
+}
+table.wheat thead th:first-child {
+  border-left: none;
+}
+
+table.red {
+  border: 1px solid #FFDDE4;
+  background-color: #EEEEEE;
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+}
+table.red td, table.red th {
+  border: 1px solid #8C263A;
+  padding: 3px 2px;
+}
+table.red tbody td {
+  font-size: 15px;
+  text-align: center;
+}
+table.red tbody tr:nth-child(even) {
+  background: rgba(140,38,58,0.1);
+}
+table.red thead {
+  background: #F7D4EC;
+  background: linear-gradient(to bottom, #F7D4EC 0%, #EA202C 66%, #AE0D7A 100%);
+  border-bottom: 2px solid #FFB7C5;
+}
+table.red thead th {
+  font-size: 15px;
+  font-weight: bold;
+  font-color: black;
+  border-left: 2px solid #FFDDE4;
+;
+}
+table.red thead th:first-child {
+  border-left: none;
+}
 
 /*
 input#calibrate{

@@ -68,7 +68,7 @@ if($ID[0]){
     $q_sql = mysqli_query($conn, $update_archive_table) or die(mysqli_error($conn));
     
   }
-//now add a new entry to the archive tabli with information on the new recipe, start date  Spindle ID and current calibration data
+//now add a new entry to the archive table with information on the new recipe, start date  Spindle ID and current calibration data
 $timestamp = date("Y-m-d H:i:s");
 $entry_recipe_table_sql = "INSERT INTO `Archive`
                            (`Recipe_ID`, `Name`, `ID`, `Recipe`, `Start_date`, `End_date`, `const1`, `const2`, `const3`)
@@ -82,7 +82,7 @@ $q_sql = mysqli_query($conn, $get_latest_archive_id_sql) or die(mysqli_error($co
 $ID = mysqli_fetch_array($q_sql);
 
 // set reset flag for spindel and write recipe name , '0' values for other parameters as 'NULL' values may cause a problem for some database configurations (strict SQL mode)
-$sql_select="INSERT INTO Data (Timestamp, Name, ID, Angle, Temperature, Battery, resetFlag, Recipe, Recipe_ID)VALUES ('$timestamp','$Name', $valID, 0, 0, 0, true, '$Recipe','$ID[0]')";
+$sql_select="INSERT INTO Data (Timestamp, Name, ID, Angle, Temperature, Battery, resetFlag, RSSI, Recipe, Recipe_ID)VALUES ('$timestamp','$Name', $valID, 0, 0, 0, true, 0, '$Recipe','$ID[0]')";
 mysqli_set_charset($conn, "utf8mb4");
 $q_sql = mysqli_query($conn, $sql_select) or die(mysqli_error($conn));
        

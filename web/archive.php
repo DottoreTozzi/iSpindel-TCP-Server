@@ -171,6 +171,9 @@ list($SpindleName, $RecipeName, $start_date, $end_date, $dens, $temperature, $an
 list($isCalib,$initial_gravity, $const1, $const2, $const3) = getArchiveInitialGravity($conn, $selected_recipe);
 list($isCalib,$final_gravity) = getArchiveFinalGravity($conn, $selected_recipe, $end_date);
 
+$document_class = get_color_scheme($conn);
+
+
 $attenuation = ($initial_gravity - $final_gravity)*100 / $initial_gravity;
 $real_dens = 0.1808 * $initial_gravity + 0.8192 * $final_gravity;
 $alcohol = ((100* ($real_dens - $initial_gravity) / (1.0665 * $initial_gravity -206.65)) / 0.795);
@@ -566,7 +569,7 @@ $(function ()
 
 </script>
 </head>
-<body>
+<body class='<?php echo $document_class ?>'>
 <div id="wrapper">
 <div id="summary_table">
 <!-- select options for  archives-->

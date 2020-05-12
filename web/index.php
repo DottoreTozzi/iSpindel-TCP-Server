@@ -183,7 +183,7 @@ include_once("./config/tables.php");
         exit;
     }
 
-    
+$document_class = get_color_scheme($conn);    
 
 // sql queries to get language dependent fields to be displayed
     $file = "index";
@@ -396,13 +396,13 @@ write_log('iGauge Table exixst: '. $iGauge_exists);
 
 </script>
 
-<body>
-<form name="main" action="<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method="post">
-<h1>RasPySpindel</h1>
-<h3><?php echo($diagram_selection .' '. $daysago)?></h3>
 
-<!-- select options for spindle names -->
 <?php
+echo "<body class='$document_class'>";
+$action=htmlentities($_SERVER['PHP_SELF']);
+echo "<form name='main' action='$action' method='post'>";
+echo "<h1>RasPySpindel</h1>";
+echo "<h3>$diagram_selection  $daysago</h3>";
     if ($len != 0){
         echo "<select id='ispindel_name' name = 'ispindel_name'>";
         while($row = mysqli_fetch_assoc($result))
@@ -420,10 +420,6 @@ write_log('iGauge Table exixst: '. $iGauge_exists);
             $iGauge_name=$row['Name'];
             echo"<option value = '$iGauge_Name'>$iGauge_Name";
         }
-//                    $sql_q = "SELECT DISTINCT Name FROM iGauge
-//                          WHERE Timestamp > date_sub(NOW(), INTERVAL ".$daysago." DAY)
-//                          ORDER BY Name";
-//                    $result=mysqli_query($conn, $sql_q) or die(mysqli_error($conn));
     }
     echo"</option>";
     echo"</select>";
@@ -438,7 +434,7 @@ echo "<option value='plato4_ma.php'>$chart_filename_05</option>";
 echo "<option value='angle.php'>$chart_filename_06</option>";
 echo "<option value='angle_ma.php'>$chart_filename_07</option>";
 echo "<option value='plato.php'>$chart_filename_08</option>";
-echo "n value='plato_ma.php'>$chart_filename_08_1</option>";
+echo "<option value='plato_ma.php'>$chart_filename_08_1</option>";
 echo "<option value='batterytrend.php'>$chart_filename_12</option>";
 echo "<option value='svg_ma.php'>$chart_filename_10</option>";
 echo "<option value='plato4_delta.php'>$chart_filename_11</option>";
@@ -524,24 +520,25 @@ else {
 // Database entries for parameter, value and description of defined language will be displayed for selected section
 // name of input field gets unique id (combination of section and parameter). This is used to identify parameter value during _POST['GO']
 if ($len !=0 ){
-echo "<h2>$current_data</h2>"; 
-
-
-    echo "<table border='1'>";
+    echo "<h2>$current_data</h2>"; 
+    echo "<table class='$document_class'>";
+    echo "<thead>";
     echo "<tr>";
-    echo "<td><b>Device</b></td>";
-    echo "<td><b>$header_time</b></td>";
-    echo "<td><b>$header_recipe</b></td>";
-    echo "<td><b>$header_angle [°]</b></td>";
-    echo "<td><b>$header_temperature [°C]</b></td>";
-    echo "<td><b>$header_initialgravity</b></td>";
-    echo "<td><b>$header_density</b></td>";
-    echo "<td><b>$header_deltagravity ($hours_ago h)</b></td>";
-    echo "<td><b>$header_svg</b></td>";
-    echo "<td><b>$header_alcohol</b></td>";
-    echo "<td><b>$header_battery [Volt]</b></td>";
-    echo "<td><b>$header_wifi [dB]</b></td>";
+    echo "<th>Device</th>";
+    echo "<th>$header_time</th>";
+    echo "<th>$header_recipe</th>";
+    echo "<th>$header_angle [°]</th>";
+    echo "<th>$header_temperature [°C]</th>";
+    echo "<th>$header_initialgravity</th>";
+    echo "<th>$header_density</th>";
+    echo "<th>$header_deltagravity ($hours_ago h)</th>";
+    echo "<th>$header_svg</th>";
+    echo "<th>$header_alcohol</th>";
+    echo "<th>$header_battery [Volt]</th>";
+    echo "<th>$header_wifi [dB]</th>";
     echo "</tr>";
+    echo "</thead>";
+    echo "<tbody>";
     while($row = mysqli_fetch_assoc($result1) ) {
         $show_device=get_settings_from_sql($conn, 'GENERAL', $row['Name'],'SHOWSUMMARY'); 
         if ($show_device == 1){
@@ -556,28 +553,30 @@ echo "<h2>$current_data</h2>";
         $realdens = 0.1808 * $initialgravity + 0.8192 * $dens;
         # calculate alcohol by weigth and by volume (fabbier calcfabbier calc for link see above)
         $ABV = (( 100 * ($realdens - $initialgravity) / (1.0665 * $initialgravity- 206.65))/0.795);
-        $Ddens = $dens_ago-$dens;
+        $Ddens = $dens-$dens_ago;
         }
         else {
         $initialgravity=0;
         $SVG=0;
         }
         echo "<tr>";
-        echo "<td><b>" . $row['Name'] . "</b></td>";
-        echo "<td>" . date("Y-m-d\ H:i:s\ ", $time) . "</td>";
-        echo "<td>" .  $recipe . "</td>";
-        echo "<td style='text-align:center'>" . number_format($angle,1) . "</td>";
-        echo "<td style='text-align:center'>" . number_format($temperature,1) . "</td>";
-        echo "<td style='text-align:center'>" . number_format($initialgravity,1) . "</td>";
-        echo "<td style='text-align:center'>" . number_format($dens,1) . "</td>";
-        echo "<td style='text-align:center'>" . number_format($Ddens,1) . "</td>";
-        echo "<td style='text-align:center'>" . number_format($SVG,1) . "</td>";
-        echo "<td style='text-align:center'>" . number_format($ABV,1) . "</td>";
-        echo "<td style='text-align:center'>" . number_format($battery,2) . "</td>";
-        echo "<td style='text-align:center'>" . number_format($RSSI,0) . "</td>";
-        echo "</tr>\n";
+        echo "<td style='text-align: left'><b>" . $row['Name'] . "</b></td>";
+        echo "<td style='text-align: left'>" . date("Y-m-d\ H:i:s\ ", $time) . "</td>";
+        echo "<td style='text-align: left'>" .  $recipe . "</td>";
+        echo "<td>" . number_format($angle,1) . "</td>";
+        echo "<td>" . number_format($temperature,1) . "</td>";
+        echo "<td>" . number_format($initialgravity,1) . "</td>";
+        echo "<td>" . number_format($dens,1) . "</td>";
+        echo "<td>" . number_format($Ddens,1) . "</td>";
+        echo "<td>" . number_format($SVG,1) . "</td>";
+        echo "<td>" . number_format($ABV,1) . "</td>";
+        echo "<td>" . number_format($battery,2) . "</td>";
+        echo "<td>" . number_format($RSSI,0) . "</td>";
+        echo "</tr>";
+        
         }
     }
+echo "</tbody>";
 echo "</table>";
 }
 ?>

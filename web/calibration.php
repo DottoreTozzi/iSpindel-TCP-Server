@@ -72,6 +72,7 @@ $iSpindleID=$spindle_list[$_GET['name']];
 $valCalib = getSpindleCalibration($conn, $iSpindleID );
 
 
+$document_class = get_color_scheme($conn);
 // Get fields from database in language selected in settings
 $file = "calibration";
 $window_alert_update = get_field_from_sql($conn,$file,"window_alert_update");
@@ -117,7 +118,7 @@ $stop = get_field_from_sql($conn,$file,"stop");
 
 </head>
 
-<body bgcolor="#E6E6FA">
+<body class='<?php echo $document_class ?>'>
 <form name="main" action="<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method="post">
 <h1><?php echo $header.' '.$iSpindleID."_".$valCalib[4] ?></h1>
 

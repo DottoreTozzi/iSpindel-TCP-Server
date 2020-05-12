@@ -23,6 +23,7 @@ $header_battery = get_field_from_sql($conn,$file,"header_battery");
 $diagram_battery = get_field_from_sql($conn,$file,"diagram_battery");
 $file = "settings";
 $stop = get_field_from_sql($conn,$file,"stop");
+$document_class = get_color_scheme($conn);
 
 
 ?>
@@ -145,7 +146,7 @@ $(function ()
 });
 </script>
 </head>
-<body>
+<body class='<?php echo $document_class ?>'>
 <a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt="<?php echo $stop; ?>"></a>
 
 <div id="wrapper">

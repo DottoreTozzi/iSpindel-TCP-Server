@@ -35,6 +35,7 @@ $tfhours = $tftemp;
                                                   
 list($isCalib, $dens, $temperature, $angle) = getChartValuesiGauge($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 list($RecipeName, $show) = getCurrentRecipeName_iGauge($conn, $_GET['name'], $timeFrame, $_GET['reset']);
+$document_class = get_color_scheme($conn);
 // Get fields from database in language selected in settings
 $file = "plato4";
 $recipe_name = get_field_from_sql($conn,'diagram',"recipe_name");
@@ -322,7 +323,7 @@ $(function ()
 });
 </script>
 </head>
-<body>
+<body class='<?php echo $document_class ?>'>
 
 <a href=/iSpindle/index.php><img src=./include/icons8-home-26.png></a>
  

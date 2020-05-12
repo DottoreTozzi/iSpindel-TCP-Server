@@ -29,7 +29,7 @@ use PHPMailer\PHPMailer\Exception;
 require "../PHPMailer/src/Exception.php";
 require "../PHPMailer/src/PHPMailer.php";
 require "../PHPMailer/src/SMTP.php";
-
+$document_class = get_color_scheme($conn);
 // Get fields from database in language selected in settings
 $file = "settings";
 $window_alert_update = get_field_from_sql($conn,$file,"window_alert_update");
@@ -216,6 +216,17 @@ if (isset($_POST['Add']))
         header("Location: ".$url);
     }
 
+// self caled function: if send button is selected, Layout will be activated in database
+if (isset($_POST['GoLayout']))
+    {
+$parameter=$_POST['colorscheme'];
+write_log($parameter);
+$del_color_scheme="UPDATE Settings SET value = '' WHERE Parameter LIKE 'COLORSCHEME_%'";
+$result=mysqli_query($conn, $del_color_scheme) or die(mysqli_error($conn));
+$change_color_scheme="UPDATE Settings SET value = '1' WHERE Parameter = '$parameter'";
+$result=mysqli_query($conn, $change_color_scheme) or die(mysqli_error($conn));
+
+}
 
 // self caled function: if send button is selected, values will be written to database
 if (isset($_POST['Go']))
@@ -333,7 +344,7 @@ if (isset($_POST['Go']))
 </script>
 
 </head>
-<body bgcolor="#E6E6FA">
+<body class='<?php echo $document_class ?>'>
 <form name="main" action="<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method="post" enctype="multipart/form-data">
 <a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt="<?php echo $stop; ?>"></a>
 <h1><?php echo $settings_header; ?></h1>
@@ -404,7 +415,7 @@ if (isset($_POST['Go']))
 // if a section is selected (default is 0), table will be defined
 // Database entries for parameter, value and description of defined language will be displayed for selected section
 // name of input field gets unique id (combination of section and parameter). This is used to identify parameter value during _POST['GO']
-if ($_GET['section']<>''){ 
+if ($_GET['section']<> '' and $selected_section <>'LAYOUT'){ 
 
 echo "<table border='0'>";
 echo "<tr>";
@@ -423,6 +434,25 @@ echo "</tr>";
     }}
 echo "</table>";
 }
+if ($_GET['section'] <> '' and $selected_section == 'LAYOUT'){
+    while($row = mysqli_fetch_assoc($result) ) {
+        if ($row['Section'] == $sections[$_GET['section']] and $row['DeviceName'] == $devices[$_GET['device']] ) {
+            $parameter   = $row['Parameter'];
+            $value       = $row['value'];
+            $text = $row[$DESCRIPTION];
+            if ($value <> 1){
+                echo "<input type='radio' id='$parameter' name='colorscheme' value='$parameter'>";
+                echo "<label for='$parameter'>$text</label><br/>";
+            }
+            else {
+                echo "<input type='radio' id='$parameter' name='colorscheme' value='$parameter' checked>";
+                echo "<label for='$parameter'>$text</label><br/>";
+
+            }
+
+        }
+    }
+}
 ?>
 <br />
 <br />
@@ -433,9 +463,16 @@ echo "</table>";
 <input type = "hidden" name="current_Sid" value="<?php echo $_GET['section']; ?>">
 <input type = "hidden" name="current_device" value="<?php echo $devices[$_GET['device']]; ?>">
 <input type = "hidden" name="current_Did" value="<?php echo $_GET['device']; ?>">
-<input type = "submit" name = "Go" value = "<?php echo $send; ?>" onclick="target_popup(this)">
-<input type = "submit" name = "Stop" value = "<?php echo $stop; ?>">
+
 <?php
+if ($selected_section <> "LAYOUT"){
+    echo "<input type = 'submit' name = 'Go' value = '$send' onclick='target_popup(this)'>";
+}
+else{
+    echo "<input type = 'submit' name = 'GoLayout' value = '$send' onclick='target_popup(this)'>";
+}
+
+echo "<input type = 'submit' name = 'Stop' value = '$stop'>";
     if ($selected_device == "GLOBAL" && $selected_section == "EMAIL"){
         echo "</br></br>";
         echo "<div id='delete' style='display: block;' >";

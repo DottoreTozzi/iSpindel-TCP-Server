@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3308
--- Erstellungszeit: 03. Mai 2020 um 20:31
+-- Erstellungszeit: 13. Mai 2020 um 01:07
 -- Server-Version: 10.4.7-MariaDB-debug
 -- PHP-Version: 7.3.7
 
@@ -93,6 +93,7 @@ INSERT INTO `Settings` (`Section`, `Parameter`, `value`, `Description_DE`, `Desc
 ('EMAIL', 'EXCLUDESTRING', 'XXX', 'Device Name mit Teilstring wird von Email Alarmen ausgeschlossen', 'Devicename with substring is excluded from Email alarms', 'Il nome devic con sottostringa è escluso dagli allarmi e-mail', 'GLOBAL'),
 ('EMAIL', 'FROMADDR', 'your.email@gmail.com', 'Email Adresse von der eine Nachricht versendet werden soll.', 'email, from which the ', 'Indirizzo email provenienza, inviato da ', 'GLOBAL'),
 ('EMAIL', 'PASSWD', 'yourpassword', 'SMTP Server Passwort', 'SMTP server password', 'Server SMTP password', 'GLOBAL'),
+('EMAIL', 'SentAlarmSVG', '281375', NULL, NULL, NULL, 'iSpindel001'),
 ('EMAIL', 'SMTPPORT', '587', 'SMTP Server Port (z.B. 587)', 'smpt server port', 'Porta SMTP server (p. es. 587)', 'GLOBAL'),
 ('EMAIL', 'SMTPSERVER', 'smtp.gmail.com', 'SMTP Server Adresse (z.B. smtp.gmail.com)', 'smtp server addresss', 'Indirizzo server SMTP', 'GLOBAL'),
 ('EMAIL', 'TIMEFRAMESTATUS', '3', 'Zeitraum der letzten Datenübermittlung in Tagen, wenn ein Statusalarm gesendet werden soll', 'Timeframe in days when last spindel data was send and should be displayed.', 'Periodo in giorni dall\'ultimo invio di una mail di allarme', '_DEFAULT'),
@@ -116,11 +117,15 @@ INSERT INTO `Settings` (`Section`, `Parameter`, `value`, `Description_DE`, `Desc
 ('INFLUXDB', 'INFLUXDBPASSWD', 'secret', 'Passwort des InfluxDB-Users', 'Password of the InfluxDB user', 'Password dell\'utente InfluxDB', '_DEFAULT'),
 ('INFLUXDB', 'INFLUXDBPORT', '8086', 'Port des InfluxDB-Servers', 'Port of InfluxDB Server', 'Porta del server InfluxDB', '_DEFAULT'),
 ('INFLUXDB', 'INFLUXDBUSERNAME', 'username', 'Userame für InfluxDB', 'User name for InfluxDB', 'Inoltro a InfluxDB', '_DEFAULT'),
+('LAYOUT', 'COLORSCHEME_blue', '1', 'Farbschema Wasser', 'Colorscheme Water', 'Colorscheme Water', 'GLOBAL'),
+('LAYOUT', 'COLORSCHEME_green', '', 'Farbschema Hopfen', 'Colorscheme Hops', 'Colorscheme Hops', 'GLOBAL'),
+('LAYOUT', 'COLORSCHEME_red', '', 'Farbschema Rot', 'Colorscheme Red', 'Colorscheme Red', 'GLOBAL'),
+('LAYOUT', 'COLORSCHEME_wheat', '', 'Farbschema Malz', 'Colorscheme Grain', 'Colorscheme Grain', 'GLOBAL'),
 ('REMOTECONFIG', 'ENABLE_REMOTECONFIG', '0', 'Bei 1: Konfiguration wird vom TCP Server an die Spindel während eines Datentransfers gesendet (noch in der Testung)', 'If enabled, config from TCP server will be send to Spindle during data transfer once (still under testing)', 'Se abilitato, vengono scritti i dati di configurazione sulla Spindel durante un trasferimento (in fase di testing)', '_DEFAULT'),
 ('UBIDOTS', 'ENABLE_UBIDOTS', '0', 'Weiterleitung der Daten an Ubidots (1: an 0: aus)', '1 to enable output to ubidots', '1 per abilitare l\'inoltro a ubidots ', '_DEFAULT'),
 ('UBIDOTS', 'UBI_TOKEN', 'my_token', 'UBIDOTS Token. Siehe Anleitung oder ubidots.com', 'global ubidots token, see manual or ubidots.com', 'Token ubidots vedi istruzioni o ubidots.com', '_DEFAULT'),
 ('UBIDOTS', 'UBI_USE_ISPINDLE_TOKEN', '0', 'Benutzung des in der Spindel gespeicherten Tokens zur Weiterleitung an Ubidots ', '1 to use \"token\" field in iSpindle config (overrides UBI_TOKEN)', 'Utilizzo del token salvato nella iSpindle per l\'inoltro a ubidots', '_DEFAULT'),
-('VERSION', '', '002', NULL, NULL, NULL, 'GLOBAL');
+('VERSION', '', '003', NULL, NULL, NULL, 'GLOBAL');
 
 --
 -- Indizes der exportierten Tabellen
