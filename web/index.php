@@ -262,13 +262,21 @@ $document_class = get_color_scheme($conn);
     $daysago = $_GET['days'];
     if($daysago == 0) $daysago = defaultDaysAgo;
 
-// get information if TCP server is running
+// get information if TCP server is running (if pid file is written)
     $pids=''; 
     $running=false;
     $stat = exec("systemctl is-active ispindle-srv");
     if (file_exists( "/var/run/ispindle-srv.pid" )) {
         $pid= (shell_exec("cat /var/run/ispindle-srv.pid"));
         $running = posix_getpgid(intval($pid));
+    }
+// get information if TCP server is running (if no pid file is written)
+    else {
+         $running=true;
+         $pid= (shell_exec(" ps axf | grep iSpindle.py | grep -v grep| awk '{print $1}'"));
+         if($pid == '') {
+             $running = false;
+         }
     }
     if ($running) {
         $iSpindleServerRunning = $server_running . $pid;

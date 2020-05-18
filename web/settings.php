@@ -218,13 +218,22 @@ if (isset($_POST['Add']))
 
 // self caled function: if send button is selected, Layout will be activated in database
 if (isset($_POST['GoLayout']))
-    {
-$parameter=$_POST['colorscheme'];
-write_log($parameter);
-$del_color_scheme="UPDATE Settings SET value = '' WHERE Parameter LIKE 'COLORSCHEME_%'";
-$result=mysqli_query($conn, $del_color_scheme) or die(mysqli_error($conn));
-$change_color_scheme="UPDATE Settings SET value = '1' WHERE Parameter = '$parameter'";
-$result=mysqli_query($conn, $change_color_scheme) or die(mysqli_error($conn));
+{
+    $parameter=$_POST['colorscheme'];
+    $current_Sid = $_POST['current_Sid'];
+    $current_Did = $_POST['current_Did'];
+    write_log($parameter);
+
+    $del_color_scheme="UPDATE Settings SET value = '' WHERE Parameter LIKE 'COLORSCHEME_%'";
+    $result=mysqli_query($conn, $del_color_scheme) or die(mysqli_error($conn));
+    $change_color_scheme="UPDATE Settings SET value = '1' WHERE Parameter = '$parameter'";
+    $result=mysqli_query($conn, $change_color_scheme) or die(mysqli_error($conn));
+
+    $url="http://";
+    $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
+    $url .= "settings.php?section=".$current_Sid . "&device=" . $current_Did;
+    // open the page
+    header("Location: ".$url);
 
 }
 
@@ -262,6 +271,7 @@ if (isset($_POST['Go']))
         // open the page
         header("Location: ".$url);
     }
+
     // set utf-8 charset for DB connection to ensure correct display of special characters like umlauts
     mysqli_set_charset($conn, "utf8");
     // get language setting from database to define the description field displayed in the table

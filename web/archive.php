@@ -167,8 +167,8 @@ if (isset($_POST['Export']))
         exit;
     }
 
-list($SpindleName, $RecipeName, $start_date, $end_date, $dens, $temperature, $angle, $gravity, $battery, $rssi) = getArchiveValues($conn, $selected_recipe);
 list($isCalib,$initial_gravity, $const1, $const2, $const3) = getArchiveInitialGravity($conn, $selected_recipe);
+list($SpindleName, $RecipeName, $start_date, $end_date, $dens, $temperature, $angle, $gravity, $battery, $rssi, $SVG, $ABV) = getArchiveValues($conn, $selected_recipe, $initial_gravity);
 list($isCalib,$final_gravity) = getArchiveFinalGravity($conn, $selected_recipe, $end_date);
 
 $document_class = get_color_scheme($conn);
@@ -237,8 +237,28 @@ if($diagram_type == '3')
     $ChartSecond = $rssi;
 }
 
+if($diagram_type == '4')
+{
+    $file = "svg_ma";
+    $PARA_FIRST_Y_MIN = "SVG_Y_AXIS_MIN";
+    $PARA_FIRST_Y_MAX = "SVG_Y_AXIS_MAX";
+    $PARA_SECOND_Y_MIN = "ALCOHOL_Y_AXIS_MIN";
+    $PARA_SECOND_Y_MAX = "ALCOHOL_Y_AXIS_MAX";
+    $first_y_unit = " %";
+    $second_y_unit = " %";
+    $ChartFirst = $SVG;
+    $ChartSecond = $ABV;
+}
+
 $first_y = get_field_from_sql($conn,$file,"first_y");
+
+if ($diagram_type != '4'){
 $second_y = get_field_from_sql($conn,$file,"second_y");
+}
+else {
+$second_y = get_field_from_sql($conn,$file,"third_y");
+}
+
 
 $first_y_min = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_FIRST_Y_MIN));
 $first_y_max = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_FIRST_Y_MAX));
@@ -286,6 +306,7 @@ $chart_filename_04 = get_field_from_sql($conn,$file,"chart_filename_04");
 $chart_filename_06 = get_field_from_sql($conn,$file,"chart_filename_06");
 $chart_filename_08 = get_field_from_sql($conn,$file,"chart_filename_08");
 $chart_filename_12 = get_field_from_sql($conn,$file,"chart_filename_12");
+$chart_filename_10 = get_field_from_sql($conn,$file,"chart_filename_10");
 
 // get all spindle names to be displayed in form that have submitted data within the timeframe of $daysago
     $archive_sql = "SELECT * FROM Archive ORDER BY Recipe_ID";
@@ -631,6 +652,9 @@ echo ">$chart_filename_08</option>";
 echo "<option value='3'";
 if ($diagram_type == 3) echo " selected";
 echo ">$chart_filename_12</option>";
+echo "<option value='4'";
+if ($diagram_type == 4) echo " selected";
+echo ">$chart_filename_10</option>";
 echo "</select>";
 
 

@@ -6,6 +6,7 @@ body.blue {
 }
 
 body.blue h1 {
+  border-radius: 7px;
   color: white;
   background: #1C6EA4;
   background: linear-gradient(to bottom, #5592bb 0%, #327cad 66%, #1C6EA4 100%);
@@ -13,6 +14,7 @@ body.blue h1 {
 }
 
 body.blue h2 {
+  border-radius: 7px;
   color: white;
   background: #1C6EA4;
   background: linear-gradient(to bottom, #5592bb 0%, #327cad 66%, #1C6EA4 100%);
@@ -26,6 +28,7 @@ body.green {
 }
 
 body.green h1 {
+  border-radius: 7px;
   color: white;
   background: #4F7849;
   background: linear-gradient(to bottom, #7b9a76 0%, #60855b 66%, #4F7849 100%);
@@ -34,6 +37,7 @@ body.green h1 {
 }
 
 body.green h2 {
+  border-radius: 7px;
   color: white;
   background: #4F7849;
   background: linear-gradient(to bottom, #7b9a76 0%, #60855b 66%, #4F7849 100%);
@@ -48,6 +52,7 @@ body.wheat {
 }
 
 body.wheat h1 {
+  border-radius: 7px;
   color: black;
   background: rgb(245,222,179);
   background: linear-gradient(to bottom, rgba(245,222,179,1) 0%, rgba(208,179,6,1) 66%, rgba(182,156,1,1) 100%);
@@ -55,6 +60,7 @@ body.wheat h1 {
 }
 
 body.wheat h2 {
+  border-radius: 7px;
   color: black;
   background: rgb(245,222,179);
   background: linear-gradient(to bottom, rgba(245,222,179,1) 0%, rgba(208,179,6,1) 66%, rgba(182,156,1,1) 100%);
@@ -68,6 +74,7 @@ body.red {
 }
 
 body.red h1 {
+  border-radius: 7px;
   color: black;
   background: #F7D4EC;
   background: linear-gradient(to bottom, #F7D4EC 0%, #EA202C 66%, #AE0D7A 100%);
@@ -75,6 +82,7 @@ body.red h1 {
 }
 
 body.red h2 {
+  border-radius: 7px;
   color: black;
   background: #F7D4EC;
   background: linear-gradient(to bottom, #F7D4EC 0%, #EA202C 66%, #AE0D7A 100%);
@@ -105,6 +113,40 @@ ul {
   overflow: auto;
 }
 
+ul.red {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  width: 15%;
+  background-color: #F7D4EC;
+  position: fixed;
+  height: 100%;
+  overflow: auto;
+}
+
+ul.green {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  width: 15%;
+  background-color: #CEE0CC;
+  position: fixed;
+  height: 100%;
+  overflow: auto;
+}
+
+ul.wheat {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  width: 15%;
+  background-color: #F5DEB3;
+  position: fixed;
+  height: 100%;
+  overflow: auto;
+}
+
+
 li a {
   display: block;
   color: #000;
@@ -112,10 +154,11 @@ li a {
   text-decoration: none;
 }
 
-li a.active {
+/*li a.active {
+  border-radius: 7px;
   background-color: #4CAF50;
   color: white;
-}
+}*/
 
 li a:hover:not(.active) {
   background-color: #555;

@@ -240,9 +240,14 @@ function get_color_scheme($conn)
     $colorscheme_query = "Select Parameter FROM Settings WHERE Parameter LIKE 'COLORSCHEME_%' AND Value = '1'";
     $result = mysqli_query($conn, $colorscheme_query) or die(mysqli_error($conn));
     $row = mysqli_fetch_array($result);
+    write_log("Row from colorscheme_query: ");
+    write_log($row);
     $colorscheme=$row[0];
+    write_log("Colorscheme: ".$colorscheme);
     if($colorscheme != null){    
-        return substr_replace($colorscheme,'',0,12); 
+        $color=substr_replace($colorscheme,'',0,12);
+        write_log("Color: ".$color);
+        return $color; 
     }
     else {
         return 'blue';
@@ -963,7 +968,7 @@ function ExportArchiveValues($conn, $recipe_ID, $txt_recipe_name, $txt_end, $txt
     }
 
 // Get archive values from database for selected recipe_ID. 
-function getArchiveValues($conn, $recipe_ID)
+function getArchiveValues($conn, $recipe_ID, $initial_gravity)
 {
     $valAngle = '';
     $valTemperature = '';
@@ -971,11 +976,14 @@ function getArchiveValues($conn, $recipe_ID)
     $valGravity = '';
     $valRSSI = '';
     $valBattery = '';
+    $valSVG ='';
+    $valABV ='';
     $const1 = 0;
     $const2 = 0;
     $const3 = 0;
     $AND_RID = ''; 
-
+   
+    $sql_IG=floatval($initial_gravity);
     $archive_sql = "Select * FROM Archive WHERE Recipe_ID = '$recipe_ID'";
     mysqli_set_charset($conn, "utf8mb4");
     $result = mysqli_query($conn, $archive_sql) or die(mysqli_error($conn));
@@ -1012,6 +1020,12 @@ function getArchiveValues($conn, $recipe_ID)
             $jsTime = $r_row['unixtime'] * 1000;
             $angle = $r_row['angle'];
             $dens = $const1 * pow($angle, 2) + $const2 * $angle + $const3; // complete polynome from database
+            $SVG = ($initial_gravity-$dens)/$initial_gravity*100;
+            $real_dens = 0.1808 * $initial_gravity + 0.8192 * $dens;
+            // calculate alcohol by weigth and by volume (fabbier calcfabbier calc for link see above)
+            $alcohol_by_weight = ( 100 * ($real_dens - $initial_gravity) / (1.0665 * $initial_gravity - 206.65));
+            $alcohol_by_volume = ($alcohol_by_weight / 0.795);
+
             $gravity = $r_row['gravity'];
             $rssi = $r_row['rssi'];
             $battery = $r_row['battery'];
@@ -1022,6 +1036,7 @@ function getArchiveValues($conn, $recipe_ID)
                     $valAngle .= '{ timestamp: ' . $jsTime . ', value: ' . $angle . ", recipe: \"" . $r_row['recipe'] . "\", text_up: '" . $r_row['comment'] . "'},";
                     $valGravity .= '{ timestamp: ' . $jsTime . ', value: ' . $gravity . ", recipe: \"" . $r_row['recipe'] . "\", text_up: '" . $r_row['comment'] . "'},";
                     $valBattery .= '{ timestamp: ' . $jsTime . ', value: ' . $battery . ", recipe: \"" . $r_row['recipe'] . "\", text_up: '" . $r_row['comment'] . "'},";
+                    $valSVG .= '{ timestamp: ' . $jsTime . ', value: ' . $SVG . ", recipe: \"" . $r_row['recipe'] . "\", text_up: '" . $r_row['comment'] . "'},";
                     $label_position = $label_position * -1;
                 }
                 else{
@@ -1029,6 +1044,7 @@ function getArchiveValues($conn, $recipe_ID)
                     $valAngle .= '{ timestamp: ' . $jsTime . ', value: ' . $angle . ", recipe: \"" . $r_row['recipe'] . "\", text_down: '" . $r_row['comment'] . "'},";
                     $valGravity .= '{ timestamp: ' . $jsTime . ', value: ' . $gravity . ", recipe: \"" . $r_row['recipe'] . "\", text_down: '" . $r_row['comment'] . "'},";
                     $valBattery .= '{ timestamp: ' . $jsTime . ', value: ' . $battery . ", recipe: \"" . $r_row['recipe'] . "\", text_down: '" . $r_row['comment'] . "'},";
+                    $valSVG .= '{ timestamp: ' . $jsTime . ', value: ' . $SVG . ", recipe: \"" . $r_row['recipe'] . "\", text_down: '" . $r_row['comment'] . "'},";
                     $label_position = $label_position * -1;
                 }
   
@@ -1038,10 +1054,11 @@ function getArchiveValues($conn, $recipe_ID)
             $valAngle .= '{ timestamp: ' . $jsTime . ', value: ' . $angle . ", recipe: \"" . $r_row['recipe'] . "\"},";
             $valGravity .= '{ timestamp: ' . $jsTime . ', value: ' . $gravity . ", recipe: \"" . $r_row['recipe'] . "\"},";
             $valBattery .= '{ timestamp: ' . $jsTime . ', value: ' . $battery . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            $valSVG .= '{ timestamp: ' . $jsTime . ', value: ' . $SVG . ", recipe: \"" . $r_row['recipe'] . "\"},";
             }
             $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
             $valRSSI .= '{ timestamp: ' . $jsTime . ', value: ' . $rssi . ", recipe: \"" . $r_row['recipe'] . "\"},";
-
+            $valABV .= '{ timestamp: ' . $jsTime . ', value: ' . $alcohol_by_volume . ", recipe: \"" . $r_row['recipe'] . "\"},";
 
 
         }
@@ -1055,7 +1072,9 @@ function getArchiveValues($conn, $recipe_ID)
             $valAngle,
             $valGravity,
             $valBattery,
-            $valRSSI
+            $valRSSI,
+            $valSVG,
+            $valABV
         );
   
 }
