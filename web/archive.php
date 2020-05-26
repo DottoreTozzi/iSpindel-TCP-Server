@@ -1,14 +1,23 @@
 <?php
+// Archive.php script to show older fermentation data
+// Version 1.0 May 20, 2020 (initial release)
+//
+// Archive can show different diagram styles of old datasets
+// End of fermentation can be set to display only relevant data
+// Comments can be added at any given time selected in the diagram
+//
+// _GET Parameters:
+// recipe_ID : selected ID for recipe to be shown -> if not set, lowest ID from database will be used
+// type      : Diagram type to be shown (0 - 4) -> if not set, 0 is default
+// RID_END   : Flag (timestamp) to send end of fermentation flag to atabase for selected ID. Data will be shown only from reset to this flag
+// comment   : Add comment to selected id at selected timestamp (RID_END is used for this purpose)
+//
+
+
+// error handling 
 //ini_set('display_errors', 'On');
 //error_reporting(E_ALL | E_STRICT);
 
-// Show the Density/Temperature chart
-// GET Parameters:
-// hours = number of hours before now() to be displayed
-// days = hours x 24   
-// weeks = days x 7    
-// name = iSpindle name
- 
 // DB config values will be pulled from differtent location and user can personalize this file: common_db_config.php
 // If file does not exist, values will be pulled from default file
  
@@ -17,19 +26,19 @@ if ((include_once './config/common_db_config.php') == FALSE){
       }
      include_once("include/common_db_query.php");
 
+// select the minimum ID for the recipe in the archive table and set it as selected recipe
 $min_recipe_id = "SELECT min(Recipe_ID) FROM Archive";
 $q_sql = mysqli_query($conn, $min_recipe_id) or die(mysqli_error($conn));
 $result = mysqli_fetch_array($q_sql);
 $selected_recipe = $result[0];
 
-// Check GET parameters if set
+// Check if recipe_id is set and use this id as selected recipe if set
 if(isset($_GET['recipe_id'])){
     $selected_recipe = $_GET['recipe_id'];
 }
 
-$rid_end_exists = 0;
-
 //check if flag for end of fermenation is already existing
+$rid_end_exists = 0;
 $check_RID_END = "SELECT Timestamp FROM Data WHERE Recipe_ID = '$selected_recipe' AND Internal = 'RID_END'";
 $q_sql = mysqli_query($conn, $check_RID_END) or die(mysqli_error($conn));
 $rows = mysqli_num_rows($q_sql);
@@ -39,6 +48,7 @@ if ($rows <> 0){
     $timestamp_rid = $result[0];
 }
 
+// Check if other _GET parameters are set
 if(!isset($_GET['type']))
     {
     $diagram_type = '0';
@@ -56,13 +66,14 @@ else {
     $comment = $_GET['comment'];
     }
 
+// if RID_END parameter is set,flag has to be written to the data table at the given timestamp
 if(!isset($_GET['RID_END']))
     { 
     $RID_END = ''; 
     }
 else {
-    $RID_END = ($_GET['RID_END']);
-
+    $RID_END = ($_GET['RID_END']); 
+// if comment is not set in addition to RID_END, write RID_END flag to data table for selected recipe at selected timestamp
     if($comment == ''){
         //if flag for end of fermenation is already existing: remove it
         if ($rid_end_exists == 1)
@@ -80,6 +91,7 @@ else {
 
 
     }
+// if comment parameter is set in addition to RID_END, comment is written to datatable for selected recipe at selected timestamp
     else {
         $add_recipe_ID="UPDATE Data Set Comment = '$comment' WHERE Recipe_ID = $selected_recipe AND UNIX_TIMESTAMP(Timestamp) = $RID_END";
         write_log("SELECT to add comment: " . $add_recipe_ID);
@@ -100,7 +112,7 @@ if (isset($_POST['Stop']))
         header("Location: ".$url);
     }
 
-// self caled function: if add button is selected, default settings for selected device will be copied and can be modified later individually
+// self called function: if go button is selected, archive page is reloaded with selected recipe_id and diagram type
 if (isset($_POST['Go']))
     {
         $recipe_id = $_POST['archive_name'];
@@ -113,6 +125,7 @@ if (isset($_POST['Go']))
         header("Location: ".$url);
     }
 
+// self called function: if Del button is selected, data for currenlty selected fermentation will be deleted from data and archive table (this cannot be undone)
 if (isset($_POST['Del']))
     {
         $recipe_id = $_POST['archive_name'];        
@@ -126,6 +139,7 @@ if (isset($_POST['Del']))
         header("Location: ".$url);
     }
 
+// self called function: if Remove button is selected, RIE_END Flag is removed from selected dataset. New flag can be added at different position.
 if (isset($_POST['Remove']))
     {
         $recipe_id = $_POST['archive_name'];
@@ -140,6 +154,7 @@ if (isset($_POST['Remove']))
         header("Location: ".$url);
     }
 
+// self called function: if Export button is selected, data of selected fermentation is exported to a CSV file including a summary at the top. Data can be used in Excel
 if (isset($_POST['Export']))
     {
         $txt_recipe_name =  $_POST['txt_recipe_name'];
@@ -167,23 +182,29 @@ if (isset($_POST['Export']))
         exit;
     }
 
+// get initial gravity and constants for gravity calulaction to be shown in the header table
 list($isCalib,$initial_gravity, $const1, $const2, $const3) = getArchiveInitialGravity($conn, $selected_recipe);
+// get all data for the different diagram tyes
 list($SpindleName, $RecipeName, $start_date, $end_date, $dens, $temperature, $angle, $gravity, $battery, $rssi, $SVG, $ABV) = getArchiveValues($conn, $selected_recipe, $initial_gravity);
+// get the final gracvitry for this ID
 list($isCalib,$final_gravity) = getArchiveFinalGravity($conn, $selected_recipe, $end_date);
-
+// get selected colo scheme for the layout
 $document_class = get_color_scheme($conn);
 
-
+// calculate various parameters to be displayed in the header table
 $attenuation = ($initial_gravity - $final_gravity)*100 / $initial_gravity;
 $real_dens = 0.1808 * $initial_gravity + 0.8192 * $final_gravity;
 $alcohol = ((100* ($real_dens - $initial_gravity) / (1.0665 * $initial_gravity -206.65)) / 0.795);
 
+// define date and number formats for parameters in the header table
 $start_date = date("Y-m-d", strtotime($start_date));
 $end_date = date("Y-m-d", strtotime($end_date));
 $const1 = number_format($const1,4);
 $const2 = number_format($const2,4);
 $const3 = number_format($const3,4);
 $cal = 0;
+
+// define diagram parameters such as units and max/min values and data to be shown depenting on the selection of diagram_type
 
 if($diagram_type == '0')
 {
@@ -250,8 +271,10 @@ if($diagram_type == '4')
     $ChartSecond = $ABV;
 }
 
+// pull axis lable for first y depending on selected diagram type
 $first_y = get_field_from_sql($conn,$file,"first_y");
 
+// do the same for the second y axis. For the SVG diagram we need to pull the lable of the third y axis and assign it here to the second
 if ($diagram_type != '4'){
 $second_y = get_field_from_sql($conn,$file,"second_y");
 }
@@ -259,7 +282,7 @@ else {
 $second_y = get_field_from_sql($conn,$file,"third_y");
 }
 
-
+// pull the min/max values for the selected diagram type from the settings table
 $first_y_min = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_FIRST_Y_MIN));
 $first_y_max = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_FIRST_Y_MAX));
 $second_y_min = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_SECOND_Y_MIN));
@@ -269,17 +292,9 @@ $second_y_max = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_SECO
 $file = "plato4";
 $recipe_name = get_field_from_sql($conn,'diagram',"recipe_name");
 $x_axis = get_field_from_sql($conn,$file,"x_axis");
-$subheader = get_field_from_sql($conn,$file,"timetext");
-$subheader_reset = get_field_from_sql($conn,$file,"timetext_reset");
-$subheader_weeks = get_field_from_sql($conn,'diagram',"timetext_weeks");
-$subheader_days = get_field_from_sql($conn,'diagram',"timetext_days");
-$subheader_hours = get_field_from_sql($conn,'diagram',"timetext_hours");
-$header_no_data_1 = get_field_from_sql($conn,'diagram',"header_no_data_1");
-$header_no_data_2 = get_field_from_sql($conn,'diagram',"header_no_data_2");
-$header_no_data_3 = get_field_from_sql($conn,'diagram',"header_no_data_3");
-$not_calibrated = get_field_from_sql($conn,'diagram',"not_calibrated"); 
 $tooltip_at = get_field_from_sql($conn,'diagram',"tooltip_at");
 $tooltip_time = get_field_from_sql($conn,'diagram',"tooltip_time");
+
 $file = "settings";
 $stop = get_field_from_sql($conn,$file,"stop");
 
@@ -297,8 +312,6 @@ $comment_text = get_field_from_sql($conn,$file,"comment_text");
 $txt_initial_gravity = get_field_from_sql($conn,$file,"header_initialgravity");
 $txt_alcohol = get_field_from_sql($conn,$file,"alcohol");
 
-
-
 $file = "index";
 $show_diagram = get_field_from_sql($conn,$file,"show_diagram");
 $send_comment = get_field_from_sql($conn,$file,"send_comment");
@@ -308,10 +321,11 @@ $chart_filename_08 = get_field_from_sql($conn,$file,"chart_filename_08");
 $chart_filename_12 = get_field_from_sql($conn,$file,"chart_filename_12");
 $chart_filename_10 = get_field_from_sql($conn,$file,"chart_filename_10");
 
-// get all spindle names to be displayed in form that have submitted data within the timeframe of $daysago
-    $archive_sql = "SELECT * FROM Archive ORDER BY Recipe_ID";
-    $archive_result=mysqli_query($conn, $archive_sql) or die(mysqli_error($conn));
-    $len = mysqli_num_rows($archive_result);
+// get all fermentations from the archive table
+$archive_sql = "SELECT * FROM Archive ORDER BY Recipe_ID";
+$archive_result=mysqli_query($conn, $archive_sql) or die(mysqli_error($conn));
+// parameter is used to check if archive table is filled with content
+$len = mysqli_num_rows($archive_result);
 
 ?>
 
@@ -331,7 +345,7 @@ $chart_filename_10 = get_field_from_sql($conn,$file,"chart_filename_10");
 <script type="text/javascript">
 
 
-// define constants for data in chart. Allows for mor than two variables. Recipe information is included here and can be displayed in tooltip
+// define constants for data in chart. Allows for more than two variables. Recipe information is included here and can be displayed in tooltip
 const chartDens=[<?php echo $ChartFirst;?>]
 const chartTemp=[<?php echo $ChartSecond;?>]
 // define constants to be displayed in diagram -> no php code needed in chart
@@ -344,8 +358,6 @@ const first_y_max = <?php echo $first_y_max;?>;
 const second_y_max = <?php echo $second_y_max;?>;
 const first_y_unit = [<?php echo "'".$first_y_unit."'";?>]
 const second_y_unit = [<?php echo "'".$second_y_unit."'";?>]
-
-
 const x_axis=[<?php echo "'".$x_axis."'";?>]
 const tooltip_at=[<?php echo "'".$tooltip_at."'";?>]
 const tooltip_time=[<?php echo "'".$tooltip_time."'";?>]
@@ -353,6 +365,7 @@ const archive_end=[<?php echo "'".$archive_end."'";?>]
 const time_selected=[<?php echo "'".$time_selected."'";?>]
 const RecipeName=[<?php echo "'".$RecipeName."'";?>]
 
+// function to add comment to archive for selected recipe and reload page
 function reload_page() {
     var comment_text = document.getElementById('comment').value;
     var dia_type = document.getElementById('diagram_type').value;
@@ -368,6 +381,7 @@ function reload_page() {
     window.open(full_path,"_self");
     }
 
+// diagram preparation
 $(function () 
 {
   var chart;
@@ -410,6 +424,8 @@ $(function ()
                     allowPointSelect: true,
             point: {
                 events: {
+// function if point in chart is selected
+// comment field will be shown timestamp of selected point will be written to end_date variable
                     select: function () {
                         var text = Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', new Date(this.x)) + time_selected;
                             end_date = this.x;
@@ -485,6 +501,7 @@ $(function ()
             ],
             tooltip:
             {
+// Tooltip will show data at cursor position for datetime / and value
                 crosshairs: [true, true],
                 formatter: function() 
                 {
@@ -508,6 +525,7 @@ $(function ()
             series:
             [
                 {
+// labels will be shown if comment is included in database: these labels are above the dataline
                     dataLabels: [{
                         enabled: true,
                         shape: 'callout',
@@ -526,6 +544,7 @@ $(function ()
                         }
                     },
                    {
+// labels will be shown if comment is included in database: these labels are below the dataline (if two labels are close together, both (up and down) will be shown)
                         enabled: true,
                         shape: 'callout',
                         y: 50,
@@ -590,16 +609,19 @@ $(function ()
 
 </script>
 </head>
+
 <body class='<?php echo $document_class ?>'>
 <div id="wrapper">
 <div id="summary_table">
 <!-- select options for  archives-->
 <?php
+// Table that shows the select boxes and the data summary
 echo "<table border='1'>";
 echo "<tbody>";
 echo "<tr>";
 echo "<td><b>$txt_archive :</b></td><td>";
 
+// show results from the archive select if the table has content
 if ($len != 0)
 {
     echo "<select id='archive_name' name = 'archive_name'>";
@@ -607,6 +629,7 @@ if ($len != 0)
     {
         $start = $row['Start_date'];
         $newDate = date("Y-m-d", strtotime($start));
+// $ID is used for parameter archive_name that is used as _POST value in selects
         $ID = $row['Recipe_ID'];
         if ($selected_recipe==$ID) 
         {

@@ -378,7 +378,7 @@ $(function ()
 <body class='<?php echo $document_class ?>'>
 <a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt="<?php echo $stop; ?>"></a>
  
-        <div id="wrapper" style="width:80%; height:80%; position:right">
+        <div id="wrapper" style="width:95%; height:95%; position:right">
         <script src='include/highcharts.js'></script>
         <script src='include/highcharts-more.js'></script>
         <div id='battery' style='width:32%; height:32%; float:left'></div>

@@ -54,11 +54,11 @@ if (isset($_POST['Go']))
     }
 
 // Check GET parameters
-// Added parameter recipe to set recipe name at reset point. Recipe nam will be displayed in diagrams as header and in tooltip
+// _GET['name'] is a number and represents an index of an array.
+// if parameter is not set, first entry of array will be used (==0)
 if(!isset($_GET['name'])) $_GET['name'] = '0'; else $_GET['name'] = $_GET['name'];
-
 $current_spindle = $_GET['name'];
-
+// select spindle names and add them to an array
 $sql_q = "SELECT max(Timestamp), Name FROM Data GROUP BY Name";
     $result=mysqli_query($conn, $sql_q) or die(mysqli_error($conn));
 
@@ -67,12 +67,29 @@ $sql_q = "SELECT max(Timestamp), Name FROM Data GROUP BY Name";
     $spindle_list[] = $row_s['Name'];
     }
 
+// convert array ID to Spindle Name -> iSpindleID
 $iSpindleID=$spindle_list[$_GET['name']];
+
+
 //get current calibration values for iSpindelID
 $valCalib = getSpindleCalibration($conn, $iSpindleID );
 
+// set default values for constans if spinlde has no calibration entry yet
+$const1='0.000000001';
+$const2='0.000000001';
+$const3='0.000000001';
 
+// if spindle is calibrated, use the values from the database
+if ($valCalib[0])
+{
+    $const1=$valCalib[1];
+    $const2=$valCalib[2];
+    $const3=$valCalib[3];
+}
+
+// get CSS layout for page from settings table
 $document_class = get_color_scheme($conn);
+
 // Get fields from database in language selected in settings
 $file = "calibration";
 $window_alert_update = get_field_from_sql($conn,$file,"window_alert_update");
@@ -102,7 +119,7 @@ $stop = get_field_from_sql($conn,$file,"stop");
         window.alert('<?php echo $window_alert_update; ?>');
     }
 
-// function to reload page when section is changed -> different section parameters will be displayed and can be changed
+// function to reload page when spindle is changed -> different constants will be shown
     function reload_page() {
         var iSpindleID = document.getElementById('ispindel_name').selectedIndex;
         var variable = '?name='.concat(iSpindleID);
@@ -123,21 +140,6 @@ $stop = get_field_from_sql($conn,$file,"stop");
 <h1><?php echo $header.' '.$iSpindleID."_".$valCalib[4] ?></h1>
 
 <div id="Calibrate">
-<?php
-$const1='0.000000001';
-$const2='0.000000001';
-$const3='0.000000001';
-
-$valCalib = getSpindleCalibration($conn, $iSpindleID );
-
-if ($valCalib[0])
-{
-$const1=$valCalib[1];
-$const2=$valCalib[2];
-$const3=$valCalib[3];
-}
-?>
-
 <!-- select options for spindle names -->
 <select id="ispindel_name" name = 'ispindel_name' onchange="reload_page()">
         <?php
@@ -162,7 +164,7 @@ $const3=$valCalib[3];
         </option>
 </select>
 
-
+<!-- number fields for constants -->
 <p><b><?php echo $enter_constants ?></b><br/>
 <br/>
 <?php echo $constant1 ?> <input type = "number" name = "const1" step = "0.000000001" value = <?php echo $const1 ?> />

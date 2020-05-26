@@ -1,4 +1,5 @@
 <?php
+// error handling
 ini_set('display_errors', 'On');
 error_reporting(E_ALL | E_STRICT);
 
@@ -13,7 +14,7 @@ if ((include_once './config/common_db_config.php') == FALSE){
 
 
 // Check GET parameters
-// Added parameter recipe to set recipe name at reset point. Recipe nam will be displayed in diagrams as header and in tooltip
+// Parameter recipe to set recipe name at reset point. Recipe name will be displayed in diagrams as header and in tooltip for selected spindle 
 if(!isset($_GET['name'])) $_GET['name'] = 'iSpindel000'; else $_GET['name'] = $_GET['name'];
 if(!isset($_GET['recipe'])) $_GET['recipe'] = ''; else $_GET['recipe'] = $_GET['recipe'];
 
@@ -35,17 +36,19 @@ $q_sql0 = mysqli_query($conn, "SELECT DISTINCT ID FROM Data WHERE Name = '".$Nam
 if (! $q_sql0){ 
     echo $error_read_id;                                             
     }
-$valID='0';
 
+// set default values for variables
+$valID='0';
 $const1=NULL;
 $const2=NULL;
 $const3=NULL;
 
 // get ID for selected spindle name
 $rows = mysqli_num_rows($q_sql0);
+// check if spindle has an ID
 if ($rows > 0) {                                                                                                                                                                                                                 
     $r_row = mysqli_fetch_array($q_sql0);                                                                                                                                                                                                        $valID = $r_row['ID'];
-
+// get calibration values from calibration table for selected spindle
     $valCalib = getSpindleCalibration($conn, $Name );
     if ($valCalib[0])
         {
@@ -57,12 +60,12 @@ if ($rows > 0) {
 
     }     
 
+// get latest recipe_id for selected spindle
 $update_archive_sql="SELECT max(Recipe_ID) FROM Archive where Name='".$Name."'";
 $q_sql = mysqli_query($conn, $update_archive_sql) or die(mysqli_error($conn));
 $ID = mysqli_fetch_array($q_sql);  
 // if spindle has already an entry in the archive table, update the end_date of the former batch and update the current calibration data if canged during batch
 if($ID[0]){
-//    echo "Recipe_ID: ".$ID[0];
     $timestamp_2 = date("Y-m-d H:i:s"); 
     $update_archive_table = "UPDATE Archive Set End_date = '".$timestamp_2."', const1 = '".$const1."', const2 = '".$const2."', const3 = '".$const3."' WHERE Recipe_ID = '".$ID[0]."'";
     $q_sql = mysqli_query($conn, $update_archive_table) or die(mysqli_error($conn));
@@ -83,9 +86,11 @@ $ID = mysqli_fetch_array($q_sql);
 
 // set reset flag for spindel and write recipe name , '0' values for other parameters as 'NULL' values may cause a problem for some database configurations (strict SQL mode)
 $sql_select="INSERT INTO Data (Timestamp, Name, ID, Angle, Temperature, Battery, resetFlag, RSSI, Recipe, Recipe_ID)VALUES ('$timestamp','$Name', $valID, 0, 0, 0, true, 0, '$Recipe','$ID[0]')";
+// set utf8mb4 for better compatibility with characters such as ä,ö,ü,..
 mysqli_set_charset($conn, "utf8mb4");
 $q_sql = mysqli_query($conn, $sql_select) or die(mysqli_error($conn));
-       
+
+// report error if last select id not work
 if (! $q_sql){
    echo $error_write;
 }
@@ -95,6 +100,7 @@ if ($Recipe <>'')
    {
    echo $recipe_written . " <b>" . $Recipe . "</b>";
    }
+// remove also the 'mail sent flag' for several alarms
 $del_low = delete_mail_sent($conn,"SentAlarmLow",$valID);
 $del_svg = delete_mail_sent($conn,"SentAlarmSVG",$valID);
 
