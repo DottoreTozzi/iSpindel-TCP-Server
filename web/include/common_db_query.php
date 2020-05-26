@@ -39,9 +39,21 @@ Jan 24 2019
 - Function to write calibration data back to databses added which is used by calibration.php. Usercan send calibration data through frontend and does not need to open phpadmin
 
 May 2020
-- 
-- 
-- 
+- Version 3.0 with some major changes
+- combined some functions one.  
+- --> one function for all regular trend diagrams
+- --> one function for all moving average diagrams and the attenuation alcohol diagram
+- added function to migrate database automatically to use archive functionality
+- added functions to show archive diagrams for each fermentation
+- archives (old fermentation data) can be removed from the database individually
+- added function to export data from archive as CSV file
+- added functions to export and import data and archive table
+- added functiones to upgrade settings and strings table via web interface. This makes the correspo0nding sql files for update via phpmyadmin obsolete
+- added function to export and import individual settings
+- added fucntions to select and use css layouts for appearance of wab pages
+- added iGauge functionality (thansk to JackFrost))
+- Updated and added comments on the code
+
 
  */
 
