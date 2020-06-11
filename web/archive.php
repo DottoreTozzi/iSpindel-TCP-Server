@@ -21,8 +21,8 @@
 // DB config values will be pulled from differtent location and user can personalize this file: common_db_config.php
 // If file does not exist, values will be pulled from default file
  
-if ((include_once './config/common_db_config.php') == FALSE){
-       include_once("./config/common_db_default.php");
+if ((include_once '../config/common_db_config.php') == FALSE){
+       include_once("../config/common_db_default.php");
       }
      include_once("include/common_db_query.php");
 
@@ -31,6 +31,18 @@ $min_recipe_id = "SELECT min(Recipe_ID) FROM Archive";
 $q_sql = mysqli_query($conn, $min_recipe_id) or die(mysqli_error($conn));
 $result = mysqli_fetch_array($q_sql);
 $selected_recipe = $result[0];
+
+write_log('Selected_recipe: '. $selected_recipe);
+
+// if archive is empty, go back to index page
+if (!$selected_recipe){
+    $url="http://";
+    $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
+    $url .= "index.php";
+    // open the page
+    header("Location: ".$url);
+    
+}
 
 // Check if recipe_id is set and use this id as selected recipe if set
 if(isset($_GET['recipe_id'])){

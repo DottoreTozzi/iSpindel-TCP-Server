@@ -67,10 +67,10 @@ May 2020
 
 // include configuration fils in web/config directory
 
-    if ((include_once './config/common_db_config.php') == FALSE){
-       include_once("./config/common_db_default.php");
-    }
-       include_once("./config/tables.php");
+//    if ((include_once './config/common_db_config.php') == FALSE){
+//       include_once("./config/common_db_default.php");
+//    }
+//       include_once("./config/tables.php");
 
 // function to write debug messages to the console of the web browser
 // CONSOLE_LOG parameter has to be set to 1 in common_db_.....php config file
@@ -289,15 +289,15 @@ function get_color_scheme($conn)
     $colorscheme_query = "Select Parameter FROM Settings WHERE Parameter LIKE 'COLORSCHEME_%' AND Value = '1'";
     $result = mysqli_query($conn, $colorscheme_query) or die(mysqli_error($conn));
     $row = mysqli_fetch_array($result);
-    write_log("Row from colorscheme_query: ");
-    write_log($row);
+//    write_log("Row from colorscheme_query: ");
+//    write_log($row);
     $colorscheme=$row[0];
-    write_log("Colorscheme: ".$colorscheme);
+//    write_log("Colorscheme: ".$colorscheme);
 // colorscheme looks like COLORSCHEME_color
 // only 'color' is required for css layout
     if($colorscheme != null){    
         $color=substr_replace($colorscheme,'',0,12);
-        write_log("Color: ".$color);
+//        write_log("Color: ".$color);
         return $color; 
     }
 // if colorscheme is not set, fall back to blue scheme as default
@@ -425,7 +425,23 @@ function export_data_table($table,$file="iSpindle_Backup.sql")
 // function to import settings and strings tables
 function import_table($conn,$table,$filename)
 {
-// Drop table first
+// older version did not export Calibration table
+// needs to be checked that calibration is in sql file
+// otherwise table should not be dropped
+$pos = strpos($table,", Calibration");
+
+if ($pos !== false) {
+if (strpos(file_get_contents($filename),"CREATE TABLE `Calibration` (") != FALSE)
+    {
+    write_log("Calibration Table included in uploaded file"); 
+    }
+else {
+    $table = str_replace(', Calibration','',$table);
+    write_log($table);
+}
+}
+
+// Drop tables first
 $drop_table="DROP TABLE IF EXISTS ".$table;
 $result = mysqli_query($conn, $drop_table) or die(mysqli_error($conn));
 
@@ -1117,9 +1133,9 @@ function getArchiveValues($conn, $recipe_ID, $initial_gravity)
     $const1 = $archive_result['const1'];
     $const2 = $archive_result['const2'];
     $const3 = $archive_result['const3'];
-
+    write_log($end_date);
 // if no entry for end date in archive table, get last timestamp of last dataset for selected recipe from data table
-    if($end_date == '0000-00-00 00:00:00'){
+    if($end_date == NULL){
     $get_end_date = "SELECT max(Timestamp) FROM Data WHERE Recipe_ID = '$recipe_ID'";
     $q_sql = mysqli_query($conn, $get_end_date) or die(mysqli_error($conn));
     $result = mysqli_fetch_array($q_sql);
@@ -1132,7 +1148,7 @@ function getArchiveValues($conn, $recipe_ID, $initial_gravity)
     $rows = mysqli_fetch_array($q_sql);
     if ($rows <> 0)    
     {
-// update end_dat in case of existing RID_END flag
+// update end_date in case of existing RID_END flag
     $end_date = $rows['Timestamp'];
 // add condition to select if RID_END flag is set
     $AND_RID = " AND Timestamp <= (Select max(Timestamp) FROM Data WHERE Recipe_ID='$recipe_ID' AND Internal = 'RID_END')";

@@ -7,11 +7,10 @@ error_reporting(E_ALL | E_STRICT);
 // DB config values will be pulled from differtent location and user can personalize this file: common_db_config.php
 // If file does not exist, values will be pulled from default file
 
-if ((include_once './config/common_db_config.php') == FALSE){
-       include_once("./config/common_db_default.php");
+if ((include_once '../config/common_db_config.php') == FALSE){
+       include_once("../config/common_db_default.php");
      }
     include_once("include/common_db_query.php");
-
 
 // Check GET parameters
 // Parameter recipe to set recipe name at reset point. Recipe name will be displayed in diagrams as header and in tooltip for selected spindle 
@@ -59,7 +58,6 @@ if ($rows > 0) {
 
 
     }     
-
 // get latest recipe_id for selected spindle
 $update_archive_sql="SELECT max(Recipe_ID) FROM Archive where Name='".$Name."'";
 $q_sql = mysqli_query($conn, $update_archive_sql) or die(mysqli_error($conn));
@@ -67,15 +65,28 @@ $ID = mysqli_fetch_array($q_sql);
 // if spindle has already an entry in the archive table, update the end_date of the former batch and update the current calibration data if canged during batch
 if($ID[0]){
     $timestamp_2 = date("Y-m-d H:i:s"); 
-    $update_archive_table = "UPDATE Archive Set End_date = '".$timestamp_2."', const1 = '".$const1."', const2 = '".$const2."', const3 = '".$const3."' WHERE Recipe_ID = '".$ID[0]."'";
-    $q_sql = mysqli_query($conn, $update_archive_table) or die(mysqli_error($conn));
-    
+    if ($const1 != NULL){
+        $update_archive_table = "UPDATE Archive Set End_date = '".$timestamp_2."', const1 = '".$const1."', const2 = '".$const2."', const3 = '".$const3."' WHERE Recipe_ID = '".$ID[0]."'";
+        }
+    else {
+        $update_archive_table = "UPDATE Archive Set End_date = '".$timestamp_2."', const1 = NULL, const2 = NULL, const3 = NULL WHERE Recipe_ID = '".$ID[0]."'";
+        }
+        write_log($update_archive_table);
+        $q_sql = mysqli_query($conn, $update_archive_table) or die(mysqli_error($conn));    
   }
 //now add a new entry to the archive table with information on the new recipe, start date  Spindle ID and current calibration data
 $timestamp = date("Y-m-d H:i:s");
+if ($const1 != NULL){
 $entry_recipe_table_sql = "INSERT INTO `Archive`
                            (`Recipe_ID`, `Name`, `ID`, `Recipe`, `Start_date`, `End_date`, `const1`, `const2`, `const3`)
-                           VALUES (NULL, '".$Name."', '".$valID."', '".$Recipe."', '".$timestamp."', NULL, '".$const1."', '".$const2."', '".$const3."')";
+                           VALUES (NULL, '".$Name."', '".$valID."', '".$Recipe."', '".$timestamp."', NULL, '$const1', '$const2', '$const3')";
+}
+else {
+$entry_recipe_table_sql = "INSERT INTO `Archive`
+                           (`Recipe_ID`, `Name`, `ID`, `Recipe`, `Start_date`, `End_date`, `const1`, `const2`, `const3`)
+                           VALUES (NULL, '".$Name."', '".$valID."', '".$Recipe."', '".$timestamp."', NULL, NULL, NULL, NULL)";
+}
+write_log($entry_recipe_table_sql);
 mysqli_set_charset($conn, "utf8mb4");
 $entry_result = mysqli_query($conn, $entry_recipe_table_sql) or die(mysqli_error($conn));
 

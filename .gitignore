@@ -1,4 +1,3 @@
 config/common_db_config.php
 config/iSpindle_config.ini
 web/include/*.png
-web/config/common_db_config.php
