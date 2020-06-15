@@ -1025,7 +1025,7 @@ function delete_mail_sent($conn, $alarm, $iSpindel)
 
 // Export values from database for selected recipe_id from Archive
 // Parameters that are available in the script that is calling this function will be submitted while calling this function
-function ExportArchiveValues($conn, $recipe_ID, $txt_recipe_name, $txt_end, $txt_initial_gravity, $initial_gravity, $txt_final_gravity, $final_gravity, $txt_attenuation, $attenuation, $txt_alcohol, $alcohol, $txt_calibration)
+function ExportArchiveValues($conn, $recipe_ID, $txt_recipe_name, $txt_end, $txt_initial_gravity, $initial_gravity, $txt_final_gravity, $final_gravity, $txt_attenuation, $attenuation, $txt_alcohol, $alcohol, $txt_calibration, $csv_type)
 {
 // define empty variables
     $valAngle = '';
@@ -1053,12 +1053,12 @@ function ExportArchiveValues($conn, $recipe_ID, $txt_recipe_name, $txt_end, $txt
     $sql_IG=floatval($initial_gravity);
 
 // if no entry for end date in archive table, get last timestamp of last dataset for selected recipe from data table
-    if($end_date == '0000-00-00 00:00:00'){
-    $get_end_date = "SELECT max(Timestamp) FROM Data WHERE Recipe_ID = '$recipe_ID'";
-    $q_sql = mysqli_query($conn, $get_end_date) or die(mysqli_error($conn));
-    $result = mysqli_fetch_array($q_sql);
-// update end_dat in case of existing RID_END flag
-    $end_date = $result[0];
+    if($end_date == NULL){
+        $get_end_date = "SELECT max(Timestamp) FROM Data WHERE Recipe_ID = '$recipe_ID'";
+        $q_sql = mysqli_query($conn, $get_end_date) or die(mysqli_error($conn));
+        $result = mysqli_fetch_array($q_sql);
+    // update end_dat in case of existing RID_END flag
+        $end_date = $result[0];
     }
 // check, if RID_END flag is set for selected recipe_ID. If so, data will be exported only to this flag but not for points with a timestamp after this flag
     $check_RID_END = "SELECT * FROM Data WHERE Recipe_ID = '$recipe_ID' AND Internal = 'RID_END'";
@@ -1070,36 +1070,65 @@ function ExportArchiveValues($conn, $recipe_ID, $txt_recipe_name, $txt_end, $txt
 // add condition to select if RID_END flag is set
     $AND_RID = " AND Timestamp <= (Select max(Timestamp) FROM Data WHERE Recipe_ID='$recipe_ID' AND Internal = 'RID_END')";
     }
-// select that calculates all parameters to be exported while pulling date from the database
-    $q_sql = mysqli_query($conn, "SELECT Timestamp, Name, ID, Angle, Temperature, Battery, Gravity AS Spindle_Gravity, ($const1*Angle*Angle + $const2*Angle + $const3) AS Calculated_Gravity, 
-                                  (($sql_IG-($const1*Angle*Angle + $const2*Angle + $const3))*100 / $sql_IG) AS Attenuation, RSSI, Recipe, Comment
-                                  FROM Data WHERE Recipe_ID = '$recipe_ID'" . $AND_RID . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
+    // if regular csv export is selected
+    if ($csv_type == "csv1") {
+    // select that calculates all parameters to be exported while pulling data from the database
+        $q_sql = mysqli_query($conn, "SELECT Timestamp, Name, ID, Angle, Temperature, Battery, Gravity AS Spindle_Gravity, ($const1*Angle*Angle + $const2*Angle + $const3) AS Calculated_Gravity, 
+                                      (($sql_IG-($const1*Angle*Angle + $const2*Angle + $const3))*100 / $sql_IG) AS Attenuation, RSSI, Recipe, Comment
+                                      FROM Data WHERE Recipe_ID = '$recipe_ID'" . $AND_RID . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
     // filename for download
-    $filename = $recipe_ID . "_" . date_format(date_create($start_date),'Y_m_d') ."_" . $spindle_name . "_" . $recipe_name . ".txt";
-    header('Content-Type: text/csv');
-    header("Content-Disposition: attachment; filename=\"$filename\"");
-    $flag = false;
-// define fromat for date
-    $start_date=date_format(date_create($start_date),'Y-m-d');
-    $end_date=date_format(date_create($end_date),'Y-m-d');
-// write summary header to file
-    echo "Device: $spindle_name | $txt_recipe_name $recipe_name | Start: $start_date | $txt_end : $end_date \r\n";
-    echo "$txt_initial_gravity : $initial_gravity °P | $txt_final_gravity : $final_gravity °P | $txt_attenuation : $attenuation % | $txt_alcohol : $alcohol Vol% \r\n";
-    printf("$txt_calibration :  %01.5f * tilt %+01.5f * tilt^2 %+01.5f \r\n",$const1,$const2,$const3);
-    echo "\r\n";
-    // retrieve and store the values comma separated
-    while ($row = mysqli_fetch_assoc($q_sql)) {
-        if(!$flag) {
-            // display field/column names as first row
-            echo implode(",", array_keys($row)) . "\r\n";
-            $flag = true;
+        $filename = $recipe_ID . "_" . date_format(date_create($start_date),'Y_m_d') ."_" . $spindle_name . "_" . $recipe_name . ".txt";
+        header('Content-Type: text/csv');
+        header("Content-Disposition: attachment; filename=\"$filename\"");
+        ob_clean();
+        $flag = false;
+    // define fromat for date
+        $start_date=date_format(date_create($start_date),'Y-m-d');
+        $end_date=date_format(date_create($end_date),'Y-m-d');
+    // write summary header to file
+        echo "Device: $spindle_name | $txt_recipe_name $recipe_name | Start: $start_date | $txt_end : $end_date \r\n";
+        echo "$txt_initial_gravity : $initial_gravity °P | $txt_final_gravity : $final_gravity °P | $txt_attenuation : $attenuation % | $txt_alcohol : $alcohol Vol% \r\n";
+        printf("$txt_calibration :  %01.5f * tilt %+01.5f * tilt^2 %+01.5f \r\n",$const1,$const2,$const3);
+        echo "\r\n";
+        // retrieve and store the values comma separated
+        while ($row = mysqli_fetch_assoc($q_sql)) {
+            if(!$flag) {
+                // display field/column names as first row
+                echo implode(",", array_keys($row)) . "\r\n";
+                $flag = true;
+            }
+        // starting with the second row, data values will be written to file
+            array_walk($row, __NAMESPACE__ . '\cleanData');
+            echo implode(",", array_values($row)) . "\r\n";
         }
-    // starting with the second row, data values will be written to file
-        array_walk($row, __NAMESPACE__ . '\cleanData');
-        echo implode(",", array_values($row)) . "\r\n";
+     }
+    // otherwise do beersmith csv formt export
+    else {
+    // select that calculates all parameters for beersmith fermentation csv file to be exported while pulling data from the database
+        $SQL_select = "SELECT Timestamp AS Date ,Temperature, ($const1*Angle*Angle + $const2*Angle + $const3) AS Gravity, TIMESTAMPDIFF(DAY, '$start_date', Timestamp) AS Day
+                       FROM Data WHERE Recipe_ID = '$recipe_ID' AND Timestamp > (Select min(Timestamp) FROM Data WHERE Recipe_ID='$recipe_ID')" . $AND_RID . " ORDER BY Timestamp ASC";
+        $q_sql = mysqli_query($conn, $SQL_select) or die(mysqli_error($conn));
+    // filename for download
+        $filename = $recipe_ID . "_" . date_format(date_create($start_date),'Y_m_d') ."_" . $spindle_name . "_" . $recipe_name . ".csv";
+        header('Content-Type: text/csv');
+        header("Content-Disposition: attachment; filename=\"$filename\"");
+        ob_clean();
+        $fh = fopen( 'php://output', 'w' );
+        $flag = false;
+        // retrieve and store the values comma separated
+        while ($row = mysqli_fetch_assoc($q_sql)) {
+            if(!$flag) {
+                // display field/column names as first row
+                fputcsv($fh, array_keys($row));
+                $flag = true;
+            }
+        // starting with the second row, data values will be written to file
+            array_walk($row, __NAMESPACE__ . '\cleanData');
+            fputcsv($fh, array_values($row)); 
+        }
+
     }
-    exit;
-    }
+}
 
 // Get archive values from database for selected recipe_ID. 
 // Parameters that are available in the script that is calling this function will be submitted while calling this function

@@ -32,7 +32,7 @@ $q_sql = mysqli_query($conn, $min_recipe_id) or die(mysqli_error($conn));
 $result = mysqli_fetch_array($q_sql);
 $selected_recipe = $result[0];
 
-write_log('Selected_recipe: '. $selected_recipe);
+//write_log('Selected_recipe: '. $selected_recipe);
 
 // if archive is empty, go back to index page
 if (!$selected_recipe){
@@ -182,16 +182,16 @@ if (isset($_POST['Export']))
         $alcohol =  $_POST['alcohol'];
         $recipe_id = $_POST['archive_name'];
         $dia_type = $_POST['diagram_type'];
+        $csv_type = $_POST['radio_csv'];
 
         //export active recipe to csv file
-        ExportArchiveValues($conn,$recipe_id, $txt_recipe_name, $txt_end, $txt_initial_gravity, $initial_gravity, $txt_final_gravity, $final_gravity, $txt_attenuation, $attenuation, $txt_alcohol, $alcohol, $txt_calibration);
+        ExportArchiveValues($conn,$recipe_id, $txt_recipe_name, $txt_end, $txt_initial_gravity, $initial_gravity, $txt_final_gravity, $final_gravity, $txt_attenuation, $attenuation, $txt_alcohol, $alcohol, $txt_calibration, $csv_type);
         // reload page for selected archive
         $url="http://";
         $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
         $url .= "archive.php?recipe_id=".$recipe_id."&type=".$dia_type;
         // open the page
         header("Location: ".$url);
-        exit;
     }
 
 // get initial gravity and constants for gravity calulaction to be shown in the header table
@@ -525,6 +525,7 @@ $(function ()
                         return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%d.%m %H:%M', new Date(this.x))  + ' ' + tooltip_time + ' ' + this.y.toFixed(2) + first_y_unit;
                     }
                 }
+
             },  
             legend: 
             {
@@ -739,6 +740,9 @@ else {
 echo "</td></tr>";
 echo "<tr><td align='center' colspan='8'>"; 
 echo "<span title='Export'><input type = 'submit' id='Export' name = 'Export' value = 'Export'></span>";
+echo "<input type='radio' name='radio_csv' value='csv1' checked='checked' /> CSV";
+echo "<input type='radio' name='radio_csv' value='csv2' /> Beersmith";
+
 echo "</td></tr>";
 echo "</tbody>";
 echo "</table>";
