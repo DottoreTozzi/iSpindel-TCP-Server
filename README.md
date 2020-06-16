@@ -1,13 +1,46 @@
 # iSpindel Generic TCP Server
-#### (iSpindle.py Version 1.6.3)
+#### (iSpindle.py Version 3.0)
 
+[English Version](README_en.md)
+
+**Neu (16.06.2020)**
+Dies ist ein major release mit vielen Änderungen.
+- iSpindel.py und sendmail.py sind nun auf python3 lauffähig
+	- Neue Funktionen oder Änderungen werden ab jetzt nur noch in den python3 versionen durchgeführt
+	- Die alten versionen können auch noch die neusten Datenbankänderungen begleiten, werden aber in Zukunft nicht mehr aktualisiert.
+	- Diese versionen sind iSpindel im Verzeichnis mit der Endung .py2 abgelegt
+	- Es konnten bis jetzt leider nicht alle funktionen unter python3 getestet werden.
+	- getestet: Empfang von iSpindel Daten, Weiterleitung an anderen TCP server, CraftBeerPi3
+	- alle anderen forwards bis auf InfluxDB sollten theoretisch genauso wie Craftbeerpi3 funktionieren
+	- Für InfluxDB benötige ich noch einen tester und ggf Hilfe
+	- emanometer ist in iSpindel.py mit integriert (Jackfrost) -> Tabelle muss aber noch manuell angelegt werden.
+- Settings und Strings tabellen für die Oberfläche können über den webbrowser geladen und aktualisiert werden.
+- Individuelle Settings können aus dem webinterface gesichert und später wieder geladen werden
+- Daten können aus der Weboberfläche gesichert und wieder importiert werden
+- Archivfunktion, um auch alte Sude betrachten zu können.
+	- Hierfür wird  eine weitere Tabelle benötigt.
+	- Der Server kann die Datenbank selbst migrieren, wenn die Tabelle noch nicht vorhanden ist.
+	- Dazu werden noch ein paar Spalten in der Datentabelle erstellt.
+- Exportfunktion.
+	- Aus dem Archiv können Daten als CSV File z.B. für Excel exportiert werden, um damit weiterzuarbeiten
+	- Es können Gärdaten auch im beersmith csv Format exportiert werden und dann in beersmith (V3.1) importiert werden
+- Oberfläche.
+	- Zusammenfassung aller aktuellen Spindel Daten auf der index seite
+	- y-Achsen Skalierung der Diagramme kann in den Settings individuell definiert werden 
+	- 4 Themes (Farbschemata) können über die settings ausgewählt werden (Wasser, Hopfen, Malz und Raspberry)
+- Setup Prozess der Datenbank
+	- Ein Setupskript ist verfügbar, dass bei nicht vorhandener iSpindel Datenbank diese und einen Benutzer anlegt
+	- Allerdings muss iSpindel und mysql oder mariadb, apache, python und der mysql.connector für python bereits korrekt installiert sein
+	- Das manuelle erstellen der Datenbank über die sql files entfällt allerdings
+- Einige Bugfixes .....
+
+#### (iSpindle.py Version 1.6.3)
 **Neu (20.06.2019)**
 Merged avollkopf's fork.
 Many thanks!
 
 Documentation will be fully updated soon.
 
-[English Version](README_en.md)
 **Neu (28.04.2019)**
 Neue Diagramme: Berechneter SVG, Alkoholgehalt; Delta Plato für bestimmten Zeitraum; Wifi/Batterytrend
 Optimierte Landing page mit neuen Funktionen:
