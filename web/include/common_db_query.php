@@ -1035,7 +1035,6 @@ function ExportArchiveValues($conn, $recipe_ID, $txt_recipe_name, $txt_end, $txt
     $const2 = 0;
     $const3 = 0;
     $AND_RID = '';
-
 // get all information for selected recipe_id from archive table
     $archive_sql = "Select * FROM Archive WHERE Recipe_ID = '$recipe_ID'";
 // set connection to utf8mb4 for special characters (e.g. in recipe name)
@@ -1051,6 +1050,13 @@ function ExportArchiveValues($conn, $recipe_ID, $txt_recipe_name, $txt_end, $txt
     $const3 = $archive_result['const3'];
 // convert initial gravity to float
     $sql_IG=floatval($initial_gravity);
+
+// get current interval in second the spindle is sending data
+   $Interval = (getCurrentInterval($conn, $spindle_name));
+// Calculate distance between datasets in rows that are required to have $filtering minutes intervals in the select
+// Used for beersmith export
+    $filtering = 120;
+    $Rows = round( $filtering / ($Interval / 60));
 
 // if no entry for end date in archive table, get last timestamp of last dataset for selected recipe from data table
     if($end_date == NULL){
@@ -1101,12 +1107,16 @@ function ExportArchiveValues($conn, $recipe_ID, $txt_recipe_name, $txt_end, $txt
             array_walk($row, __NAMESPACE__ . '\cleanData');
             echo implode(",", array_values($row)) . "\r\n";
         }
+     exit;
      }
     // otherwise do beersmith csv formt export
     else {
+    // start query and set @x=0
+         $p_sql = mysqli_query($conn, "SET @x:=0") or die(mysqli_error($conn));
     // select that calculates all parameters for beersmith fermentation csv file to be exported while pulling data from the database
-        $SQL_select = "SELECT Timestamp AS Date ,Temperature, ($const1*Angle*Angle + $const2*Angle + $const3) AS Gravity, TIMESTAMPDIFF(DAY, '$start_date', Timestamp) AS Day
-                       FROM Data WHERE Recipe_ID = '$recipe_ID' AND Timestamp > (Select min(Timestamp) FROM Data WHERE Recipe_ID='$recipe_ID')" . $AND_RID . " ORDER BY Timestamp ASC";
+        $SQL_select = "SELECT *
+                        FROM (SELECT mt.Timestamp AS Date, mt.Temperature, ($const1*mt.Angle*mt.Angle + $const2*mt.Angle + $const3) AS Gravity, TIMESTAMPDIFF(DAY, '$start_date', mt.Timestamp) AS Day, (@x:=@x+1) AS x
+                        FROM Data mt WHERE Recipe_ID = '$recipe_ID' AND Timestamp > (Select min(Timestamp) FROM Data WHERE Recipe_ID='$recipe_ID')" . $AND_RID . " ORDER BY Timestamp ASC) t WHERE x MOD $Rows = 0";
         $q_sql = mysqli_query($conn, $SQL_select) or die(mysqli_error($conn));
     // filename for download
         $filename = $recipe_ID . "_" . date_format(date_create($start_date),'Y_m_d') ."_" . $spindle_name . "_" . $recipe_name . ".csv";
@@ -1126,7 +1136,7 @@ function ExportArchiveValues($conn, $recipe_ID, $txt_recipe_name, $txt_end, $txt
             array_walk($row, __NAMESPACE__ . '\cleanData');
             fputcsv($fh, array_values($row)); 
         }
-
+    exit;
     }
 }
 
