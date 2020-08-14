@@ -1,4 +1,44 @@
 # iSpindel Generic TCP Server
+#### (iSpindle.py Version 3.0)
+
+***Neu (14.08.2020)
+-  3rd degree polynomial can be also used now 
+- 'const0' has been added to database tables
+- index.php checks, if const0 is existing in tables. If not, it is automatically added  to the tables calibration and archive.
+--> Please make a Backup of your database prior upgrade to this version
+
+**New (16.06.2020)**
+This is a major release with quite a few changes
+- iSpindel.py and sendmail.py are now compatible with python3.
+	- New functions or changes will only be done on the python3 base files
+	- The old python2 based version are still available and can be used with the database changes of this version. However, they won't be update in future releases
+	- python2 based versions are located in the iSpindle directory with .py2 extensions
+	- Not all functions could have been tested under python3 so far
+	- tested: receiving data from a spindle, forwarding data to another tcp server, CraftBeerPi3
+	- all other forwarding except for INFLUXDB should be theoretically also working
+	- Testers and probably some help are required for INFLUXDB
+	- Receiving an acknowloedement after sending data is not yet implemented for debugging
+	- emanomater is integrated in the server (thanks to Jackfrost) -> corresponding data table needs to be created manually so far
+- Settings and Strings tables for the webpages can be loaded and updated via web interface
+- Backup and restore of individual settings can be done via web interface
+- Data table incl. archive and calibration can be exported and re-imported via web interface
+- Archive funcion added to view also old individual fermentation processes
+	- An additional archive table is required for this function
+	- The php scripts can migrate the database automaitcally from the index page if table is not available
+	- Script also adds automatically some new columns to the data table
+- Export function
+    - Data can be exported from archive as CSV file (e.g. for Excel) to work with the data
+	- Fermentation data can be also exported as beersmith csv file to import it to beersmith (V3.1)
+- Layout
+	- Overal summary of current data in table on index page
+	- y-axis scales can be edited in settings for the diagrams
+	- 4 colorschemes added via css that can be selected via settings (Water, Hops, Malt, Raspberry)  
+- Setup proces of iSpindle database
+	- Setupscript added that creates iSpindle database incl. all required tables and user if database is not available
+	- However, iSPindle files, mysql or mariadb server, apache, python3 and mysql.connector have to be installed prior to this
+	- Manual setup of database tables won't be reuired for fresh installation
+- Some bugfixes .....
+
 #### (iSpindle.py Version 1.6.0)
 
 **New (15.10.2018)**

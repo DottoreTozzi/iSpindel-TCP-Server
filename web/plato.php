@@ -10,8 +10,8 @@
 // DB config values will be pulled from differtent location and user can personalize this file: common_db_config.php
 // If file does not exist, values will be pulled from default file
  
-if ((include_once './config/common_db_config.php') == FALSE){
-       include_once("./config/common_db_default.php");
+if ((include_once '../config/common_db_config.php') == FALSE){
+       include_once("../config/common_db_default.php");
       }
      include_once("include/common_db_query.php");
 
@@ -228,7 +228,7 @@ $(function ()
                         return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%d.%m %H:%M', new Date(this.x)) + ' ' + tooltip_time + ' ' + this.y.toFixed(2) + second_y_unit;
                     } else {
                         const pointData = chartDens.find(row => row.timestamp === this.point.x)
-                        return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%d.%m %H:%M', new Date(this.x))  + ' ' + tooltip_time + ' ' + this.y.toFixed(2) + second_y_unit;
+                        return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%d.%m %H:%M', new Date(this.x))  + ' ' + tooltip_time + ' ' + this.y.toFixed(2) + first_y_unit;
                     }
                 }
             },  

@@ -17,8 +17,8 @@ error_reporting(E_ALL | E_STRICT);
 // Self-called by submit button. Calls landing page on stop
 
 // load information for sql connection
-if ((include_once './config/common_db_config.php') == FALSE){
-       include_once("./config/common_db_default.php");
+if ((include_once '../config/common_db_config.php') == FALSE){
+       include_once("../config/common_db_default.php");
     }
 // load db query functions
 include_once("include/common_db_query.php");
@@ -78,7 +78,7 @@ if (isset($_POST['Export_Data']))
     {
         $today = date("Y_m_d");
         $export_name=$today."_iSpindle_Data.sql";
-        $tables = array("Data","Archive");
+        $tables = array("Data","Archive","Calibration");
         export_data_table($tables,$export_name);
     }
 
@@ -98,6 +98,9 @@ if (isset($_POST['Import_Data']))
         $file_type=$_FILES['fileupload']['type'];
         $file_ext=strtolower(pathinfo($_FILES['fileupload']['name'], PATHINFO_EXTENSION));
 
+       write_log("Filename:".$filename);
+       write_log("Filename_tmp:".$filename_tmp);
+
 // only sql is allowed as extension      
         $extensions= array("sql");
       
@@ -112,7 +115,7 @@ if (isset($_POST['Import_Data']))
          echo "Wrong Database Filename. Must end with iSpindle_Data.sql";
          exit;
       }
-      import_table($conn,"Data, Archive",$filename_tmp);
+      import_table($conn,"Data, Archive, Calibration",$filename_tmp);
     }
 
 // self caled: Settings can be imported from previous export
@@ -122,6 +125,10 @@ if (isset($_POST['Import_Settings']))
         $filename_tmp = $_FILES["settingsupload"]["tmp_name"];
         $file_type=$_FILES['settingsupload']['type'];
         $file_ext=strtolower(pathinfo($_FILES['settingsupload']['name'], PATHINFO_EXTENSION));
+       write_log("Filename:".$filename);
+       write_log("Filename_tmp:".$filename_tmp);
+
+
 // extension has to be csv
         $extensions= array("csv");
 

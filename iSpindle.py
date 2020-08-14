@@ -616,7 +616,7 @@ def handler(clientsock, addr):
         if BREWPILESS and gauge == 0:
             try:
                 dbgprint(repr(addr) + ' - forwarding to BREWPILESS at http://' + BREWPILESSADDR)
-                import urllib2
+                import urllib3
                 outdata = {
                     'name': spindle_name,
                     'angle': angle,
@@ -624,14 +624,14 @@ def handler(clientsock, addr):
                     'battery': battery,
                     'gravity': gravity,
                 }
-                out = json.dumps(outdata)
-                dbgprint(repr(addr) + ' - sending: ' + out)
+                out = json.dumps(outdata).encode('utf-8')
+                dbgprint(repr(addr) + ' - sending: ' + out.decode('utf-8'))
                 url = 'http://' + BREWPILESSADDR + '/gravity'
-                req = urllib2.Request(url)
-                req.add_header('Content-Type', 'application/json')
-                req.add_header('User-Agent', spindle_name)
-                response = urllib2.urlopen(req, out)
-                dbgprint(repr(addr) + ' - received: ' + response.read())
+                http = urllib3.PoolManager()
+                req = http.request('POST',url,body=out, headers={'Content-Type': 'application/json', 'User-Agent': spindle_name})
+# response to be updated for debugging
+#                response = urllib2.urlopen(req, out)
+#                dbgprint(repr(addr) + ' - received: ' + response.read())
 
             except Exception as e:
                 dbgprint(repr(addr) + ' Error while forwarding to URL ' + url + ' : ' + str(e))
@@ -639,21 +639,22 @@ def handler(clientsock, addr):
         if CRAFTBEERPI3 and gauge == 0:
             try:
                 dbgprint(repr(addr) + ' - forwarding to CraftBeerPi3 at http://' + CRAFTBEERPI3ADDR)
-                import urllib2
+                import urllib3
+                import requests
                 outdata = {
                     'name': spindle_name,
                     'angle': angle if CRAFTBEERPI3_SEND_ANGLE else gravity,
                     'temperature': temperature,
                     'battery': battery,
                 }
-                out = json.dumps(outdata)
-                dbgprint(repr(addr) + ' - sending: ' + out)
+                out = json.dumps(outdata).encode('utf-8')
+                dbgprint(repr(addr) + ' - sending: ' + out.decode('utf-8'))
                 url = 'http://' + CRAFTBEERPI3ADDR + '/api/hydrometer/v1/data'
-                req = urllib2.Request(url)
-                req.add_header('Content-Type', 'application/json')
-                req.add_header('User-Agent', spindle_name)
-                response = urllib2.urlopen(req, out)
-                dbgprint(repr(addr) + ' - received: ' + response.read())
+                http = urllib3.PoolManager()                
+                req = http.request('POST',url,body=out, headers={'Content-Type': 'application/json', 'User-Agent': spindle_name})
+# response to be updated for debugging
+#                response = urllib2.urlopen(req, out)
+#                dbgprint(repr(addr) + ' - received: ' + response.read())
 
             except Exception as e:
                 dbgprint(repr(addr) + ' Error while forwarding to URL ' + url + ' : ' + str(e))
@@ -668,7 +669,7 @@ def handler(clientsock, addr):
                 if token != '':
                     if token[:1] != '*':
                         dbgprint(repr(addr) + ' - sending to ubidots')
-                        import urllib2
+                        import urllib3
                         outdata = {
                             'tilt': angle,
                             'temperature': temperature,
@@ -677,14 +678,14 @@ def handler(clientsock, addr):
                             'interval': interval,
                             'rssi': rssi
                         }
-                        out = json.dumps(outdata)
-                        dbgprint(repr(addr) + ' - sending: ' + out)
+                        out = json.dumps(outdata).encode('utf-8')
+                        dbgprint(repr(addr) + ' - sending: ' + out.decode('utf-8'))
                         url = 'http://things.ubidots.com/api/v1.6/devices/' + spindle_name + '?token=' + token
-                        req = urllib2.Request(url)
-                        req.add_header('Content-Type', 'application/json')
-                        req.add_header('User-Agent', spindle_name)
-                        response = urllib2.urlopen(req, out)
-                        dbgprint(repr(addr) + ' - received: ' + response.read())
+                        http = urllib3.PoolManager()
+                        req = http.request('POST',url,body=out, headers={'Content-Type': 'application/json', 'User-Agent': spindle_name})
+# response to be updated for debugging
+#                        response = urllib2.urlopen(req, out)
+#                        dbgprint(repr(addr) + ' - received: ' + response.read())
             except Exception as e:
                 dbgprint(repr(addr) + ' Ubidots Error: ' + str(e))
 
@@ -728,7 +729,7 @@ def handler(clientsock, addr):
                 if token != '':
                     if token[:1] != '*':
                         dbgprint(repr(addr) + ' - sending to fermentrack')
-                        import urllib2
+                        import urllib3
                         outdata = {
                             "ID": spindle_id,
                             "angle": angle,
@@ -738,18 +739,19 @@ def handler(clientsock, addr):
                             "temperature": temperature,
                             "token": token
                         }
-                        out = json.dumps(outdata)
-                        dbgprint(repr(addr) + ' - sending: ' + out)
+                        out = json.dumps(outdata).encode('utf-8')
+                        dbgprint(repr(addr) + ' - sending: ' + out.decode('utf-8'))
                         url = 'http://' + FERMENTRACKADDR + ':' + str(FERMENTRACKPORT) + '/ispindel/'
                         dbgprint(repr(addr) + ' to : ' + url)
-                        req = urllib2.Request(url)
-                        req.add_header('Content-Type', 'application/json')
-                        req.add_header('User-Agent', spindle_name)
-                        response = urllib2.urlopen(req, out)
-                        dbgprint(repr(addr) + ' - received: ' + response.read())
+                        http = urllib3.PoolManager()
+                        req = http.request('POST',url,body=out, headers={'Content-Type': 'application/json', 'User-Agent': spindle_name})
+# response to be updated for debugging
+#                        response = urllib3.urlopen(req, out)
+#                        dbgprint(repr(addr) + ' - received: ' + response.read())
             except Exception as e:
                 dbgprint(repr(addr) + ' Fermentrack Error: ' + str(e))
 
+# not clear on how to update yet (can't be tested)
         if INFLUXDB and gauge == 0:
             try:
                 dbgprint(repr(addr) + ' - forwarding to InfluxDB ' + INFLUXDBADDR)
@@ -789,7 +791,7 @@ def handler(clientsock, addr):
                 if token != '':
                     if token[:1] != '*':
                         dbgprint(repr(addr) + ' - sending to brewspy')
-                        import urllib2
+                        import urllib3
                         outdata = {
                             "ID": spindle_id,
                             "angle": angle,
@@ -800,15 +802,15 @@ def handler(clientsock, addr):
                             "token": token,
                             "RSSI": rssi
                         }
-                        out = json.dumps(outdata)
-                        dbgprint(repr(addr) + ' - sending: ' + out)
+                        out = json.dumps(outdata).encode('utf-8')
+                        dbgprint(repr(addr) + ' - sending: ' + out.decode('utf-8'))
                         url = 'http://' + BREWSPYADDR + ':' + str(BREWSPYPORT) + '/api/ispindel/'
                         dbgprint(repr(addr) + ' to : ' + url)
-                        req = urllib2.Request(url)
-                        req.add_header('Content-Type', 'application/json')
-                        req.add_header('User-Agent', spindle_name)
-                        response = urllib2.urlopen(req, out)
-                        dbgprint(repr(addr) + ' - received: ' + response.read())
+                        http = urllib3.PoolManager()
+                        req = http.request('POST',url,body=out, headers={'Content-Type': 'application/json', 'User-Agent': spindle_name})
+# response to be updated for debugging
+#                        response = urllib2.urlopen(req, out)
+#                        dbgprint(repr(addr) + ' - received: ' + response.read())
             except Exception as e:
                 dbgprint(repr(addr) + ' Brewspy Error: ' + str(e))
 
@@ -821,7 +823,7 @@ def handler(clientsock, addr):
                 if token != '':
                     if token[:1] != '*':
                         dbgprint(repr(addr) + ' - sending to brewfather')
-                        import urllib2
+                        import urllib3
                         outdata = {
                             "ID": spindle_id,
                             "angle": angle,
@@ -831,15 +833,15 @@ def handler(clientsock, addr):
                             "temperature": temperature,
                             "token": token
                         }
-                        out = json.dumps(outdata)
-                        dbgprint(repr(addr) + ' - sending: ' + out)
+                        out = json.dumps(outdata).encode('utf-8')
+                        dbgprint(repr(addr) + ' - sending: ' + out.decode('utf-8'))
                         url = 'http://' + BREWFATHERADDR + ':' + str(BREWFATHERPORT) + '/ispindel?id=' + token
                         dbgprint(repr(addr) + ' to : ' + url)
-                        req = urllib2.Request(url)
-                        req.add_header('Content-Type', 'application/json')
-                        req.add_header('User-Agent', spindle_name)
-                        response = urllib2.urlopen(req, out)
-                        dbgprint(repr(addr) + ' - received: ' + response.read())
+                        http = urllib3.PoolManager()
+                        req = http.request('POST',url,body=out, headers={'Content-Type': 'application/json', 'User-Agent': spindle_name})
+# response to be updated for debugging
+#                        response = urllib2.urlopen(req, out)
+#                        dbgprint(repr(addr) + ' - received: ' + response.read())
             except Exception as e:
                 dbgprint(repr(addr) + ' Brewfather Error: ' + str(e))
 

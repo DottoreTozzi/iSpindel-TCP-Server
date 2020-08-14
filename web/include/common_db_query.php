@@ -67,10 +67,10 @@ May 2020
 
 // include configuration fils in web/config directory
 
-    if ((include_once './config/common_db_config.php') == FALSE){
-       include_once("./config/common_db_default.php");
-    }
-       include_once("./config/tables.php");
+//    if ((include_once './config/common_db_config.php') == FALSE){
+//       include_once("./config/common_db_default.php");
+//    }
+//       include_once("./config/tables.php");
 
 // function to write debug messages to the console of the web browser
 // CONSOLE_LOG parameter has to be set to 1 in common_db_.....php config file
@@ -113,6 +113,7 @@ $create_recipe_table = "CREATE TABLE `Archive` ( `Recipe_ID` INT NOT NULL AUTO_I
                                          `Recipe` VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL, 
                                          `Start_date` DATETIME NOT NULL , 
                                          `End_date` DATETIME NULL DEFAULT NULL, 
+                                         `const0` DOUBLE NULL DEFAULT NULL,
                                          `const1` DOUBLE NULL DEFAULT NULL, 
                                          `const2` DOUBLE NULL DEFAULT NULL, 
                                          `const3` DOUBLE NULL DEFAULT NULL, 
@@ -147,6 +148,7 @@ if($rows > 0) {
         $update = mysqli_query($conn, $update_sql) or die(mysqli_error($conn));
 
         // set default value for calibration constants
+        $const0=NULL;
         $const1=NULL;
         $const2=NULL;
         $const3=NULL;
@@ -157,14 +159,15 @@ if($rows > 0) {
         // assign constants from calibration table, if available
         if ($valCalib[0])
         {
-            $const1=$valCalib[1];
-            $const2=$valCalib[2];
-            $const3=$valCalib[3];
+            $const0=$valCalib[1];
+            $const1=$valCalib[2];
+            $const2=$valCalib[3];
+            $const3=$valCalib[4];
         }
         // Add entr to Archive table for corrent sql row with corresponding Recipe_ID, Spindle Name, Recipe Name and calibratrion constants
         $entry_recipe_table_sql = "INSERT INTO `Archive` 
-                                 (`Recipe_ID`, `Name`, `ID`, `Recipe`, `Start_date`, `End_date`, `const1`, `const2`, `const3`) 
-                                 VALUES (NULL, '".$name."', '".$ID."', '".$recipe."', '".$timestamp."', NULL, '".$const1."', '".$const2."', '".$const3."')";
+                                 (`Recipe_ID`, `Name`, `ID`, `Recipe`, `Start_date`, `End_date`, `const0`, `const1`, `const2`, `const3`) 
+                                 VALUES (NULL, '".$name."', '".$ID."', '".$recipe."', '".$timestamp."', NULL, '".$const0."', '".$const1."', '".$const2."', '".$const3."')";
         $entry_result = mysqli_query($conn, $entry_recipe_table_sql) or die(mysqli_error($conn));
         // increase recipe_id number for next entry
         $recipe_id++;
@@ -289,15 +292,15 @@ function get_color_scheme($conn)
     $colorscheme_query = "Select Parameter FROM Settings WHERE Parameter LIKE 'COLORSCHEME_%' AND Value = '1'";
     $result = mysqli_query($conn, $colorscheme_query) or die(mysqli_error($conn));
     $row = mysqli_fetch_array($result);
-    write_log("Row from colorscheme_query: ");
-    write_log($row);
+//    write_log("Row from colorscheme_query: ");
+//    write_log($row);
     $colorscheme=$row[0];
-    write_log("Colorscheme: ".$colorscheme);
+//    write_log("Colorscheme: ".$colorscheme);
 // colorscheme looks like COLORSCHEME_color
 // only 'color' is required for css layout
     if($colorscheme != null){    
         $color=substr_replace($colorscheme,'',0,12);
-        write_log("Color: ".$color);
+//        write_log("Color: ".$color);
         return $color; 
     }
 // if colorscheme is not set, fall back to blue scheme as default
@@ -425,7 +428,23 @@ function export_data_table($table,$file="iSpindle_Backup.sql")
 // function to import settings and strings tables
 function import_table($conn,$table,$filename)
 {
-// Drop table first
+// older version did not export Calibration table
+// needs to be checked that calibration is in sql file
+// otherwise table should not be dropped
+$pos = strpos($table,", Calibration");
+
+if ($pos !== false) {
+if (strpos(file_get_contents($filename),"CREATE TABLE `Calibration` (") != FALSE)
+    {
+    write_log("Calibration Table included in uploaded file"); 
+    }
+else {
+    $table = str_replace(', Calibration','',$table);
+    write_log($table);
+}
+}
+
+// Drop tables first
 $drop_table="DROP TABLE IF EXISTS ".$table;
 $result = mysqli_query($conn, $drop_table) or die(mysqli_error($conn));
 
@@ -646,11 +665,11 @@ function isDataAvailable($conn, $iSpindleID, $Timeframehours)
 }
 
 // Used in calibration.php Values for corresponding SpindleID will be either updated (if already in database) or added to table calibration in SQL database
-function setSpindleCalibration($conn, $ID, $Calibrated, $const1, $const2, $const3)
+function setSpindleCalibration($conn, $ID, $Calibrated, $const0, $const1, $const2, $const3)
 {
 // if spindle is calibrated, fields only need to be updated. If not, we need to insert a new row to the calibration database
     if ($Calibrated) {
-        $q_sql = mysqli_query($conn, "UPDATE Calibration SET const1 = '" . $const1 . "', const2 = '" . $const2 . "', const3 = '" . $const3 . "' WHERE ID = '" . $ID . "'") or die(mysqli_error($conn));
+        $q_sql = mysqli_query($conn, "UPDATE Calibration SET const0 = '" . $const0 . "', const1 = '" . $const1 . "', const2 = '" . $const2 . "', const3 = '" . $const3 . "' WHERE ID = '" . $ID . "'") or die(mysqli_error($conn));
     } 
 // if spindle is not yet calibrated, new dataset needs to be created in calibration table
     else {
@@ -672,6 +691,7 @@ function getSpindleCalibration($conn, $iSpindleID = 'iSpindel000')
 // define variables
     $valID = '0';
     $Calibration_exists = false;
+    $valconst0 = '';
     $valconst1 = '';
     $valconst2 = '';
     $valconst3 = '';
@@ -681,12 +701,13 @@ function getSpindleCalibration($conn, $iSpindleID = 'iSpindel000')
         $r_row = mysqli_fetch_array($q_sql0);
         $valID = $r_row['ID'];
 // get current calibration values for spindle with ID from calibration table
-        $q_sql1 = mysqli_query($conn, "SELECT const1, const2, const3
+        $q_sql1 = mysqli_query($conn, "SELECT const0, const1, const2, const3
                                FROM Calibration WHERE ID = " . $valID) or die(mysqli_error($conn));
         $rows1 = mysqli_num_rows($q_sql1);
         if ($rows1 > 0) {
             $Calibration_exists = true;
             $r_row = mysqli_fetch_array($q_sql1);
+            $valconst0 = $r_row['const0'];
             $valconst1 = $r_row['const1'];
             $valconst2 = $r_row['const2'];
             $valconst3 = $r_row['const3'];
@@ -695,6 +716,7 @@ function getSpindleCalibration($conn, $iSpindleID = 'iSpindel000')
 // return calibration constants
     return array(
         $Calibration_exists,
+        $valconst0,
         $valconst1,
         $valconst2,
         $valconst3,
@@ -845,6 +867,7 @@ function getArchiveInitialGravity($conn, $recipe_id)
     $isCalibrated = 0;
     $valAngle = '';
     $valDens = '';
+    $const0 = 0;
     $const1 = 0;
     $const2 = 0;
     $const3 = 0;
@@ -858,11 +881,12 @@ function getArchiveInitialGravity($conn, $recipe_id)
     $rows = mysqli_num_rows($q_sql);
     if ($rows > 0) {
         // try to get calibration for recipe_id from archive
-        $cal_sql = mysqli_query($conn, "SELECT const1, const2, const3 FROM Archive WHERE Recipe_ID = $recipe_id") or die(mysqli_error($conn));
+        $cal_sql = mysqli_query($conn, "SELECT const0, const1, const2, const3 FROM Archive WHERE Recipe_ID = $recipe_id") or die(mysqli_error($conn));
         $rows_cal = mysqli_num_rows($cal_sql);
         if ($rows_cal > 0) {
             $isCalibrated = 1;
             $r_cal = mysqli_fetch_array($cal_sql);
+            $const0 = $r_cal['const0'];            
             $const1 = $r_cal['const1'];
             $const2 = $r_cal['const2'];
             $const3 = $r_cal['const3'];
@@ -871,10 +895,11 @@ function getArchiveInitialGravity($conn, $recipe_id)
     $r_row = mysqli_fetch_array($q_sql);
     $angle = $r_row['angle']; // average angle
 // calculate gravity
-    $dens = round(($const1 * pow($angle, 2) + $const2 * $angle + $const3),2); // complete polynome from database
+    $dens = round(($const0 * pow($angle, 3) + $const1 * pow($angle, 2) + $const2 * $angle + $const3),2); // complete polynome from database
     return array(
         $isCalibrated,
         $dens,
+        $const0,
         $const1,
         $const2,
         $const3
@@ -889,6 +914,7 @@ function getArchiveFinalGravity($conn, $recipe_id, $end_date)
     $isCalibrated = 0;
     $valAngle = '';
     $valDens = '';
+    $const0 = 0;
     $const1 = 0;
     $const2 = 0;
     $const3 = 0;
@@ -903,11 +929,12 @@ function getArchiveFinalGravity($conn, $recipe_id, $end_date)
     $rows = mysqli_num_rows($q_sql);
     if ($rows > 0) {
         // try to get calibration for recipe_id from archive
-        $cal_sql = mysqli_query($conn, "SELECT const1, const2, const3 FROM Archive WHERE Recipe_ID = $recipe_id") or die(mysqli_error($conn));
+        $cal_sql = mysqli_query($conn, "SELECT const0, const1, const2, const3 FROM Archive WHERE Recipe_ID = $recipe_id") or die(mysqli_error($conn));
         $rows_cal = mysqli_num_rows($cal_sql);
         if ($rows_cal > 0) {
             $isCalibrated = 1;
             $r_cal = mysqli_fetch_array($cal_sql);
+            $const0 = $r_cal['const0'];
             $const1 = $r_cal['const1'];
             $const2 = $r_cal['const2'];
             $const3 = $r_cal['const3'];
@@ -916,7 +943,7 @@ function getArchiveFinalGravity($conn, $recipe_id, $end_date)
     $r_row = mysqli_fetch_array($q_sql);
     $angle = $r_row['angle']; //average angle
 // calculate gravity
-    $dens = round(($const1 * pow($angle, 2) + $const2 * $angle + $const3),2); // complete polynome from database
+    $dens = round(($const0 * pow($angle, 3) + $const1 * pow($angle, 2) + $const2 * $angle + $const3),2); // complete polynome from database
     return array(
         $isCalibrated,
         $dens
@@ -932,6 +959,7 @@ function getInitialGravity($conn, $iSpindleID = 'iSpindel000')
     $isCalibrated = 0;
     $valAngle = '';
     $valDens = '';
+    $const0 = 0;
     $const1 = 0;
     $const2 = 0;
     $const3 = 0;
@@ -954,11 +982,12 @@ function getInitialGravity($conn, $iSpindleID = 'iSpindel000')
             // try to get calibration for iSpindle hardware ID
             $r_id = mysqli_fetch_array($u_sql);
             $uniqueID = $r_id['ID'];
-            $f_sql = mysqli_query($conn, "SELECT const1, const2, const3 FROM Calibration WHERE ID = '$uniqueID' ") or die(mysqli_error($conn));
+            $f_sql = mysqli_query($conn, "SELECT const0, const1, const2, const3 FROM Calibration WHERE ID = '$uniqueID' ") or die(mysqli_error($conn));
             $rows_cal = mysqli_num_rows($f_sql);
             if ($rows_cal > 0) {
                 $isCalibrated = 1;
                 $r_cal = mysqli_fetch_array($f_sql);
+                $const0 = $r_cal['const0'];
                 $const1 = $r_cal['const1'];
                 $const2 = $r_cal['const2'];
                 $const3 = $r_cal['const3'];
@@ -967,7 +996,7 @@ function getInitialGravity($conn, $iSpindleID = 'iSpindel000')
         $r_row = mysqli_fetch_array($q_sql);
             $angle = $r_row['angle']; //average angle
 // calculate gravity
-            $dens = round(($const1 * pow($angle, 2) + $const2 * $angle + $const3),2); // complete polynome from database
+            $dens = round(($const0 * pow($angle, 3) + $const1 * pow($angle, 2) + $const2 * $angle + $const3),2); // complete polynome from database
         return array(
             $isCalibrated,
             $dens
@@ -1009,17 +1038,17 @@ function delete_mail_sent($conn, $alarm, $iSpindel)
 
 // Export values from database for selected recipe_id from Archive
 // Parameters that are available in the script that is calling this function will be submitted while calling this function
-function ExportArchiveValues($conn, $recipe_ID, $txt_recipe_name, $txt_end, $txt_initial_gravity, $initial_gravity, $txt_final_gravity, $final_gravity, $txt_attenuation, $attenuation, $txt_alcohol, $alcohol, $txt_calibration)
+function ExportArchiveValues($conn, $recipe_ID, $txt_recipe_name, $txt_end, $txt_initial_gravity, $initial_gravity, $txt_final_gravity, $final_gravity, $txt_attenuation, $attenuation, $txt_alcohol, $alcohol, $txt_calibration, $csv_type)
 {
 // define empty variables
     $valAngle = '';
     $valTemperature = '';
     $valDens = '';
+    $const0 = 0;
     $const1 = 0;
     $const2 = 0;
     $const3 = 0;
     $AND_RID = '';
-
 // get all information for selected recipe_id from archive table
     $archive_sql = "Select * FROM Archive WHERE Recipe_ID = '$recipe_ID'";
 // set connection to utf8mb4 for special characters (e.g. in recipe name)
@@ -1030,19 +1059,27 @@ function ExportArchiveValues($conn, $recipe_ID, $txt_recipe_name, $txt_end, $txt
     $recipe_name = $archive_result['Recipe'];
     $start_date = $archive_result['Start_date'];
     $end_date = $archive_result['End_date'];
+    $const0 = $archive_result['const0'];
     $const1 = $archive_result['const1'];
     $const2 = $archive_result['const2'];
     $const3 = $archive_result['const3'];
 // convert initial gravity to float
     $sql_IG=floatval($initial_gravity);
 
+// get current interval in second the spindle is sending data
+   $Interval = (getCurrentInterval($conn, $spindle_name));
+// Calculate distance between datasets in rows that are required to have $filtering minutes intervals in the select
+// Used for beersmith export
+    $filtering = 120;
+    $Rows = round( $filtering / ($Interval / 60));
+
 // if no entry for end date in archive table, get last timestamp of last dataset for selected recipe from data table
-    if($end_date == '0000-00-00 00:00:00'){
-    $get_end_date = "SELECT max(Timestamp) FROM Data WHERE Recipe_ID = '$recipe_ID'";
-    $q_sql = mysqli_query($conn, $get_end_date) or die(mysqli_error($conn));
-    $result = mysqli_fetch_array($q_sql);
-// update end_dat in case of existing RID_END flag
-    $end_date = $result[0];
+    if($end_date == NULL){
+        $get_end_date = "SELECT max(Timestamp) FROM Data WHERE Recipe_ID = '$recipe_ID'";
+        $q_sql = mysqli_query($conn, $get_end_date) or die(mysqli_error($conn));
+        $result = mysqli_fetch_array($q_sql);
+    // update end_dat in case of existing RID_END flag
+        $end_date = $result[0];
     }
 // check, if RID_END flag is set for selected recipe_ID. If so, data will be exported only to this flag but not for points with a timestamp after this flag
     $check_RID_END = "SELECT * FROM Data WHERE Recipe_ID = '$recipe_ID' AND Internal = 'RID_END'";
@@ -1054,36 +1091,69 @@ function ExportArchiveValues($conn, $recipe_ID, $txt_recipe_name, $txt_end, $txt
 // add condition to select if RID_END flag is set
     $AND_RID = " AND Timestamp <= (Select max(Timestamp) FROM Data WHERE Recipe_ID='$recipe_ID' AND Internal = 'RID_END')";
     }
-// select that calculates all parameters to be exported while pulling date from the database
-    $q_sql = mysqli_query($conn, "SELECT Timestamp, Name, ID, Angle, Temperature, Battery, Gravity AS Spindle_Gravity, ($const1*Angle*Angle + $const2*Angle + $const3) AS Calculated_Gravity, 
-                                  (($sql_IG-($const1*Angle*Angle + $const2*Angle + $const3))*100 / $sql_IG) AS Attenuation, RSSI, Recipe, Comment
-                                  FROM Data WHERE Recipe_ID = '$recipe_ID'" . $AND_RID . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
+    // if regular csv export is selected
+    if ($csv_type == "csv1") {
+    // select that calculates all parameters to be exported while pulling data from the database
+        $q_sql = mysqli_query($conn, "SELECT Timestamp, Name, ID, Angle, Temperature, Battery, Gravity AS Spindle_Gravity, ($const0*Angle*Angle*Angle + $const1*Angle*Angle + $const2*Angle + $const3) AS Calculated_Gravity, 
+                                      (($sql_IG-($const0*Angle*Angle*Angle + $const1*Angle*Angle + $const2*Angle + $const3))*100 / $sql_IG) AS Attenuation, RSSI, Recipe, Comment
+                                      FROM Data WHERE Recipe_ID = '$recipe_ID'" . $AND_RID . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
     // filename for download
-    $filename = $recipe_ID . "_" . date_format(date_create($start_date),'Y_m_d') ."_" . $spindle_name . "_" . $recipe_name . ".txt";
-    header('Content-Type: text/csv');
-    header("Content-Disposition: attachment; filename=\"$filename\"");
-    $flag = false;
-// define fromat for date
-    $start_date=date_format(date_create($start_date),'Y-m-d');
-    $end_date=date_format(date_create($end_date),'Y-m-d');
-// write summary header to file
-    echo "Device: $spindle_name | $txt_recipe_name $recipe_name | Start: $start_date | $txt_end : $end_date \r\n";
-    echo "$txt_initial_gravity : $initial_gravity °P | $txt_final_gravity : $final_gravity °P | $txt_attenuation : $attenuation % | $txt_alcohol : $alcohol Vol% \r\n";
-    printf("$txt_calibration :  %01.5f * tilt %+01.5f * tilt^2 %+01.5f \r\n",$const1,$const2,$const3);
-    echo "\r\n";
-    // retrieve and store the values comma separated
-    while ($row = mysqli_fetch_assoc($q_sql)) {
-        if(!$flag) {
-            // display field/column names as first row
-            echo implode(",", array_keys($row)) . "\r\n";
-            $flag = true;
+        $filename = $recipe_ID . "_" . date_format(date_create($start_date),'Y_m_d') ."_" . $spindle_name . "_" . $recipe_name . ".txt";
+        header('Content-Type: text/csv');
+        header("Content-Disposition: attachment; filename=\"$filename\"");
+        ob_clean();
+        $flag = false;
+    // define fromat for date
+        $start_date=date_format(date_create($start_date),'Y-m-d');
+        $end_date=date_format(date_create($end_date),'Y-m-d');
+    // write summary header to file
+        echo "Device: $spindle_name | $txt_recipe_name $recipe_name | Start: $start_date | $txt_end : $end_date \r\n";
+        echo "$txt_initial_gravity : $initial_gravity °P | $txt_final_gravity : $final_gravity °P | $txt_attenuation : $attenuation % | $txt_alcohol : $alcohol Vol% \r\n";
+        printf("$txt_calibration :  %01.5f * tilt^3 %+01.5f * tilt^2 %+01.5f * tilt %+01.5f \r\n",$const0,$const1,$const2,$const3);
+        echo "\r\n";
+        // retrieve and store the values comma separated
+        while ($row = mysqli_fetch_assoc($q_sql)) {
+            if(!$flag) {
+                // display field/column names as first row
+                echo implode(",", array_keys($row)) . "\r\n";
+                $flag = true;
+            }
+        // starting with the second row, data values will be written to file
+            array_walk($row, __NAMESPACE__ . '\cleanData');
+            echo implode(",", array_values($row)) . "\r\n";
         }
-    // starting with the second row, data values will be written to file
-        array_walk($row, __NAMESPACE__ . '\cleanData');
-        echo implode(",", array_values($row)) . "\r\n";
-    }
+     exit;
+     }
+    // otherwise do beersmith csv formt export
+    else {
+    // start query and set @x=0
+         $p_sql = mysqli_query($conn, "SET @x:=0") or die(mysqli_error($conn));
+    // select that calculates all parameters for beersmith fermentation csv file to be exported while pulling data from the database
+        $SQL_select = "SELECT *
+                        FROM (SELECT mt.Timestamp AS Date, mt.Temperature, ($const0*mt.Angle*mt.Angle*mt.Angle + $const1*mt.Angle*mt.Angle + $const2*mt.Angle + $const3) AS Gravity, TIMESTAMPDIFF(DAY, '$start_date', mt.Timestamp) AS Day, (@x:=@x+1) AS x
+                        FROM Data mt WHERE Recipe_ID = '$recipe_ID' AND Timestamp > (Select min(Timestamp) FROM Data WHERE Recipe_ID='$recipe_ID')" . $AND_RID . " ORDER BY Timestamp ASC) t WHERE x MOD $Rows = 0";
+        $q_sql = mysqli_query($conn, $SQL_select) or die(mysqli_error($conn));
+    // filename for download
+        $filename = $recipe_ID . "_" . date_format(date_create($start_date),'Y_m_d') ."_" . $spindle_name . "_" . $recipe_name . ".csv";
+        header('Content-Type: text/csv');
+        header("Content-Disposition: attachment; filename=\"$filename\"");
+        ob_clean();
+        $fh = fopen( 'php://output', 'w' );
+        $flag = false;
+        // retrieve and store the values comma separated
+        while ($row = mysqli_fetch_assoc($q_sql)) {
+            if(!$flag) {
+                // display field/column names as first row
+                fputcsv($fh, array_keys($row));
+                $flag = true;
+            }
+        // starting with the second row, data values will be written to file
+            array_walk($row, __NAMESPACE__ . '\cleanData');
+            fputcsv($fh, array_values($row)); 
+        }
     exit;
     }
+}
 
 // Get archive values from database for selected recipe_ID. 
 // Parameters that are available in the script that is calling this function will be submitted while calling this function
@@ -1098,11 +1168,12 @@ function getArchiveValues($conn, $recipe_ID, $initial_gravity)
     $valBattery = '';
     $valSVG ='';
     $valABV ='';
+    $const0 = 0;
     $const1 = 0;
     $const2 = 0;
     $const3 = 0;
     $AND_RID = ''; 
-// convert initial gravity to float
+// conveqli_errort initial gravity to float
     $sql_IG=floatval($initial_gravity);
 // get all information for selected recipe_id from archive table
     $archive_sql = "Select * FROM Archive WHERE Recipe_ID = '$recipe_ID'";
@@ -1114,12 +1185,13 @@ function getArchiveValues($conn, $recipe_ID, $initial_gravity)
     $recipe_name = $archive_result['Recipe'];
     $start_date = $archive_result['Start_date'];
     $end_date = $archive_result['End_date'];
+    $const0 = $archive_result['const0'];
     $const1 = $archive_result['const1'];
     $const2 = $archive_result['const2'];
     $const3 = $archive_result['const3'];
-
+    write_log($end_date);
 // if no entry for end date in archive table, get last timestamp of last dataset for selected recipe from data table
-    if($end_date == '0000-00-00 00:00:00'){
+    if($end_date == NULL){
     $get_end_date = "SELECT max(Timestamp) FROM Data WHERE Recipe_ID = '$recipe_ID'";
     $q_sql = mysqli_query($conn, $get_end_date) or die(mysqli_error($conn));
     $result = mysqli_fetch_array($q_sql);
@@ -1132,7 +1204,7 @@ function getArchiveValues($conn, $recipe_ID, $initial_gravity)
     $rows = mysqli_fetch_array($q_sql);
     if ($rows <> 0)    
     {
-// update end_dat in case of existing RID_END flag
+// update end_date in case of existing RID_END flag
     $end_date = $rows['Timestamp'];
 // add condition to select if RID_END flag is set
     $AND_RID = " AND Timestamp <= (Select max(Timestamp) FROM Data WHERE Recipe_ID='$recipe_ID' AND Internal = 'RID_END')";
@@ -1149,7 +1221,7 @@ function getArchiveValues($conn, $recipe_ID, $initial_gravity)
             $jsTime = $r_row['unixtime'] * 1000;
             $angle = $r_row['angle'];
 // calculate current density based on calibration values
-            $dens = $const1 * pow($angle, 2) + $const2 * $angle + $const3; // complete polynome from database
+            $dens = $const0 * pow($angle, 3) + $const1 * pow($angle, 2) + $const2 * $angle + $const3; // complete polynome from database
 // calculate current attenuation based on initial gravity and current gravity
             $SVG = ($initial_gravity-$dens)/$initial_gravity*100;
 // calculate real gravity based on initial gravity and current gravity (required for ABV calculation)
@@ -1231,6 +1303,7 @@ function getChartValues($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = de
     $valGravity = '';
     $valRSSI = '';
     $valBattery = '';
+    $const0 = 0;
     $const1 = 0;
     $const2 = 0;
     $const3 = 0;
@@ -1263,11 +1336,12 @@ function getChartValues($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = de
 // try to get calibration for iSpindle hardware ID
             $r_id = mysqli_fetch_array($u_sql);
             $uniqueID = $r_id['ID'];
-            $f_sql = mysqli_query($conn, "SELECT const1, const2, const3 FROM Calibration WHERE ID = '$uniqueID' ") or die(mysqli_error($conn));
+            $f_sql = mysqli_query($conn, "SELECT const0, const1, const2, const3 FROM Calibration WHERE ID = '$uniqueID' ") or die(mysqli_error($conn));
             $rows_cal = mysqli_num_rows($f_sql);
             if ($rows_cal > 0) {
                 $isCalibrated = 1;
                 $r_cal = mysqli_fetch_array($f_sql);
+                $const0 = $r_cal['const0'];
                 $const1 = $r_cal['const1'];
                 $const2 = $r_cal['const2'];
                 $const3 = $r_cal['const3'];
@@ -1285,7 +1359,7 @@ function getChartValues($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = de
             $angle = $r_row['angle'];
 
 // calculate current density based on calibration values
-            $dens = $const1 * pow($angle, 2) + $const2 * $angle + $const3; // complete polynome from database
+            $dens = $const0 * pow($angle, 3) + $const1 * pow($angle, 2) + $const2 * $angle + $const3; // complete polynome from database
             $gravity = $r_row['gravity']; // desity values from spindle
             $rssi = $r_row['rssi'];
             $battery = $r_row['battery'];
@@ -1446,6 +1520,7 @@ function getlastValuesPlato4($conn, $iSpindleID = 'iSpindel000')
 // define empty variables
     $isCalibrated = 0;
     $valDens = '';
+    $const0 = 0;
     $const1 = 0;
     $const2 = 0;
     $const3 = 0;
@@ -1470,12 +1545,13 @@ function getlastValuesPlato4($conn, $iSpindleID = 'iSpindel000')
             // try to get calibration for iSpindle hardware ID
             $r_id = mysqli_fetch_array($u_sql);
             $uniqueID = $r_id['ID'];
-            $f_sql = mysqli_query($conn, "SELECT const1, const2, const3 FROM Calibration WHERE ID = '$uniqueID' ") or die(mysqli_error($conn));
+            $f_sql = mysqli_query($conn, "SELECT const0, const1, const2, const3 FROM Calibration WHERE ID = '$uniqueID' ") or die(mysqli_error($conn));
             $rows_cal = mysqli_num_rows($f_sql);
             if ($rows_cal > 0) {
                 $isCalibrated = 1;
                 $r_cal = mysqli_fetch_array($f_sql);
 // sql query to pull last dataset for selected spindle from database
+                $const0 = $r_cal['const0'];
                 $const1 = $r_cal['const1'];
                 $const2 = $r_cal['const2'];
                 $const3 = $r_cal['const3'];
@@ -1487,7 +1563,7 @@ function getlastValuesPlato4($conn, $iSpindleID = 'iSpindel000')
         $valTemperature = $r_row['temperature'];
         $valAngle = $r_row['angle'];
 // calculate gravity based on angle and spinlde calibration
-        $valDens = $const1 * pow($valAngle, 2) + $const2 * $valAngle + $const3; // complete polynome from database
+        $valDens = $const0 * pow($valAngle, 3) + $const1 * pow($valAngle, 2) + $const2 * $valAngle + $const3; // complete polynome from database
         $valRecipe = $r_row['recipe'];
         $valInterval = $r_row['interval'];
         $valBattery = $r_row['battery'];
@@ -1514,6 +1590,7 @@ function getValuesHoursAgoPlato4($conn, $iSpindleID = 'iSpindel000', $lasttime, 
 // define empty variables
     $isCalibrated = 0;
     $valDens = '';
+    $const0 = 0;
     $const1 = 0;
     $const2 = 0;
     $const3 = 0;
@@ -1538,11 +1615,12 @@ function getValuesHoursAgoPlato4($conn, $iSpindleID = 'iSpindel000', $lasttime, 
             // try to get calibration for iSpindle hardware ID
             $r_id = mysqli_fetch_array($u_sql);
             $uniqueID = $r_id['ID'];
-            $f_sql = mysqli_query($conn, "SELECT const1, const2, const3 FROM Calibration WHERE ID = '$uniqueID' ") or die(mysqli_error($conn));
+            $f_sql = mysqli_query($conn, "SELECT const0, const1, const2, const3 FROM Calibration WHERE ID = '$uniqueID' ") or die(mysqli_error($conn));
             $rows_cal = mysqli_num_rows($f_sql);
             if ($rows_cal > 0) {
                 $isCalibrated = 1;
                 $r_cal = mysqli_fetch_array($f_sql);
+                $const0 = $r_cal['const0'];
                 $const1 = $r_cal['const1'];
                 $const2 = $r_cal['const2'];
                 $const3 = $r_cal['const3'];
@@ -1554,7 +1632,7 @@ function getValuesHoursAgoPlato4($conn, $iSpindleID = 'iSpindel000', $lasttime, 
         $valTemperature = $r_row['temperature'];
         $valAngle = $r_row['angle'];
 // calculate gravity based on angle and spinlde calibration
-        $valDens = $const1 * pow($valAngle, 2) + $const2 * $valAngle + $const3; // complete polynome from database
+        $valDens = $const0 * pow($valAngle, 3) + $const1 * pow($valAngle, 2) + $const2 * $valAngle + $const3; // complete polynome from database
         $valRecipe = $r_row['recipe'];
         $valInterval = $r_row['interval'];
         $valBattery = $r_row['battery'];
@@ -1592,6 +1670,7 @@ function getChartValuesPlato4_delta($conn, $iSpindleID = 'iSpindel000', $timeFra
     $isCalibrated = 0;
     $valTemperature = '';
     $valDens = '';
+    $const0 = 0;
     $const1 = 0;
     $const2 = 0;
     $const3 = 0;
@@ -1604,11 +1683,12 @@ function getChartValuesPlato4_delta($conn, $iSpindleID = 'iSpindel000', $timeFra
 // try to get calibration for iSpindle hardware ID
             $r_id = mysqli_fetch_array($u_sql);
             $uniqueID = $r_id['ID'];
-            $f_sql = mysqli_query($conn, "SELECT const1, const2, const3 FROM Calibration WHERE ID = '$uniqueID' ") or die(mysqli_error($conn));
+            $f_sql = mysqli_query($conn, "SELECT const0, const1, const2, const3 FROM Calibration WHERE ID = '$uniqueID' ") or die(mysqli_error($conn));
             $rows_cal = mysqli_num_rows($f_sql);
             if ($rows_cal > 0) {
                 $isCalibrated = 1;
                 $r_cal = mysqli_fetch_array($f_sql);
+                $const0 = $r_cal['const0'];
                 $const1 = $r_cal['const1'];
                 $const2 = $r_cal['const2'];
                 $const3 = $r_cal['const3'];
@@ -1641,8 +1721,8 @@ function getChartValuesPlato4_delta($conn, $iSpindleID = 'iSpindel000', $timeFra
                                        mt.recipe, 
                                        mt.temperature, 
                                        mt.angle, 
-                                       mt.Angle*mt.Angle*" . $const1 . " + mt.Angle*" . $const2 . " + " . $const3 . " AS Calc_Plato, 
-                                       mt.Angle*mt.Angle*" . $const1 . "+mt.Angle*" . $const2 . "+" . $const3 . " - lag(mt.Angle*mt.Angle*" . $const1 . "+mt.Angle*" . $const2 . "+" . $const3 . ", " . $Rows . ") 
+                                       mt.Angle*mt.Angle*mt.Angle*" . $const0. " + mt.Angle*mt.Angle*" . $const1 . " + mt.Angle*" . $const2 . " + " . $const3 . " AS Calc_Plato, 
+                                       mt.Angle*mt.Angle*mt.Angle*" . $const0. " + mt.Angle*mt.Angle*" . $const1 . "+mt.Angle*" . $const2 . "+" . $const3 . " - lag(mt.Angle*mt.Angle*mt.Angle*".$const0." +mt.Angle*mt.Angle*" . $const1 . "+mt.Angle*" . $const2 . "+" . $const3 . ", " . $Rows . ") 
                                        OVER (ORDER BY mt.Timestamp) DeltaPlato 
                                        FROM Data mt " .$where . " order by Timestamp) t WHERE x MOD " . $Rows . " = 0"))
          {
@@ -1708,6 +1788,7 @@ function getChartValues_ma($conn, $iSpindleID = 'iSpindel000', $timeFrameHours =
     $valDens = '';
     $valSVG = '';
     $valABV = '';
+    $const0 = 0;
     $const1 = 0;
     $const2 = 0;
     $const3 = 0;
@@ -1757,11 +1838,12 @@ function getChartValues_ma($conn, $iSpindleID = 'iSpindel000', $timeFrameHours =
 // try to get calibration for iSpindle hardware ID
             $r_id = mysqli_fetch_array($u_sql);
             $uniqueID = $r_id['ID'];
-            $f_sql = mysqli_query($conn, "SELECT const1, const2, const3 FROM Calibration WHERE ID = '$uniqueID' ") or die(mysqli_error($conn));
+            $f_sql = mysqli_query($conn, "SELECT const0, const1, const2, const3 FROM Calibration WHERE ID = '$uniqueID' ") or die(mysqli_error($conn));
             $rows_cal = mysqli_num_rows($f_sql);
             if ($rows_cal > 0) {
                 $isCalibrated = 1;
                 $r_cal = mysqli_fetch_array($f_sql);
+                $const0 = $r_cal['const0'];
                 $const1 = $r_cal['const1'];
                 $const2 = $r_cal['const2'];
                 $const3 = $r_cal['const3'];
@@ -1778,7 +1860,7 @@ function getChartValues_ma($conn, $iSpindleID = 'iSpindel000', $timeFrameHours =
             $angle = $r_row['mv_angle'];
             $gravity = $r_row['mv_gravity'];
 // calculate desnity from angle and calibration constants for selected spindle
-            $dens = $const1 * pow($angle, 2) + $const2 * $angle + $const3; // complete polynome from database
+            $dens = $const0 * pow($angle, 3) + $const1 * pow($angle, 2) + $const2 * $angle + $const3; // complete polynome from database
 // real density differs fro aparent density
             $real_dens = 0.1808 * $InitialGravity + 0.8192 * $dens;
 // calculte apparent attenuation

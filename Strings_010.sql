@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3308
--- Erstellungszeit: 13. Mai 2020 um 01:05
+-- Erstellungszeit: 14. Aug 2020 um 13:02
 -- Server-Version: 10.4.7-MariaDB-debug
 -- PHP-Version: 7.3.7
 
@@ -72,9 +72,10 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('batterytrend', 'timetext', 'Batteriespannung und WiFi Signal der letzten', 'Battery voltage and WiFi reception of the last ', 'Voltaggio Batteria e segnale WiFi delle ultime'),
 ('batterytrend', 'timetext_reset', 'Batteriespannung und WiFi Signal seit dem letzten Reset: ', 'Battery voltage and WiFi reception since last reset: ', 'Voltaggio Batteria e segnale WiFi dall\'ultimo reset: '),
 ('batterytrend', 'x_axis', 'Datum / Uhrzeit', 'Date / Time', 'Data / Orario'),
-('calibration', 'constant1', 'Konstante 1:', 'Constant 1:', 'Costante 1:'),
-('calibration', 'constant2', 'Konstante 2:', 'Constant 2:', 'Costante 2:'),
-('calibration', 'constant3', 'Konstante 3:', 'Constant 3:', 'Costante 3:'),
+('calibration', 'constant0', 'Konstante 0 (x3):', 'Constant 0 (x3):', 'Costante 0 (x3):'),
+('calibration', 'constant1', 'Konstante 1 (x2):', 'Constant 1(x2):', 'Costante 1 (x2):'),
+('calibration', 'constant2', 'Konstante 2 (x)  :', 'Constant 2 (x)  :', 'Costante 2 (x)  :'),
+('calibration', 'constant3', 'Konstante 3      :', 'Constant 3      :', 'Costante 3      :'),
 ('calibration', 'enter_constants', 'Konstanten eingeben:', 'Please enter constants:', 'Inserire costanti:'),
 ('calibration', 'header', 'Aktualisieren der Kalibrierung für:', 'Update calibration for:', 'Aggiornamento della calibrazione per:'),
 ('calibration', 'send', 'Kalibrierung an DB senden', 'Send calibration to database', 'Inoltra calibrazione al database'),
@@ -163,7 +164,7 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('reset_now', 'recipe_written', 'Sudname in Datenbank eingetragen:', 'Recipe name added to database:', 'Nome ricetta inserita nel database:'),
 ('reset_now', 'reset_written', 'Reset-Timestamp in Datenbank eingetragen', 'Reset-Timestamp added to database', 'Reset-Timestamp inserito nel database'),
 ('sendmail', 'content_alarm_low_gravity_1', '<b>Der gemessene Extrakt folgender Spindel(n) ist unter das Limit von %s Plato gefallen:</b><br/><br/>', '<b>Measured Gravity for these Spindle(s) is below Limit of %s Plato:</b><br/><br/>', '<b>Densità rilevata dalla Spindle e inferiore al limite di %s plato:</b><br/><br/>'),
-('sendmail', 'content_alarm_svg', '<b>Der Vergärungsgrad folgender Spindel(n) ist oberhalbe dem Alarm Limit von %s Prozent gefallen:</b><br/><br/>', '<b>Calculated Apparent Attenuation for these Spindle(s) is above alarm Limit of %s Percent:</b><br/><br/>', '<b>Attenuazione apparente calcolata e superiore al limite di %s per cento:</b><br/><br/>'),
+('sendmail', 'content_alarm_svg', '<b>Der Vergärungsgrad folgender Spindel(n) ist oberhalb des Alarm Limits von %s Prozent\r\n:</b><br/><br/>', '<b>Calculated Apparent Attenuation for these Spindle(s) is above alarm Limit of %s Percent:</b><br/><br/>', '<b>Attenuazione apparente calcolata e superiore al limite di %s per cento:</b><br/><br/>'),
 ('sendmail', 'content_data', '<b>%s <br/>Datum:</b> %s <br/><b>ID:</b> %s <br/><b>Winkel:</b> %s <br/><b>Stammwürze in Plato:</b> %s <br/><b>Extrakt in Plato:</b> %s <br/><b>Scheinbarer Vergärungsgrad:</b> %s <br/><b>Alkohol im Volumen :</b> %s <br/><b>Delta Plato letzte 24h:</b> %s <br/><b>Delta Plato letzte 12h:</b> %s <br/><b>Temperatur:</b> %s <br/><b>Batteriespannung:</b> %s <br/><b>Sudname:</b> %s <br/><br/>', '<b>%s <br/>Date:</b> %s <br/><b>ID:</b> %s <br/><b>Angle:</b> %s <br/><b>Apparent Attenuation in Plato:</b> %s <br/><b>Current extract in Plato:</b> %s <br/><b>Apparent attentuation:</b> %s <br/><b>Alcohol by Volumen :</b> %s <br/><b>Delta Plato last 24h:</b> %s <br/><b>Delta Plato last 12h:</b> %s <br/><b>Temperature:</b> %s <br/><b>Battery:</b> %s <br/><b>Recipe:</b> %s <br/><br/>', '<b>%s <br/>Data:</b> %s <br/><b>ID:</b> %s <br/><b>Angolo:</b> %s <br/><b>Attenuazione apparente in Plato:</b> %s <br/><b>Attuale densità in Plato:</b> %s <br/><b>Attenuazione apparente:</b> %s <br/><b>ABV :</b> %s <br/><b>Delta Plato ultime 24 ore:</b> %s <br/><b>Delta Plato ultime 12 ore:</b> %s <br/><b>Temperatura:</b> %s <br/><b>Batteria:</b> %s <br/><b>Ricetta:</b> %s <br/><br/>'),
 ('sendmail', 'content_info', '<b>Alarm bei Plato Unterschreitung:</b> %s Plato<br/><b>Alarm Delta Plato in den letzten 24 Stunden :</b> %s Plato<br/><b>Zeit für Statusemail:</b> %s<br/>                    <b>Aktuelle Zeit:</b> %s', '<b>Lower limit for Plato Alarm:</b> %s Plato<br/><b>Alarm Delta Plato in last 24 hours :</b> %s Plato<br/><b>Time for Statusmail:</b> %s<br/>                    <b>Current Time:</b> %s', '<b>Limite inferiore per allarme plato:</b> %s Plato<br/><b>Allarme Delta Plato nelle ultime 24 ore :</b> %s Plato<br/><b>Ora per la mail di stato:</b> %s<br/>                    <b>Ora attuale:</b> %s'),
 ('sendmail', 'content_status_1', '<b>Letzter Datensatz innerhalb der letzten %s Tage wurde für folgende Spindel(n) gefunden:</b><br/><br/>', '<b>Last dataset within the last %s days was found for the following Spindles:</b><br/><br/>', '<b>Ultima rilevazione nei ultimi %s giorni sono state trovate dalle seguenti spindle:</b><br/><br/>'),
@@ -199,7 +200,7 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('svg_ma', 'timetext', 'Temperatur und scheinbarer Vergärungsgrad der letzten', 'Temperature and extract of the last ', 'Tenperatura e densità delle ultime'),
 ('svg_ma', 'timetext_reset', 'Temperatur und scheinbarer Vergärungsgrad seit dem letzten Reset: ', 'Temperature and apparent attenuation since last reset: ', 'Temperatura e attenuazione apparente dall\'ultimo reset: '),
 ('svg_ma', 'x_axis', 'Datum / Uhrzeit', 'Date / Time', 'Data / Orario'),
-('version', '008', '', '', ''),
+('version', '010', '', '', ''),
 ('wifi', 'header', 'WiFi Empfangsqualität:', 'Wifi reception: ', 'Qualità della ricezione WiFi: ');
 
 --

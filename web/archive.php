@@ -21,8 +21,8 @@
 // DB config values will be pulled from differtent location and user can personalize this file: common_db_config.php
 // If file does not exist, values will be pulled from default file
  
-if ((include_once './config/common_db_config.php') == FALSE){
-       include_once("./config/common_db_default.php");
+if ((include_once '../config/common_db_config.php') == FALSE){
+       include_once("../config/common_db_default.php");
       }
      include_once("include/common_db_query.php");
 
@@ -31,6 +31,18 @@ $min_recipe_id = "SELECT min(Recipe_ID) FROM Archive";
 $q_sql = mysqli_query($conn, $min_recipe_id) or die(mysqli_error($conn));
 $result = mysqli_fetch_array($q_sql);
 $selected_recipe = $result[0];
+
+//write_log('Selected_recipe: '. $selected_recipe);
+
+// if archive is empty, go back to index page
+if (!$selected_recipe){
+    $url="http://";
+    $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
+    $url .= "index.php";
+    // open the page
+    header("Location: ".$url);
+    
+}
 
 // Check if recipe_id is set and use this id as selected recipe if set
 if(isset($_GET['recipe_id'])){
@@ -170,20 +182,20 @@ if (isset($_POST['Export']))
         $alcohol =  $_POST['alcohol'];
         $recipe_id = $_POST['archive_name'];
         $dia_type = $_POST['diagram_type'];
+        $csv_type = $_POST['radio_csv'];
 
         //export active recipe to csv file
-        ExportArchiveValues($conn,$recipe_id, $txt_recipe_name, $txt_end, $txt_initial_gravity, $initial_gravity, $txt_final_gravity, $final_gravity, $txt_attenuation, $attenuation, $txt_alcohol, $alcohol, $txt_calibration);
+        ExportArchiveValues($conn,$recipe_id, $txt_recipe_name, $txt_end, $txt_initial_gravity, $initial_gravity, $txt_final_gravity, $final_gravity, $txt_attenuation, $attenuation, $txt_alcohol, $alcohol, $txt_calibration, $csv_type);
         // reload page for selected archive
         $url="http://";
         $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
         $url .= "archive.php?recipe_id=".$recipe_id."&type=".$dia_type;
         // open the page
         header("Location: ".$url);
-        exit;
     }
 
 // get initial gravity and constants for gravity calulaction to be shown in the header table
-list($isCalib,$initial_gravity, $const1, $const2, $const3) = getArchiveInitialGravity($conn, $selected_recipe);
+list($isCalib,$initial_gravity, $const0, $const1, $const2, $const3) = getArchiveInitialGravity($conn, $selected_recipe);
 // get all data for the different diagram tyes
 list($SpindleName, $RecipeName, $start_date, $end_date, $dens, $temperature, $angle, $gravity, $battery, $rssi, $SVG, $ABV) = getArchiveValues($conn, $selected_recipe, $initial_gravity);
 // get the final gracvitry for this ID
@@ -199,6 +211,7 @@ $alcohol = ((100* ($real_dens - $initial_gravity) / (1.0665 * $initial_gravity -
 // define date and number formats for parameters in the header table
 $start_date = date("Y-m-d", strtotime($start_date));
 $end_date = date("Y-m-d", strtotime($end_date));
+$const0 = number_format($const0,4);
 $const1 = number_format($const1,4);
 $const2 = number_format($const2,4);
 $const3 = number_format($const3,4);
@@ -513,6 +526,7 @@ $(function ()
                         return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%d.%m %H:%M', new Date(this.x))  + ' ' + tooltip_time + ' ' + this.y.toFixed(2) + first_y_unit;
                     }
                 }
+
             },  
             legend: 
             {
@@ -719,7 +733,12 @@ echo "</td><td rowspan='2'></td>";
 echo "<td><b>$txt_calibration :</b></td>";
 echo "<td align='center' colspan='7'>";
 if ($cal == 1){
-    printf("%01.5f * tilt %+01.5f * tilt^2 %+01.5f",$const1,$const2,$const3);
+    if ($const0 == 0){
+        printf("%01.5f * tilt^2 %+01.5f * tilt %+01.5f",$const1,$const2,$const3);
+        }
+    else {
+        printf("%01.5F * tilt^3 %+01.5f * tilt^2 %+01.5f * tilt %+01.5f",$const0,$const1,$const2,$const3);
+        }
 }
 else {
     echo "N/A";
@@ -727,6 +746,9 @@ else {
 echo "</td></tr>";
 echo "<tr><td align='center' colspan='8'>"; 
 echo "<span title='Export'><input type = 'submit' id='Export' name = 'Export' value = 'Export'></span>";
+echo "<input type='radio' name='radio_csv' value='csv1' checked='checked' /> CSV";
+echo "<input type='radio' name='radio_csv' value='csv2' /> Beersmith";
+
 echo "</td></tr>";
 echo "</tbody>";
 echo "</table>";

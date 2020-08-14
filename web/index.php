@@ -1,7 +1,7 @@
 <?php
 // show errors in case of issues with php
-ini_set('display_errors', 'On');
-error_reporting(E_ALL | E_STRICT);
+// ini_set('display_errors', 'On');
+// error_reporting(E_ALL | E_STRICT);
     
 // Landing page (Homepage) for RasPySpindel Project
 // Selecting chart, iSpindel name, timeframe and other parameters here
@@ -50,12 +50,47 @@ error_reporting(E_ALL | E_STRICT);
 
     
 // Loads personal config file for db connection details. If not found, default file will be used
-if ((include_once './config/common_db_config.php') == FALSE){
-       include_once("./config/common_db_default.php");
+if ((include_once '../config/common_db_config.php') == FALSE){
+       include_once("../config/common_db_default.php");
     }
+if (!$conn){
+
+    // establish path by the current URL used to invoke this page
+    $url="http://";
+    $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
+    $url .= 'setup.php';
+    // open the page
+    header("Location: ".$url);
+}
+
+// Update calibration and archive table to allow for 3rd degree polynom if required
+// check first, if archive table exists
+    $q_sql="SHOW TABLES LIKE '%Archive%'";
+    $lines = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
+    $archive_exists = mysqli_num_rows($lines);
+    if ($archive_exists !=0){
+        //  check if calibration table has column const0
+        $q_sql1 = "SHOW COLUMNS FROM Calibration WHERE FIELD LIKE 'const0'";
+        $lines = mysqli_query($conn, $q_sql1) or die(mysqli_error($conn));
+        $const0_exists = mysqli_num_rows($lines);
+        if ($const0_exists ==0){
+            $add_column_sql1="ALTER TABLE `Calibration` ADD `const0` DOUBLE NOT NULL AFTER `ID`";
+            mysqli_query($conn, $add_column_sql1) or die(mysqli_error($conn));
+            }
+
+        $q_sql1 = "SHOW COLUMNS FROM Archive WHERE FIELD LIKE 'const0'";
+        $lines = mysqli_query($conn, $q_sql1) or die(mysqli_error($conn));
+        $const0_exists = mysqli_num_rows($lines);
+        if ($const0_exists == 0){
+            $add_column_sql1="ALTER TABLE `Archive` ADD `const0` DOUBLE NOT NULL AFTER `End_date`";
+            mysqli_query($conn, $add_column_sql1) or die(mysqli_error($conn));
+            }
+        }
+
+
 //  Loads db query functions
 include_once("./include/common_db_query.php");
-include_once("./config/tables.php");
+include_once("../config/tables.php");
  
 
     // Self-called by submit button to load diagrams
@@ -333,12 +368,21 @@ $document_class = get_color_scheme($conn);
 
 write_log('Recipe_ID Column exists: '. $exists);
 
-//  check if data table has column recipe_id
+//  check if iGauge table exists
     $q_sql1 = "SHOW TABLES LIKE 'iGauge'";
     $lines = mysqli_query($conn, $q_sql1) or die(mysqli_error($conn));
     $iGauge_exists = mysqli_num_rows($lines);
 
 write_log('iGauge Table exists: '. $iGauge_exists);
+
+//  check if archive table has entries
+    $q_sql1 ="SELECT COUNT(*) FROM `Archive`";
+    $lines = mysqli_query($conn, $q_sql1) or die(mysqli_error($conn));
+    $result2 = mysqli_fetch_array($lines);
+    $archive_rows = $result2[0];
+
+write_log('Archive has rows: '. $archive_rows);
+
 
 ?>
 
@@ -539,15 +583,16 @@ else {
     echo "</div>";
 
 }
-?>
-<br/>
-<!-- Archive button -->
-<div id="archive" style="display: block;">
-<span title="<?php echo($show_archive)?>"><input type = "submit" id='archive' name = "archive" value = "<?php echo($show_archive)?>"></span>
-</div>
-<br/>
-<br/>
-<?php
+
+echo "<br/>";
+// Archive button 
+if ($archive_rows !=0 ){
+echo "<div id='archive' style='display: block;'>";
+echo "<span title='$show_archive'><input type = 'submit' id='archive' name = 'archive' value = '$show_archive'></span>";
+echo "</div>";
+}
+echo "<br/>";
+echo "<br/>";
 
 // if data is available, table with latrest dataset is shown in a table
 if ($len !=0 ){

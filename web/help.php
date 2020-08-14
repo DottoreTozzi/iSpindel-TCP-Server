@@ -3,8 +3,8 @@ ini_set('display_errors', 'On');
 error_reporting(E_ALL | E_STRICT);
 
 // Loads personal config file for db connection details. If not found, default file will be used
-if ((include_once './config/common_db_config.php') == FALSE){
-    include_once("./config/common_db_default.php");
+if ((include_once '../config/common_db_config.php') == FALSE){
+    include_once("../config/common_db_default.php");
     }
 //  Loads db query functions
 include_once("./include/common_db_query.php");
