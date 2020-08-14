@@ -53,7 +53,6 @@
 if ((include_once '../config/common_db_config.php') == FALSE){
        include_once("../config/common_db_default.php");
     }
-
 if (!$conn){
 
     // establish path by the current URL used to invoke this page
@@ -63,6 +62,31 @@ if (!$conn){
     // open the page
     header("Location: ".$url);
 }
+
+// Update calibration and archive table to allow for 3rd degree polynom if required
+// check first, if archive table exists
+    $q_sql="SHOW TABLES LIKE '%Archive%'";
+    $lines = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
+    $archive_exists = mysqli_num_rows($lines);
+    if ($archive_exists !=0){
+        //  check if calibration table has column const0
+        $q_sql1 = "SHOW COLUMNS FROM Calibration WHERE FIELD LIKE 'const0'";
+        $lines = mysqli_query($conn, $q_sql1) or die(mysqli_error($conn));
+        $const0_exists = mysqli_num_rows($lines);
+        if ($const0_exists ==0){
+            $add_column_sql1="ALTER TABLE `Calibration` ADD `const0` DOUBLE NOT NULL AFTER `ID`";
+            mysqli_query($conn, $add_column_sql1) or die(mysqli_error($conn));
+            }
+
+        $q_sql1 = "SHOW COLUMNS FROM Archive WHERE FIELD LIKE 'const0'";
+        $lines = mysqli_query($conn, $q_sql1) or die(mysqli_error($conn));
+        $const0_exists = mysqli_num_rows($lines);
+        if ($const0_exists == 0){
+            $add_column_sql1="ALTER TABLE `Archive` ADD `const0` DOUBLE NOT NULL AFTER `End_date`";
+            mysqli_query($conn, $add_column_sql1) or die(mysqli_error($conn));
+            }
+        }
+
 
 //  Loads db query functions
 include_once("./include/common_db_query.php");

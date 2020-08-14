@@ -156,6 +156,7 @@ if (isset($_POST['Go']))
                       `Recipe` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
                       `Start_date` datetime NOT NULL,
                       `End_date` datetime DEFAULT NULL,
+                      `const0` double DEFAULT NULL,
                       `const1` double DEFAULT NULL,
                       `const2` double DEFAULT NULL,
                       `const3` double DEFAULT NULL,
@@ -172,6 +173,7 @@ if (isset($_POST['Go']))
 // create calibration table
     $create_calibration = "CREATE TABLE `Calibration` (
                           `ID` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+                          `const0` double NOT NULL,
                           `const1` double NOT NULL,
                           `const2` double NOT NULL,
                           `const3` double NOT NULL,

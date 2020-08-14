@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3308
--- Erstellungszeit: 16. Jun 2020 um 01:25
+-- Erstellungszeit: 14. Aug 2020 um 13:02
 -- Server-Version: 10.4.7-MariaDB-debug
 -- PHP-Version: 7.3.7
 
@@ -72,9 +72,10 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('batterytrend', 'timetext', 'Batteriespannung und WiFi Signal der letzten', 'Battery voltage and WiFi reception of the last ', 'Voltaggio Batteria e segnale WiFi delle ultime'),
 ('batterytrend', 'timetext_reset', 'Batteriespannung und WiFi Signal seit dem letzten Reset: ', 'Battery voltage and WiFi reception since last reset: ', 'Voltaggio Batteria e segnale WiFi dall\'ultimo reset: '),
 ('batterytrend', 'x_axis', 'Datum / Uhrzeit', 'Date / Time', 'Data / Orario'),
-('calibration', 'constant1', 'Konstante 1:', 'Constant 1:', 'Costante 1:'),
-('calibration', 'constant2', 'Konstante 2:', 'Constant 2:', 'Costante 2:'),
-('calibration', 'constant3', 'Konstante 3:', 'Constant 3:', 'Costante 3:'),
+('calibration', 'constant0', 'Konstante 0 (x3):', 'Constant 0 (x3):', 'Costante 0 (x3):'),
+('calibration', 'constant1', 'Konstante 1 (x2):', 'Constant 1(x2):', 'Costante 1 (x2):'),
+('calibration', 'constant2', 'Konstante 2 (x)  :', 'Constant 2 (x)  :', 'Costante 2 (x)  :'),
+('calibration', 'constant3', 'Konstante 3      :', 'Constant 3      :', 'Costante 3      :'),
 ('calibration', 'enter_constants', 'Konstanten eingeben:', 'Please enter constants:', 'Inserire costanti:'),
 ('calibration', 'header', 'Aktualisieren der Kalibrierung für:', 'Update calibration for:', 'Aggiornamento della calibrazione per:'),
 ('calibration', 'send', 'Kalibrierung an DB senden', 'Send calibration to database', 'Inoltra calibrazione al database'),
@@ -199,7 +200,7 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('svg_ma', 'timetext', 'Temperatur und scheinbarer Vergärungsgrad der letzten', 'Temperature and extract of the last ', 'Tenperatura e densità delle ultime'),
 ('svg_ma', 'timetext_reset', 'Temperatur und scheinbarer Vergärungsgrad seit dem letzten Reset: ', 'Temperature and apparent attenuation since last reset: ', 'Temperatura e attenuazione apparente dall\'ultimo reset: '),
 ('svg_ma', 'x_axis', 'Datum / Uhrzeit', 'Date / Time', 'Data / Orario'),
-('version', '009', '', '', ''),
+('version', '010', '', '', ''),
 ('wifi', 'header', 'WiFi Empfangsqualität:', 'Wifi reception: ', 'Qualità della ricezione WiFi: ');
 
 --

@@ -38,6 +38,7 @@ if (! $q_sql0){
 
 // set default values for variables
 $valID='0';
+$const0=NULL;
 $const1=NULL;
 $const2=NULL;
 $const3=NULL;
@@ -51,9 +52,10 @@ if ($rows > 0) {
     $valCalib = getSpindleCalibration($conn, $Name );
     if ($valCalib[0])
         {
-            $const1=$valCalib[1];
-            $const2=$valCalib[2];
-            $const3=$valCalib[3];
+            $const0=$valCalib[1];
+            $const1=$valCalib[2];
+            $const2=$valCalib[3];
+            $const3=$valCalib[4];
         }
 
 
@@ -66,10 +68,10 @@ $ID = mysqli_fetch_array($q_sql);
 if($ID[0]){
     $timestamp_2 = date("Y-m-d H:i:s"); 
     if ($const1 != NULL){
-        $update_archive_table = "UPDATE Archive Set End_date = '".$timestamp_2."', const1 = '".$const1."', const2 = '".$const2."', const3 = '".$const3."' WHERE Recipe_ID = '".$ID[0]."'";
+        $update_archive_table = "UPDATE Archive Set End_date = '".$timestamp_2."', const0 = '" .$const0. "',const1 = '".$const1."', const2 = '".$const2."', const3 = '".$const3."' WHERE Recipe_ID = '".$ID[0]."'";
         }
     else {
-        $update_archive_table = "UPDATE Archive Set End_date = '".$timestamp_2."', const1 = NULL, const2 = NULL, const3 = NULL WHERE Recipe_ID = '".$ID[0]."'";
+        $update_archive_table = "UPDATE Archive Set End_date = '".$timestamp_2."', const0 = NULL, const1 = NULL, const2 = NULL, const3 = NULL WHERE Recipe_ID = '".$ID[0]."'";
         }
         write_log($update_archive_table);
         $q_sql = mysqli_query($conn, $update_archive_table) or die(mysqli_error($conn));    
@@ -78,13 +80,13 @@ if($ID[0]){
 $timestamp = date("Y-m-d H:i:s");
 if ($const1 != NULL){
 $entry_recipe_table_sql = "INSERT INTO `Archive`
-                           (`Recipe_ID`, `Name`, `ID`, `Recipe`, `Start_date`, `End_date`, `const1`, `const2`, `const3`)
-                           VALUES (NULL, '".$Name."', '".$valID."', '".$Recipe."', '".$timestamp."', NULL, '$const1', '$const2', '$const3')";
+                           (`Recipe_ID`, `Name`, `ID`, `Recipe`, `Start_date`, `End_date`, `const0`, `const1`, `const2`, `const3`)
+                           VALUES (NULL, '".$Name."', '".$valID."', '".$Recipe."', '".$timestamp."', NULL, '$const0', '$const1', '$const2', '$const3')";
 }
 else {
 $entry_recipe_table_sql = "INSERT INTO `Archive`
-                           (`Recipe_ID`, `Name`, `ID`, `Recipe`, `Start_date`, `End_date`, `const1`, `const2`, `const3`)
-                           VALUES (NULL, '".$Name."', '".$valID."', '".$Recipe."', '".$timestamp."', NULL, NULL, NULL, NULL)";
+                           (`Recipe_ID`, `Name`, `ID`, `Recipe`, `Start_date`, `End_date`, `const0`,`const1`, `const2`, `const3`)
+                           VALUES (NULL, '".$Name."', '".$valID."', '".$Recipe."', '".$timestamp."', NULL, NULL, NULL, NULL, NULL)";
 }
 write_log($entry_recipe_table_sql);
 mysqli_set_charset($conn, "utf8mb4");

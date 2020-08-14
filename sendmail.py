@@ -296,6 +296,7 @@ def get_data_hours_ago(iSpindleID, lasttime, hours):
 def calculate_plato_from_calibration(iSpindleID, Angle):
     calc_gravity = 'N/A'
     lSpindleID = []
+    dconst0 = {}
     dconst1 = {}
     dconst2 = {}
     dconst3 = {}
@@ -304,12 +305,13 @@ def calculate_plato_from_calibration(iSpindleID, Angle):
         cnx = mysql.connector.connect(
             user=SQL_USER,  port=SQL_PORT, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
         cur = cnx.cursor()
-        sqlselect = "SELECT id, const1, const2, const3 FROM Calibration WHERE ID = '" + \
+        sqlselect = "SELECT id, const0, const1, const2, const3 FROM Calibration WHERE ID = '" + \
             iSpindleID + "';"
         cur.execute(sqlselect)
         calibrationdata = cur.fetchall()
         if len(calibrationdata) > 0:
             del lSpindleID[:]  # ConfigIDs.clear()
+            dconst0.clear()
             dconst1.clear()
             dconst2.clear()
             dconst3.clear()
@@ -317,10 +319,11 @@ def calculate_plato_from_calibration(iSpindleID, Angle):
                 id = i[0]  # ID
                 sID = str(id)
                 lSpindleID.append(sID)
-                dconst1[sID] = i[1]
-                dconst2[sID] = i[2]
-                dconst3[sID] = i[3]
-            calc_gravity = dconst1[sID]*Angle * \
+                dconst0[sID] = i[1]
+                dconst1[sID] = i[2]                
+                dconst2[sID] = i[3]
+                dconst3[sID] = i[4]
+            calc_gravity = dconst0[sID]*Angle*Angle*Angle + dconst1[sID]*Angle * \
                 Angle+dconst2[sID]*Angle+dconst3[sID]
             cur.close()
             cnx.close()

@@ -2,6 +2,13 @@
 #### (iSpindle.py Version 3.0)
 
 [English Version](README_en.md)
+***Neu (14.08.2020)
+- Polynom 3. Grades kann nun auch verwendet werden.
+- 'const0' wurde hierfür in Datenbank eingefügt
+- index.php überprüft, ob const0 bei bestehender Datenbank vorhanden ist. Falls nicht, wird die Spalte automatisch in die Tabellen calibration und archive ergänzt
+--> vor dem Upgrade sollte ein Backup der bestehenden DB gemacht werden
+
+
 
 **Neu (16.06.2020)**
 Dies ist ein major release mit vielen Änderungen.

@@ -1,6 +1,12 @@
 # iSpindel Generic TCP Server
 #### (iSpindle.py Version 3.0)
 
+***Neu (14.08.2020)
+-  3rd degree polynomial can be also used now 
+- 'const0' has been added to database tables
+- index.php checks, if const0 is existing in tables. If not, it is automatically added  to the tables calibration and archive.
+--> Please make a Backup of your database prior upgrade to this version
+
 **New (16.06.2020)**
 This is a major release with quite a few changes
 - iSpindel.py and sendmail.py are now compatible with python3.

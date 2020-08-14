@@ -27,6 +27,7 @@ if (isset($_POST['Stop']))
 // if send button is selected send calibration values to database and reload page
 if (isset($_POST['Go']))
     {
+        $valconst0= $_POST["const0"];
         $valconst1= $_POST["const1"];
         $valconst2= $_POST["const2"];
         $valconst3= $_POST["const3"];
@@ -34,7 +35,7 @@ if (isset($_POST['Go']))
         $valID= $_POST["ID"];
         $valName= $_POST["Name"];
     
-        $calibrate_now = setSpindleCalibration($conn, $valID, $calibrated, $valconst1, $valconst2, $valconst3);
+        $calibrate_now = setSpindleCalibration($conn, $valID, $calibrated, $valconst0, $valconst1, $valconst2, $valconst3);
 
         if (!$calibrate_now){
             echo 'Fehler beim Schreiben der Daten an die Datenbank';
@@ -75,6 +76,7 @@ $iSpindleID=$spindle_list[$_GET['name']];
 $valCalib = getSpindleCalibration($conn, $iSpindleID );
 
 // set default values for constans if spinlde has no calibration entry yet
+$const0='0.000000001';
 $const1='0.000000001';
 $const2='0.000000001';
 $const3='0.000000001';
@@ -82,9 +84,10 @@ $const3='0.000000001';
 // if spindle is calibrated, use the values from the database
 if ($valCalib[0])
 {
-    $const1=$valCalib[1];
-    $const2=$valCalib[2];
-    $const3=$valCalib[3];
+    $const0=$valCalib[1];
+    $const1=$valCalib[2];
+    $const2=$valCalib[3];
+    $const3=$valCalib[4];
 }
 
 // get CSS layout for page from settings table
@@ -94,6 +97,7 @@ $document_class = get_color_scheme($conn);
 $file = "calibration";
 $window_alert_update = get_field_from_sql($conn,$file,"window_alert_update");
 $enter_constants = get_field_from_sql($conn,$file,"enter_constants");
+$constant0 = get_field_from_sql($conn,$file,"constant0");
 $constant1 = get_field_from_sql($conn,$file,"constant1");
 $constant2 = get_field_from_sql($conn,$file,"constant2");
 $constant3 = get_field_from_sql($conn,$file,"constant3");
@@ -137,7 +141,7 @@ $stop = get_field_from_sql($conn,$file,"stop");
 
 <body class='<?php echo $document_class ?>'>
 <form name="main" action="<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method="post">
-<h1><?php echo $header.' '.$iSpindleID."_".$valCalib[4] ?></h1>
+<h1><?php echo $header.' '.$iSpindleID."_".$valCalib[5] ?></h1>
 
 <div id="Calibrate">
 <!-- select options for spindle names -->
@@ -167,6 +171,8 @@ $stop = get_field_from_sql($conn,$file,"stop");
 <!-- number fields for constants -->
 <p><b><?php echo $enter_constants ?></b><br/>
 <br/>
+<?php echo $constant0 ?> <input type = "number" name = "const0" step = "0.000000001" value = <?php echo $const0 ?> />
+<br/>
 <?php echo $constant1 ?> <input type = "number" name = "const1" step = "0.000000001" value = <?php echo $const1 ?> />
 <br/>
 <?php echo $constant2 ?> <input type = "number" name = "const2" step = "0.000000001" value = <?php echo $const2 ?> />
@@ -176,7 +182,7 @@ $stop = get_field_from_sql($conn,$file,"stop");
 
 <!-- hidden fields. Information required to write back calibration data for corresponding spindel-->
 <input type = "hidden" name="Is_Calib" value= <?php echo $valCalib[0] ?>>
-<input type = "hidden" name="ID" value= <?php echo $valCalib[4] ?>>
+<input type = "hidden" name="ID" value= <?php echo $valCalib[5] ?>>
 <input type = "hidden" name="Name" value= <?php echo $iSpindleID ?>>
 <input type = "hidden" name="current_spindle" value="<?php echo $spindle_list[$_GET['name']]; ?>">
 <input type = "hidden" name="current_id" value="<?php echo $_GET['name']; ?>">

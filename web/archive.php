@@ -195,7 +195,7 @@ if (isset($_POST['Export']))
     }
 
 // get initial gravity and constants for gravity calulaction to be shown in the header table
-list($isCalib,$initial_gravity, $const1, $const2, $const3) = getArchiveInitialGravity($conn, $selected_recipe);
+list($isCalib,$initial_gravity, $const0, $const1, $const2, $const3) = getArchiveInitialGravity($conn, $selected_recipe);
 // get all data for the different diagram tyes
 list($SpindleName, $RecipeName, $start_date, $end_date, $dens, $temperature, $angle, $gravity, $battery, $rssi, $SVG, $ABV) = getArchiveValues($conn, $selected_recipe, $initial_gravity);
 // get the final gracvitry for this ID
@@ -211,6 +211,7 @@ $alcohol = ((100* ($real_dens - $initial_gravity) / (1.0665 * $initial_gravity -
 // define date and number formats for parameters in the header table
 $start_date = date("Y-m-d", strtotime($start_date));
 $end_date = date("Y-m-d", strtotime($end_date));
+$const0 = number_format($const0,4);
 $const1 = number_format($const1,4);
 $const2 = number_format($const2,4);
 $const3 = number_format($const3,4);
@@ -732,7 +733,12 @@ echo "</td><td rowspan='2'></td>";
 echo "<td><b>$txt_calibration :</b></td>";
 echo "<td align='center' colspan='7'>";
 if ($cal == 1){
-    printf("%01.5f * tilt %+01.5f * tilt^2 %+01.5f",$const1,$const2,$const3);
+    if ($const0 == 0){
+        printf("%01.5f * tilt^2 %+01.5f * tilt %+01.5f",$const1,$const2,$const3);
+        }
+    else {
+        printf("%01.5F * tilt^3 %+01.5f * tilt^2 %+01.5f * tilt %+01.5f",$const0,$const1,$const2,$const3);
+        }
 }
 else {
     echo "N/A";

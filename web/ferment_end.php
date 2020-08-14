@@ -24,6 +24,59 @@ $file = "ferment_end";
 $ferment_end_written = get_field_from_sql($conn,$file,"ferment_end_written");
 $file = "settings";
 $stop = get_field_from_sql($conn,$file,"stop");
+$file = "reset_now";
+$error_read_id = get_field_from_sql($conn,$file,"error_read_id");
+$error_write = get_field_from_sql($conn,$file,"error_write");
+
+//depending on mysql config e.g. strict mode, all values need to be transfered to DB and no empty values are allowed.
+//unique spindle id is pulled from DB and transferred for reset timestamp
+$q_sql0 = mysqli_query($conn, "SELECT DISTINCT ID FROM Data WHERE Name = '".$Name."'AND (ID <>'' OR ID <>'0') ORDER BY Timestamp DESC LIMIT 1") or die(mysqli_error($conn));
+if (! $q_sql0){
+    echo $error_read_id;
+    }
+
+// set default values for variables
+$valID='0';
+$const0=NULL;
+$const1=NULL;
+$const2=NULL;
+$const3=NULL;
+
+// get ID for selected spindle name
+$rows = mysqli_num_rows($q_sql0);
+// check if spindle has an ID
+if ($rows > 0) {
+    $r_row = mysqli_fetch_array($q_sql0);                                                                                                                                                                                                        $valID = $r_row['ID'];
+// get calibration values from calibration table for selected spindle
+    $valCalib = getSpindleCalibration($conn, $Name );
+    if ($valCalib[0])
+        {
+            $const0=$valCalib[1];
+            $const1=$valCalib[2];
+            $const2=$valCalib[3];
+            $const3=$valCalib[4];
+        }
+
+
+    }
+
+// get latest recipe_id for selected spindle
+$update_archive_sql="SELECT max(Recipe_ID) FROM Archive where Name='".$Name."'";
+$q_sql = mysqli_query($conn, $update_archive_sql) or die(mysqli_error($conn));
+$ID = mysqli_fetch_array($q_sql);
+// if spindle has already an entry in the archive table, update the end_date of the former batch and update the current calibration data if canged during batch
+if($ID[0]){
+    $timestamp_2 = date("Y-m-d H:i:s");
+    if ($const1 != NULL){
+        $update_archive_table = "UPDATE Archive Set End_date = '".$timestamp_2."', const0 = '" .$const0. "',const1 = '".$const1."', const2 = '".$const2."', const3 = '".$const3."' WHERE Recipe_ID = '".$ID[0]."'";
+        }
+    else {
+        $update_archive_table = "UPDATE Archive Set End_date = '".$timestamp_2."', const0 = NULL, const1 = NULL, const2 = NULL, const3 = NULL WHERE Recipe_ID = '".$ID[0]."'";
+        }
+        write_log($update_archive_table);
+        $q_sql = mysqli_query($conn, $update_archive_table) or die(mysqli_error($conn));
+  }
+
 
 // get recipe id and last timestamp for spindle where flag will be added
 $get_Recipe_ID = "Select Recipe_ID,Timestamp from Data Where Name = '$Name' ORDER BY Timestamp DESC LIMIT 1";
