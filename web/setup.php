@@ -9,6 +9,21 @@ error_reporting(E_ALL | E_STRICT);
 
 // relative path to stroe config files
 $config_path = "../config/";
+if (is_writable($config_path)==FALSE) 
+    {
+        echo $config_path.' is not writable. Permissions have to be adjusted for proper setup.<br>';
+        $userInfo = posix_getpwuid(posix_getuid());
+        $httpd_user = $userInfo['name'];
+        $groupInfo = posix_getgrgid(posix_getgid());
+        $httpd_group = $groupInfo = $groupInfo['name'];
+//        $httpd_user = shell_exec( 'whoami' );
+        $full_config_path = substr(getcwd(),0,-3)."config";
+        echo "Please allow access for the http user group: $httpd_group to the config path: $full_config_path. <br><br>";
+        echo "<b>Use the following commands:</b><br>";
+        echo "sudo chown root:$httpd_group $full_config_path<br>";
+        echo "sudo chmod 775 $full_config_path";
+        exit;
+    } 
 
 // Loads personal config file for db connection details. If not found, default file will be used
 if ((include_once '../config/common_db_config.php') == FALSE){
