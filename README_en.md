@@ -1,7 +1,7 @@
 # iSpindel Generic TCP Server
 #### (iSpindle.py Version 3.0)
 ***New (20.11.2020)
-- Updated [Installation Instructions](INSTALL_en.md) for ubuntu (my server is not running on a raspbi)
+- Updated [Installation Instructions](INSTALL_en.md) for ubuntu (should also work for a rasbpi with small modifications)
 - Updated setup.php script that informs you if write access is not granted for config directory
 
 ***New (14.08.2020)
