@@ -4,7 +4,7 @@
 [English Version](README_en.md)
 ***Neu (05.12.2020)
 - Detailiertere [Installationsanleitung für Raspi] (INSTALL_Raspi.md)
-- Image für Rapsi zum Download. [Link] (https://mrhyde.spdns.eu:8081/share.cgi?ssid=0YCZO6M) gültig bis 3. Januar 2021
+- Image für Rapsi zum Download. (https://mrhyde.spdns.eu:8081/share.cgi?ssid=0YCZO6M) gültig bis 3. Januar 2021
 - Möglichkeit zur Weiterleitung der Daten an Grainfather Connect (Für jede Spindel müssen individuelle Settings angelegt werden)
 	- Noch nicht im Image enthalten, kann aber über git pull und Update der settings Datenbank aktualisiert werden
 
