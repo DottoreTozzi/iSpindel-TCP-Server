@@ -1,14 +1,13 @@
 -- phpMyAdmin SQL Dump
--- version 4.9.0.1
+-- version 5.0.2
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3308
--- Erstellungszeit: 13. Mai 2020 um 01:07
--- Server-Version: 10.4.7-MariaDB-debug
+-- Erstellungszeit: 05. Dez 2020 um 20:34
+-- Server-Version: 10.4.12-MariaDB
 -- PHP-Version: 7.3.7
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-SET AUTOCOMMIT = 0;
 START TRANSACTION;
 SET time_zone = "+00:00";
 
@@ -57,9 +56,9 @@ INSERT INTO `Settings` (`Section`, `Parameter`, `value`, `Description_DE`, `Desc
 ('BREWSPY', 'BREWSPY_TOKEN', 'mytoken', 'Token für BrewSpy Server', 'Token for BrewSpy Server', 'Token per il server BrewSpy', '_DEFAULT'),
 ('BREWSPY', 'ENABLE_BREWSPY', '0', 'Weiterleitung an BrewSpy', 'Forward to BrewSpy', 'Inoltro a BrewSpy', '_DEFAULT'),
 ('BREWSPY', 'SPY_USE_ISPINDLE_TOKEN', '0', 'Verwendung des ISpindle Tokens zur Weiterleitung', 'Use token from iSpindle for data forwarding', 'Utilizzare il token sul iSpindle per l\'inoltro dati', '_DEFAULT'),
-('CRAFTBEERPI3', 'CRAFTBEERPI3ADDR', 'localhost:5000', 'IPADRESSE:PORT des Craftbeerpi3 servers', 'IPADDRESS:PORT of the Craftbeerpi3 servers', 'INDIRIZZO_IP:PORTA del server Craftbeerpi3', '_DEFAULT'),
-('CRAFTBEERPI3', 'CRAFTBEERPI3_SEND_ANGLE', '0', 'Falls 1: Weiterleitung des Winkels anstelle der berechneten Gravity. CBPI3 kann dann gravity berechnen', 'If 1: raw angle will be send instead of gravity. Polynom inside craftbeerpi3 can be used for gravity calculation', 'Se 1: viene inviato il valore del angolo invece della densità.Il polinomio inserito in craftbeerpi3 può calcolare la densità', '_DEFAULT'),
-('CRAFTBEERPI3', 'ENABLE_CRAFTBEERPI3', '0', 'Weiterleitung an CraftbeerPI3', 'Enable forwarding to CraftbeerPi3', 'Inoltro a CraftbeerPI3', '_DEFAULT'),
+('CRAFTBEERPI3', 'CRAFTBEERPI3ADDR', '127.0.0.1:5000', 'IPADRESSE:PORT des Craftbeerpi3 servers', 'IPADDRESS:PORT of the Craftbeerpi3 servers', 'INDIRIZZO_IP:PORTA del server Craftbeerpi3', '_DEFAULT'),
+('CRAFTBEERPI3', 'CRAFTBEERPI3_SEND_ANGLE', '1', 'Falls 1: Weiterleitung des Winkels anstelle der berechneten Gravity. CBPI3 kann dann gravity berechnen', 'If 1: raw angle will be send instead of gravity. Polynom inside craftbeerpi3 can be used for gravity calculation', 'Se 1: viene inviato il valore del angolo invece della densità.Il polinomio inserito in craftbeerpi3 può calcolare la densità', '_DEFAULT'),
+('CRAFTBEERPI3', 'ENABLE_CRAFTBEERPI3', '1', 'Weiterleitung an CraftbeerPI3', 'Enable forwarding to CraftbeerPi3', 'Inoltro a CraftbeerPI3', '_DEFAULT'),
 ('CSV', 'DATETIME', '1', 'Ein Wert von 1 schreibt einen Excel kompatiblen Zeitstempel in das CSV file', 'Leave this at 1 to include Excel compatible timestamp in CSV', 'Se lasciato a 1 viene incluso un timestamp compatibile nel file CSV', 'GLOBAL'),
 ('CSV', 'DELIMITER', ';', 'Trennzeichen, dass fuer CSV File genutzt wird', 'Delimiter used for CSV file', 'Separatore usato nel file CSV', 'GLOBAL'),
 ('CSV', 'ENABLE_CSV', '0', 'Schreiben der Daten in CSV File (1: ja 0: nein)', 'Write Data to CSV file (1: yes 0: no)', 'Scrivere dati in un file CSV (1: si 0: no) ', '_DEFAULT'),
@@ -91,14 +90,13 @@ INSERT INTO `Settings` (`Section`, `Parameter`, `value`, `Description_DE`, `Desc
 ('EMAIL', 'ENABLESTATUS', '1', 'Sende tägliche Status Email (0:nein 1: ja)', 'Send daily status email (1: yes 0: no)', 'Abilita l\'Invio di una mail di stato giornaliera (1: si 0: no)', 'GLOBAL'),
 ('EMAIL', 'ENABLE_ALARMDELTA', '0', 'Alarm, wenn Plato Veränderung innerhalb der letzten 12 Stunden unter limit fällt (An: 1)', 'Alarm for delta plato (On: 1) If change of plato within past 12 hours falls below setting, email alarm will be sent', 'Abilita allarme se il delta plato scende al di sotto un valore impostato nelle ultime 12 ore.', '_DEFAULT'),
 ('EMAIL', 'EXCLUDESTRING', 'XXX', 'Device Name mit Teilstring wird von Email Alarmen ausgeschlossen', 'Devicename with substring is excluded from Email alarms', 'Il nome devic con sottostringa è escluso dagli allarmi e-mail', 'GLOBAL'),
-('EMAIL', 'FROMADDR', 'your.email@gmail.com', 'Email Adresse von der eine Nachricht versendet werden soll.', 'email, from which the ', 'Indirizzo email provenienza, inviato da ', 'GLOBAL'),
+('EMAIL', 'FROMADDR', 'youremail@email.com', 'Email Adresse von der eine Nachricht versendet werden soll.', 'email, from which the ', 'Indirizzo email provenienza, inviato da ', 'GLOBAL'),
 ('EMAIL', 'PASSWD', 'yourpassword', 'SMTP Server Passwort', 'SMTP server password', 'Server SMTP password', 'GLOBAL'),
-('EMAIL', 'SentAlarmSVG', '281375', NULL, NULL, NULL, 'iSpindel001'),
 ('EMAIL', 'SMTPPORT', '587', 'SMTP Server Port (z.B. 587)', 'smpt server port', 'Porta SMTP server (p. es. 587)', 'GLOBAL'),
 ('EMAIL', 'SMTPSERVER', 'smtp.gmail.com', 'SMTP Server Adresse (z.B. smtp.gmail.com)', 'smtp server addresss', 'Indirizzo server SMTP', 'GLOBAL'),
 ('EMAIL', 'TIMEFRAMESTATUS', '3', 'Zeitraum der letzten Datenübermittlung in Tagen, wenn ein Statusalarm gesendet werden soll', 'Timeframe in days when last spindel data was send and should be displayed.', 'Periodo in giorni dall\'ultimo invio di una mail di allarme', '_DEFAULT'),
-('EMAIL', 'TIMESTATUS', '7', 'Uhrzeit in vollen Stunden für tägliche Status Email (z.B. 6 fuer 6 Uhr morgens)', 'Set time for Status email around full hour. e.g. 6 means 6:00', 'Ora per l\'invio della mail di stato giornaliera p. es. 6 sono le 6:00', 'GLOBAL'),
-('EMAIL', 'TOADDR', 'your.email@gmail.com', 'Email Adresse, an die eine Nachricht gesendet werden soll', 'email address to which the alarm email is sent', 'Indirizzo email a cui inviare la mail di stato/allarme', 'GLOBAL'),
+('EMAIL', 'TIMESTATUS', '6', 'Uhrzeit in vollen Stunden für tägliche Status Email (z.B. 6 fuer 6 Uhr morgens)', 'Set time for Status email around full hour. e.g. 6 means 6:00', 'Ora per l\'invio della mail di stato giornaliera p. es. 6 sono le 6:00', 'GLOBAL'),
+('EMAIL', 'TOADDR', 'youremail@email.com', 'Email Adresse, an die eine Nachricht gesendet werden soll', 'email address to which the alarm email is sent', 'Indirizzo email a cui inviare la mail di stato/allarme', 'GLOBAL'),
 ('FERMENTRACK', 'ENABLE_FERMENTRACK', '0', 'Weiterleitung der Daten an Fermentrack', 'Forward data to Fermentrack', 'Inoltro dati a Fermentrack', '_DEFAULT'),
 ('FERMENTRACK', 'FERMENTRACKADDR', '0.0.0.0', 'IP Adresse des Fermentrack Servers', 'IP Address of the Fermentrack Server', 'Indirizzo IP del server Fermentrack', '_DEFAULT'),
 ('FERMENTRACK', 'FERMENTRACKPORT', '80', 'Port des Fermentrack Servers', 'Port of Fermentrack Server', 'Porta del server Fermentrack', '_DEFAULT'),
@@ -111,6 +109,8 @@ INSERT INTO `Settings` (`Section`, `Parameter`, `value`, `Description_DE`, `Desc
 ('GENERAL', 'LANGUAGE', 'DE', 'Verwendete Sprache (DE für Deutsch, EN for Englisch, IT für Italienisch)', 'Displayed Language (DE for German, EN for English, IT for Italian)', 'Lingua visualizzata (DE per tedesco, EN per inglese, IT per italiano)', 'GLOBAL'),
 ('GENERAL', 'PORT', '9501', 'Port zur Kommunikation zwischen Spindel und TCP Server (muss auch in der Spindel hinterlegt sein)', 'TCP Port to listen to (to be used in iSpindle config as well)', 'Porta TCP di communicazione (da impostare anche nella configurazione iSpindle)', 'GLOBAL'),
 ('GENERAL', 'SHOWSUMMARY', '1', 'Anzeige von Device in der Übersicht auf der Hauptseite. (0: nein 1: ja)', 'Show device in summary on main page (0: no 1: yes)', 'Visualizzazione del dispositivo nella panoramica sulla pagina principale. (0: no 1: sì)', '_DEFAULT'),
+('GRAINCONNECT', 'ENABLE_GRAINCONNECT', '0', 'Weiterleitung an Grainfather Connect (muss für jede Spindel individuell angelegt werden)', 'Forward to Grainfather Connect (must be cofigured for individual spindles)', 'Inoltra a Grainfather Connect (deve essere configurato per i singoli spindle)', '_DEFAULT'),
+('GRAINCONNECT', 'GRAINCONNECT_URL', '/URL', 'Grainfather \'Server URL\'', 'Grainfather \'Server URL\'', 'Grainfather \'Server URL\'', '_DEFAULT'),
 ('INFLUXDB', 'ENABLE_INFLUXDB', '0', 'Weiterleitung an InfluxDB', 'Forward to InfluxDB', 'Inoltro a InfluxDB', '_DEFAULT'),
 ('INFLUXDB', 'INFLUXDBADDR', 'localhost', 'IP-Adresse/Name des InfluxDB-Servers', 'IP address/hostname of the InfluxDB Server', 'Indirizzo IP / nome del server InfluxDB', '_DEFAULT'),
 ('INFLUXDB', 'INFLUXDBNAME', 'spindeldaten', 'Name der Datenbank innerhalb von InfluxDB', 'Name of the database inside InfluxDB', 'Nome del database all\'interno di InfluxDB', '_DEFAULT'),
@@ -125,7 +125,7 @@ INSERT INTO `Settings` (`Section`, `Parameter`, `value`, `Description_DE`, `Desc
 ('UBIDOTS', 'ENABLE_UBIDOTS', '0', 'Weiterleitung der Daten an Ubidots (1: an 0: aus)', '1 to enable output to ubidots', '1 per abilitare l\'inoltro a ubidots ', '_DEFAULT'),
 ('UBIDOTS', 'UBI_TOKEN', 'my_token', 'UBIDOTS Token. Siehe Anleitung oder ubidots.com', 'global ubidots token, see manual or ubidots.com', 'Token ubidots vedi istruzioni o ubidots.com', '_DEFAULT'),
 ('UBIDOTS', 'UBI_USE_ISPINDLE_TOKEN', '0', 'Benutzung des in der Spindel gespeicherten Tokens zur Weiterleitung an Ubidots ', '1 to use \"token\" field in iSpindle config (overrides UBI_TOKEN)', 'Utilizzo del token salvato nella iSpindle per l\'inoltro a ubidots', '_DEFAULT'),
-('VERSION', '', '003', NULL, NULL, NULL, 'GLOBAL');
+('VERSION', '', '004', NULL, NULL, NULL, 'GLOBAL');
 
 --
 -- Indizes der exportierten Tabellen

@@ -1,34 +1,21 @@
-# Installationsanleitung für Ubuntu
+# Installationsanleitung für Raspberry Pi (Raspbian)
 ### Schritt-für-Schritt
 
-[English Version] (INSTALL_en.md)
-[Installation auf Raspi] (INSTALL_Raspi.md)
+[English Version] (INSTALL_en_Raspi.md)
 
-Bei mir läuft der Server in einem Ubuntu 16.04 Container auf meiner NAS. 
-
-Nach der Installation des Systems habe ich zunächst ein Update durchgeführt:
+Nach der Installation des Systems (ich habe z.B. Raaspian 32 bit lite verwendet) habe ich zunächst ein Update durchgeführt:
 
 	sudo apt-get update
 	sudo apt-get upgrade
 
-Da als Standard kein ssh server installiert war, habe ich den noch nachträglich installiert (optional, falls Zugriff über putty gewünscht ist):
+Dann habe ich den ssh server vie raspi-config aktiviert.
 
-	sudo apt-get install openssh-server
+Außerdem habe ich die Zeitzone via Raspi-config angepasst (z.B Europe/Berlin)
 	
 Dann müssen die git bibliotheken installiert werden, damit man das repo später klonen kann:
 
 	sudo apt-get install git-all
 
-Optional könnnen die deutschen locales mit den folgenden Kommandos installiert werden
-
-	sudo locale-gen de_DE.UTF-8
-	sudo update-locale LANG="de_DE.utf8" LANGUAGE="de:en" LC_ALL="de_DE.utf8"
-
-Danach muss ein user'pi' erstellt werden. Das kann auch ein anderer nutzername sein. Aber dann müssen auch die späteren Schritte und das script ispindle-srv entsprechend dem Nutzernamen angepasst werden.
-
-	sudo adduser pi 
-
-Bei der Passwortabfrage kein Passwort für den Nutzer angeben
 Danach in das Home Verzeichnis des angelegten Nutzers wechseln:
 
 	cd /home/pi
@@ -41,30 +28,27 @@ Falls nicht bereits auf dem System, muss nun der apache server isntalliert werde
 
 	sudo apt-get install apache2
 	
-Als Datenbank nutze ich MariaDB auf meinem System. Um MariaDB 10.5 zu installieren, muss das repo zur Installationsdatenbank hinzugefügt werden:
+Als Datenbank hbae ich MariaDB installiert.
 
-	sudo apt -y install software-properties-common gnupg-curl
-	sudo apt-key adv --fetch-keys 'https://mariadb.org/mariadb_release_signing_key.asc'
-
-Der nächste Schritt ist nun für Ubuntu 16.04 spezifisch und muss für das entsprechende system angepasst werden, damit das korrekte repo verwendet wird:
-
-	sudo add-apt-repository 'deb [arch=amd64,arm64,i386,ppc64el] http://mariadb.mirror.liquidtelecom.com/repo/10.5/ubuntu xenial main'
-
-Dan muss ein update der Installationsdatanbank durchgeführt werden:
-
-	sudo apt-get update
-
-Und nun kann MariaDB installiert werden:
-
-	sudo apt install mariadb-server mariadb-client
-
+	sudo apt install mariadb-server
+	
 Die Datenbank muss konfiguriert werden:
 
 	sudo mysql_secure_installation
 
-Für den Root user der Datenbank muss ein Passwort eingegeben werden 
+Für den Root user der Datenbank ggf ein Passwort eingeben.
 
-Auf meinem Container war Python 3 bereits mit installiert. Sollte das nicht der Fall sein, so muss das auch noch per apt-get gemacht werden
+Einen user Pi in der Datenbank anlegen (Passwort hier als Beispiel: 'PiSpindle'):
+	
+	sudo mysql --user=root mysql
+
+	CREATE USER 'pi'@'localhost' IDENTIFIED BY 'PiSpindle';
+	GRANT ALL PRIVILEGES ON *.* TO 'pi'@'localhost' WITH GRANT OPTION;
+	FLUSH PRIVILEGES;
+	QUIT;
+ 
+
+Auf Raspbian lite war  Python 3 bereits mit installiert. Sollte das nicht der Fall sein, so muss das auch noch per apt-get gemacht werden
 
 Die python3 bibliothek für die Datenbankverbindung muss noch installiert werden:
 
@@ -83,8 +67,10 @@ Nun müssen die letzten Schritte zur Konfiguration noch durchgeführt werden (fa
 
 	cd /home/pi/iSpindel-Srv
 	sudo mv iSpindle.py /usr/local/bin
+	sudo mv sendmail.py /usr/local/bin
 	sudo mv ispindle-srv /etc/init.d
 	sudo chmod 755 /usr/local/bin/iSpindle.py
+	sudo chmod 755 /usr/local/bin/sendmail.py
 	sudo chmod 755 /etc/init.d/ispindle-srv
 	sudo update-rc.d ispindle-srv defaults    
 
@@ -95,7 +81,7 @@ Nun müssen die letzten Schritte zur Konfiguration noch durchgeführt werden (fa
 
 UTF-8 sollte in php aktiviert werden, falls das nicht bereits der Fall ist. Auf meinem system ist die php.ini hier zu finden:
 
-	cd /etc/php/7.0/apache2/
+	cd /etc/php/7.3/apache2/
 
 Das kann auf anderen System natürlich woanders unter /etc sein.
 
@@ -120,11 +106,6 @@ Nun kann die Webesite des Servers aufgerufen werden:
 http://IPOFYOURSYSTEM/iSpindle/index.php
 
 Wenn die Datenbank nicht vorhanden ist, wird man automatisch zu enem setup.php script umgeleitet. Dieses kann dann die Datenbank automatisch erstellen.
-Es muss lediglich das root Passwort der Datenbank eingegeben werden und man hat die Möglichkeit den Namen, User und das Passwort der Spindel Datenbank anzupassen.
+Es muss lediglich der admin/root username und passwort eingegeben werden, dem zuvor alle Privilegien für die Datenbank erteilt worden. Man hat auch die Möglichkeit den Namen, User und das Passwort der Spindel Datenbank anzupassen.
 Wenn dann die Eingaben bestätigt werden, erstellt das skript die Datenbank und erstellt die konfigurationsdateien für php und die python skripte
 Sollten die Schreibrechte für das Konfigurationsfile nicht korrekt sein, so teilt das skript einem das im Vorfeld mit.
-
-
-
-
-

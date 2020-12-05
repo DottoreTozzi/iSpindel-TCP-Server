@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Version 3.1
+# Added support to forwrd data to Grainfather Connect
+#
 # Version 3.0
 # Modified version fpor Python 3
 # Some string handling had to be changed for python3
@@ -445,12 +448,18 @@ def handler(clientsock, addr):
         BREWFATHERPORT = int(get_config_from_sql('BREWFATHER', 'BREWFATHERPORT', spindle_name))
         BREWFATHERSUFFIX = get_config_from_sql('BREWFATHER', 'BREWFATHERSUFFIX', spindle_name)
 
+        # InfluxDB
         INFLUXDB = int(get_config_from_sql('INFLUXDB', 'ENABLE_INFLUXDB', spindle_name))
         INFLUXDBADDR = get_config_from_sql('INFLUXDB', 'INFLUXDBADDR', spindle_name)
         INFLUXDBPORT = int(get_config_from_sql('INFLUXDB', 'INFLUXDBPORT', spindle_name))
         INFLUXDBNAME = get_config_from_sql('INFLUXDB', 'INFLUXDBNAME', spindle_name)
         INFLUXDBUSERNAME = get_config_from_sql('INFLUXDB', 'INFLUXDBUSERNAME', spindle_name)
         INFLUXDBPASSWD = get_config_from_sql('INFLUXDB', 'INFLUXDBPASSWD', spindle_name)
+
+        #Grainfather Connect
+        GRAINCONNECT = int(get_config_from_sql('GRAINCONNECT', 'ENABLE_GRAINCONNECT', spindle_name))
+        GC_URL = get_config_from_sql('GRAINCONNECT', 'GRAINCONNECT_URL', spindle_name)
+
 
         if CSV:
             dbgprint(repr(addr) + ' - writing CSV')
@@ -750,6 +759,24 @@ def handler(clientsock, addr):
 #                        dbgprint(repr(addr) + ' - received: ' + response.read())
             except Exception as e:
                 dbgprint(repr(addr) + ' Fermentrack Error: ' + str(e))
+
+        if GRAINCONNECT and gauge == 0:
+            try:
+                import urllib3
+                if len (GC_URL) != 0:
+                    dbgprint(repr(addr) + ' - forwarding to Grainfather Connect at http://community.grainfather.com:80' + GC_URL)
+                    out = inpstr
+                    dbgprint(repr(addr) + ' - sending: ' + out)
+                    url = 'http://community.grainfather.com:80' + GC_URL
+                    dbgprint(repr(addr) + ' to : ' + url)
+                    http = urllib3.PoolManager()
+                    req = http.request('POST', url, body=out, headers={'Content-Type': 'application/json'})
+# response to be updated for debugging
+#                    dbgprint(repr(addr) + ' - received: ' + response.read())
+                else:
+                    dbgprint(repr(addr) + ' - forwarding to GC - No usable iSpindel name found: "' + spindle_name + '"')
+            except Exception as e:
+                dbgprint(repr(addr) + ' - forwarding to Grainfather Connect Error: ' + str(e))
 
 # not clear on how to update yet (can't be tested)
         if INFLUXDB and gauge == 0:

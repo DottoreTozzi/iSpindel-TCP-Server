@@ -1,8 +1,13 @@
 # iSpindel Generic TCP Server
 
-#### (iSpindle.py Version 3.0)
-
+#### (iSpindle.py Version 3.1)
 [English Version](README_en.md)
+***Neu (05.12.2020)
+- Detailiertere [Installationsanleitung für Raspi] (INSTALL_Raspi.md)
+- Image für Rapsi zum Download. [Link] (https://mrhyde.spdns.eu:8081/share.cgi?ssid=0YCZO6M) gültig bis 3. Januar 2021
+- Möglichkeit zur Weiterleitung der Daten an Grainfather Connect (Für jede Spindel müssen individuelle Settings angelegt werden)
+	- Noch nicht im Image enthalten, kann aber über git pull und Update der settings Datenbank aktualisiert werden
+
 ***Neu (20.11.2020)
 - Aktualisierte [Installations Anleitung](INSTALL.md) für ubuntu (diese sollte mit leichten Anpassungen auch auf einer Raspberry laufen)
 - Aktualiseirtes setup.php Skript das zunächst prüft, ob ausreichende Schreibrechte für das config Verzeichnis vorhanden sind.

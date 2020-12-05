@@ -1,33 +1,18 @@
-# Installation Guide for Ubuntu 
+# Installation Guide for Raspberry Pi (Raspbian)
 ### Step-by-Step
 
-[Installation on Raspi] (INSTALL_en_Raspi.md)
-
-I am running the server in an ubuntu 16.04 container environement on my NAS. 
-
-After installation of the system I started to update it:
+After installation of the system (I was using Rasbpian lite) I started to update it:
 
 	sudo apt-get update
 	sudo apt-get upgrade
 
-Since I hade no access via ssh (through putty) I had to install the ssh server (optional):
-
-	sudo apt-get install openssh-server
+I activated the ssh server to get access via raspi-config
+I also configured the timezone to my needs (e.g. Europe/Berlin)
+Optionally for German keyboard layout you also need go through raspi-config and use the localization options 
 	
 Then you need to install the git libraries that are required to clone the repo later:
 
 	sudo apt-get install git-all
-	
-Optionally for German keyboard you need to run these commands 
-
-	sudo locale-gen de_DE.UTF-8
-	sudo update-locale LANG="de_DE.utf8" LANGUAGE="de:en" LC_ALL="de_DE.utf8"
-	
-Then you need to add a user called pi. This can be also a different user but then you will also need to change this in the later steps accordingly and you will need to change the user in the ispindle-srv script
-
-	sudo adduser pi 
-
-Don’t enter a password for this user
 
 Then move to the home directory of the new user:
 
@@ -41,28 +26,24 @@ Install the apache server if it is not already installed on your system:
 
 	sudo apt-get install apache2
 	
-I am using MariaDB on my system. To install mariadb 10.5 you need to add the repo to the system:
+You need to install MariaDB on the Raspi. 10.3 seems to be the most recent version as of today for the Raspi (Mysql should also work)
 
-	sudo apt -y install software-properties-common gnupg-curl
-	sudo apt-key adv --fetch-keys 'https://mariadb.org/mariadb_release_signing_key.asc'
-
-This is specific for ubuntu 16.04 and has to be adapted for your system:
-
-	sudo add-apt-repository 'deb [arch=amd64,arm64,i386,ppc64el] http://mariadb.mirror.liquidtelecom.com/repo/10.5/ubuntu xenial main'
-
-Then run another update:
-
-	sudo apt-get update
-
-And install mariadb:
-
-	sudo apt install mariadb-server mariadb-client
+	sudo apt install mariadb-server
 
 Configure the database:
 
 	sudo mysql_secure_installation
 
 Enter a password for the datase user root during the configuration
+
+Add a user Pi to the database that has all privileges to create also the iSPindle database during setup (Password as example here: 'PiSpindle'):
+	
+	sudo mysql --user=root mysql
+
+	CREATE USER 'pi'@'localhost' IDENTIFIED BY 'PiSpindle';
+	GRANT ALL PRIVILEGES ON *.* TO 'pi'@'localhost' WITH GRANT OPTION;
+	FLUSH PRIVILEGES;
+	QUIT;
 
 On my system python3 was installed. If this is not the case on your system you will need to install python3
 
@@ -96,7 +77,7 @@ Now do the final steps (if your user is not pi, you need to adapt these steps ac
 You should activate UTF-8 charset handling if not already configured per default:
 In my case the php.ini file is loacated here:
 
-	cd /etc/php/7.0/apache2/
+	cd /etc/php/7.3/apache2/
 
 edit the php.ini file by removing the ';' if not already done:
 	;default_charset = "UTF-8"    ->  default_charset = "UTF-8"   
@@ -104,6 +85,7 @@ edit the php.ini file by removing the ';' if not already done:
 Now change the rights of the config directory to give the web server group write-access:
 
 	cd /home/pi/iSpindel-Srv
+
 Change group of config file to apache user group (example www-data)
 
 	sudo chown root:www-data config
@@ -117,11 +99,7 @@ Call the webpage from your browser:
 http://IPOFYOURSYSTEM/iSpindle/index.php
 
 If the database is not configured setup.php should start automatically and database will be created.
-You just need to enter the root access to your database installation and how you want to name your iSpindle databse (in case you want to change the defaults.
+You need to replace the Admin/Root databaes user with pi or the user you granted root access to the databse earlier.
+Enter also the password you've choosen earlier for the user that has all privileges to the database
+Then you just need to enter  name your iSpindle databse, then name of the user and the password (in case you want to change the defaults).
 Once you hit ok, the database will be created and config files will be written accordingly to the config path.
-
-
-
-
-
-

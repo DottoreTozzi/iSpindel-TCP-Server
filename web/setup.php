@@ -1,8 +1,12 @@
 <?php
 // error reporting
-ini_set('display_errors', 'On');
-error_reporting(E_ALL | E_STRICT);
+//ini_set('display_errors', 'On');
+//error_reporting(E_ALL | E_STRICT);
 
+// December 2020
+// Added verification that checks write access to the config path
+// Otherwise config files cannot be written
+//
 // May 2020 
 // Initial script
 // Script for initial setup of RaspySpindle Database
