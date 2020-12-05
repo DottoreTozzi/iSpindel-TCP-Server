@@ -1,7 +1,7 @@
 # Installation Guide for Ubuntu 
 ### Step-by-Step
 
-[Installation on Raspi] (INSTALL_en_Raspi.md)
+Installation on Raspi: (https://github.com/avollkopf/iSpindel-TCP-Server/blob/master/INSTALL_en_Raspi.md)
 
 I am running the server in an ubuntu 16.04 container environement on my NAS. 
 

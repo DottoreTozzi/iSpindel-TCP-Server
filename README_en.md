@@ -2,7 +2,7 @@
 
 #### (iSpindle.py Version 3.1)
 ***New (05.12.2020)
-- More detailied [Installation manual for Raspi] (INSTALL_en_Raspi.md)
+- More detailied Installation manual for Raspi: (https://github.com/avollkopf/iSpindel-TCP-Server/blob/master/INSTALL_en_Raspi.md)
 - Downloadable image for Rapsi. (https://mrhyde.spdns.eu:8081/share.cgi?ssid=0YCZO6M) valid until January 3rd,2021
 - Possibility to forward data to Grainfather Connect (Individual settings need to be configured for each spindle)
 	- Not yet inccluded in the image. pdate possible via git pull and settings database upgrade
