@@ -748,7 +748,7 @@ echo "<tr><td align='center' colspan='8'>";
 echo "<span title='Export'><input type = 'submit' id='Export' name = 'Export' value = 'Export'></span>";
 echo "<input type='radio' name='radio_csv' value='csv1' checked='checked' /> CSV";
 echo "<input type='radio' name='radio_csv' value='csv2' /> Beersmith";
-
+echo "<input type='radio' name='radio_csv' value='csv3' /> KBH2 CSV";
 echo "</td></tr>";
 echo "</tbody>";
 echo "</table>";

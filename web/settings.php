@@ -1,7 +1,7 @@
 <?php
 // error reporting
-ini_set('display_errors', 'On');
-error_reporting(E_ALL | E_STRICT);
+// ini_set('display_errors', 'On');
+// error_reporting(E_ALL | E_STRICT);
     
 // Settings Page to update iSpindel-TCP server settings in SQL Database
 // - Email alarm settings for instance have to be updated by each user (email,server, port, password)

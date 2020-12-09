@@ -122,8 +122,6 @@ $result = mysqli_query($conn, $create_recipe_table) or die(mysqli_error($conn));
 
 // Add Recipe_ID , Internal and Comment columns to Data table
 // Internal column is currently used for RID_END flag, but can be used later for other pruposes in addition
-$q_sql="ALTER TABLE `Calibration` ADD COLUMN `const0` DOUBLE DEFAULT (0) AFTER `ID`";
-$result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
 $q_sql="ALTER TABLE `Data` ADD COLUMN `Recipe_ID` INT NOT NULL AFTER `Recipe`";
 $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
 $q_sql="ALTER TABLE `Data` ADD `Internal` VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL AFTER `Recipe_ID`";
@@ -182,7 +180,7 @@ if($rows > 0) {
         // receive start timestamp, Spindle Name and Spindle ID for each row with resetflag = 1
         $Timestamp = $row['Timestamp'];
         $Name = $row['Name'];
-        $Recipe_ID = $row['Recipe_ID'];
+        $Recipe_ID = $row['ID'];
         // select the current entry and the next for this particular Spindle with a reset 
         $timestamp_sql="SELECT Timestamp,Recipe FROM Data WHERE Name= '".$Name."' AND Timestamp >= '$Timestamp' AND ResetFlag = '1' ORDER BY Timestamp ASC limit 2";
         $timestamp_result = mysqli_query($conn, $timestamp_sql) or die(mysqli_error($conn));
@@ -1071,8 +1069,8 @@ function ExportArchiveValues($conn, $recipe_ID, $txt_recipe_name, $txt_end, $txt
 // get current interval in second the spindle is sending data
    $Interval = (getCurrentInterval($conn, $spindle_name));
 // Calculate distance between datasets in rows that are required to have $filtering minutes intervals in the select
-// Used for beersmith export
-    $filtering = 120;
+// Used for beersmith/kbh export
+    $filtering = 240;
     $Rows = round( $filtering / ($Interval / 60));
 
 // if no entry for end date in archive table, get last timestamp of last dataset for selected recipe from data table
@@ -1126,8 +1124,8 @@ function ExportArchiveValues($conn, $recipe_ID, $txt_recipe_name, $txt_end, $txt
         }
      exit;
      }
-    // otherwise do beersmith csv formt export
-    else {
+    //  if beersmith csv formt is selected
+    if ($csv_type == "csv2") {
     // start query and set @x=0
          $p_sql = mysqli_query($conn, "SET @x:=0") or die(mysqli_error($conn));
     // select that calculates all parameters for beersmith fermentation csv file to be exported while pulling data from the database
@@ -1155,6 +1153,32 @@ function ExportArchiveValues($conn, $recipe_ID, $txt_recipe_name, $txt_end, $txt
         }
     exit;
     }
+    // if kbh csv format is selected
+    if ($csv_type == "csv3") {
+    // start query and set @x=0
+         $p_sql = mysqli_query($conn, "SET @x:=0") or die(mysqli_error($conn));
+    // select that calculates all parameters for beersmith fermentation csv file to be exported while pulling data from the database
+        $SQL_select = "SELECT *
+                        FROM (SELECT mt.Timestamp AS Date, ($const0*mt.Angle*mt.Angle*mt.Angle + $const1*mt.Angle*mt.Angle + $const2*mt.Angle + $const3) AS Gravity,mt.Temperature, mt.Comment, (@x:=@x+1) AS x
+                        FROM Data mt WHERE Recipe_ID = '$recipe_ID' AND Timestamp > (Select min(Timestamp) FROM Data WHERE Recipe_ID='$recipe_ID')" . $AND_RID . " ORDER BY Timestamp ASC) t WHERE x MOD $Rows = 0";
+        $q_sql = mysqli_query($conn, $SQL_select) or die(mysqli_error($conn));
+    // filename for download
+        $filename = $recipe_ID . "_" . date_format(date_create($start_date),'Y_m_d') ."_" . $spindle_name . "_" . $recipe_name . ".txt";
+        header('Content-Type: text/csv');
+        header("Content-Disposition: attachment; filename=\"$filename\"");
+        ob_clean();
+        $fh = fopen( 'php://output', 'w' );
+        $flag = false;
+        // retrieve and store the values comma separated
+        while ($row = mysqli_fetch_assoc($q_sql)) {
+        // starting with the second row, data values will be written to file
+            array_walk($row, __NAMESPACE__ . '\cleanData');
+            $array=array_values($row);
+            fputs($fh, implode(';', $array)."\n");
+        }
+    exit;
+    }
+
 }
 
 // Get archive values from database for selected recipe_ID. 
