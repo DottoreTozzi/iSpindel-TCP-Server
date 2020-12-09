@@ -87,7 +87,6 @@ if (!$conn){
             }
         }
 
-
 //  Loads db query functions
 include_once("./include/common_db_query.php");
 include_once("../config/tables.php");
@@ -376,13 +375,13 @@ write_log('Recipe_ID Column exists: '. $exists);
 write_log('iGauge Table exists: '. $iGauge_exists);
 
 //  check if archive table has entries
-    $q_sql1 ="SELECT COUNT(*) FROM `Archive`";
-    $lines = mysqli_query($conn, $q_sql1) or die(mysqli_error($conn));
-    $result2 = mysqli_fetch_array($lines);
-    $archive_rows = $result2[0];
-
-write_log('Archive has rows: '. $archive_rows);
-
+    if ($archive_exists !=0){
+        $q_sql1 ="SELECT COUNT(*) FROM `Archive`";
+        $lines = mysqli_query($conn, $q_sql1) or die(mysqli_error($conn));
+        $result2 = mysqli_fetch_array($lines);
+        $archive_rows = $result2[0];
+        write_log('Archive has rows: '. $archive_rows);
+    }
 
 ?>
 
