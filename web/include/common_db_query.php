@@ -122,6 +122,8 @@ $result = mysqli_query($conn, $create_recipe_table) or die(mysqli_error($conn));
 
 // Add Recipe_ID , Internal and Comment columns to Data table
 // Internal column is currently used for RID_END flag, but can be used later for other pruposes in addition
+$q_sql="ALTER TABLE `Calibration` ADD COLUMN `const0` DOUBLE DEFAULT (0) AFTER `ID`";
+$result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
 $q_sql="ALTER TABLE `Data` ADD COLUMN `Recipe_ID` INT NOT NULL AFTER `Recipe`";
 $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
 $q_sql="ALTER TABLE `Data` ADD `Internal` VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL AFTER `Recipe_ID`";
@@ -141,7 +143,7 @@ if($rows > 0) {
         // Get Start Timestamp, Spindle Name, Spindle ID and Recipe Name
         $timestamp = $row['Timestamp'];
         $name = $row['Name'];
-        $ID = $row['ID'];
+        $ID = $row['Recipe_ID'];
         $recipe = $row['Recipe'];
         // Write Recipe ID each of the selected lines with reset flag = 1
         $update_sql = "UPDATE Data SET Recipe_ID = '".$recipe_id."' WHERE Timestamp = '".$timestamp."' AND Name = '".$name."';";
