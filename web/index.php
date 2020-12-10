@@ -337,21 +337,45 @@ $document_class = get_color_scheme($conn);
 
 // get installed strings table version
     $installed_strings_version="N/A";
+    $new_strings_table = false;
     $q_sql="Select Field from Strings WHERE File = 'Version'";
     $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
     $rows = mysqli_num_rows($result);
     if($rows > 0) {
         $row = mysqli_fetch_array($result);
         $installed_strings_version= $row[0];
+        if (intval($installed_strings_version) != intval(LATEST_STRINGS_TABLE)) {
+            $new_strings_table=true;
+        }
     }
 // get installed settings table version
     $installed_settings_version="N/A";
+    $new_settings_table = false;
     $q_sql="Select value from Settings WHERE Section = 'VERSION'";
     $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
     $rows = mysqli_num_rows($result);
     if($rows > 0) {
         $row = mysqli_fetch_array($result);
         $installed_settings_version = $row[0];
+        if (intval($installed_settings_version) != intval(LATEST_SETTINGS_TABLE)) {
+            $new_settings_table=true;
+        }
+
+    }
+
+    if ($new_strings_table==true || $new_settings_table==true) {
+    $box_label="New Tables Versions are available.\\nPlease check expert mode on index page and upgrade tables!";
+    if ($new_strings_table==true) {
+        $latest=LATEST_STRINGS_TABLE;
+        $box_label=$box_label."\\nStrings Installed: $installed_strings_version | New: $latest";
+    }
+    if ($new_settings_table==true) {
+        $latest=LATEST_SETTINGS_TABLE;
+        $box_label=$box_label."\\nSettings Installed: $installed_settings_version | New: $latest";
+    }
+    echo"<script>";
+    echo"alert('$box_label');";
+    echo"</script>";
     }
 
 // get all spindle names to be displayed in form that have submitted data within the timeframe of $daysago
