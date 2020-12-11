@@ -1,6 +1,14 @@
 # iSpindel Generic TCP Server
 
 #### (iSpindle.py Version 3.1)
+***New (11.12.2020)
+- KBH2 CSV export from archive
+- Bug Fix for database migration from old version (automatic generation of archive table)
+- Info on index page if  settings or strings tables need to be updated after runnuing update.sh
+- New Raspi Image for Download (https://mrhyde.spdns.eu:8081/share.cgi?ssid=0x1kSHQ) Link valid until Jan 10th 2021
+	- ntp starts now and time should be synced automatically
+	- default python version ist now python3 (can be changed via update-alternatives)
+
 ***New (05.12.2020)
 - More detailied Installation manual for Raspi: (https://github.com/avollkopf/iSpindel-TCP-Server/blob/master/INSTALL_en_Raspi.md)
 - Downloadable image for Rapsi. (https://mrhyde.spdns.eu:8081/share.cgi?ssid=0YCZO6M) valid until January 3rd,2021

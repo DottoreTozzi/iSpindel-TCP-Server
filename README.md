@@ -2,9 +2,17 @@
 
 #### (iSpindle.py Version 3.1)
 [English Version](README_en.md)
+***Neu (11.12.2020)
+- KBH2 CSV export aus dem Archiv
+- Bug Fix für Datenbankmigration von alter Datenbank (Automatische Erstellung der Archive Tabelle)
+- Info auf index page wenn settings oder strings tabellen bei update aktualisiert werden müssen
+- Neues Raspi Image zum Download (https://mrhyde.spdns.eu:8081/share.cgi?ssid=0x1kSHQ) Link gültig bis 10.Januar 2021
+	- ntp läuft jetzt und Zeit sollte automatisch syncronisiert werden
+	- default python version ist nun python3 (kann über update-alternatives angepasst werden)
+
 ***Neu (05.12.2020)
 - Detailiertere Installationsanleitung für Raspi: (https://github.com/avollkopf/iSpindel-TCP-Server/blob/master/INSTALL_Raspi.md)
-- Image für Rapsi zum Download. (https://mrhyde.spdns.eu:8081/share.cgi?ssid=0YCZO6M) gültig bis 3. Januar 2021
+- Image für Rapsi zum Download. 
 - Möglichkeit zur Weiterleitung der Daten an Grainfather Connect (Für jede Spindel müssen individuelle Settings angelegt werden)
 	- Noch nicht im Image enthalten, kann aber über git pull und Update der settings Datenbank aktualisiert werden
 
