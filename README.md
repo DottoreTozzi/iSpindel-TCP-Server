@@ -12,7 +12,7 @@
 
 ***Neu (05.12.2020)
 - Detailiertere Installationsanleitung für Raspi: (https://github.com/avollkopf/iSpindel-TCP-Server/blob/master/INSTALL_Raspi.md)
-- Image für Rapsi zum Download. 
+- Image für Raspi zum Download. 
 - Möglichkeit zur Weiterleitung der Daten an Grainfather Connect (Für jede Spindel müssen individuelle Settings angelegt werden)
 	- Noch nicht im Image enthalten, kann aber über git pull und Update der settings Datenbank aktualisiert werden
 
