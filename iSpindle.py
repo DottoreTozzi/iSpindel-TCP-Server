@@ -85,9 +85,9 @@ config_path = '~/iSpindel-Srv/config'
 
 try:
   with open(os.path.join(os.path.expanduser(config_path),'iSpindle_config.ini')) as f:
-    config.readfp(f)
+    config.read_file(f)
 except IOError:
-    config.read(os.path.join(os.path.expanduser(config_path),'iSpindle_default.ini'))
+    config.read_file(os.path.join(os.path.expanduser(config_path),'iSpindle_default.ini'))
   
 
 # General
@@ -278,7 +278,7 @@ def handler(clientsock, addr):
     user_token = ''
     interval = 0
     rssi = 0
-    timestart = time.clock()
+    timestart = time.monotonic()
     config_sent = 0
     pressure = 0.0
     carbondioxid = 0.0
@@ -365,7 +365,7 @@ def handler(clientsock, addr):
                     clientsock.send(ACK)
                     dbgprint(repr(addr) + ' Sent ACK.')
                 #
-                dbgprint(repr(addr) + ' Time elapsed: ' + str(time.clock() - timestart))
+                dbgprint(repr(addr) + ' Time elapsed: ' + str(time.monotonic() - timestart))
                 dbgprint(repr(addr) + ' ' + spindle_name + ' (ID:' + str(spindle_id) + ') : Data Transfer OK.')
                 success = 1
                 break  # close connection
@@ -638,9 +638,7 @@ def handler(clientsock, addr):
                 url = 'http://' + BREWPILESSADDR + '/gravity'
                 http = urllib3.PoolManager()
                 req = http.request('POST',url,body=out, headers={'Content-Type': 'application/json', 'User-Agent': spindle_name})
-# response to be updated for debugging
-#                response = urllib2.urlopen(req, out)
-#                dbgprint(repr(addr) + ' - received: ' + response.read())
+                dbgprint(repr(addr) + ' - HTTP Status Code received: ' + str(req.status))
 
             except Exception as e:
                 dbgprint(repr(addr) + ' Error while forwarding to URL ' + url + ' : ' + str(e))
@@ -661,9 +659,7 @@ def handler(clientsock, addr):
                 url = 'http://' + CRAFTBEERPI3ADDR + '/api/hydrometer/v1/data'
                 http = urllib3.PoolManager()                
                 req = http.request('POST',url,body=out, headers={'Content-Type': 'application/json', 'User-Agent': spindle_name})
-# response to be updated for debugging
-#                response = urllib2.urlopen(req, out)
-#                dbgprint(repr(addr) + ' - received: ' + response.read())
+                dbgprint(repr(addr) + ' - HTTP Status code received: ' + str(req.status))
 
             except Exception as e:
                 dbgprint(repr(addr) + ' Error while forwarding to URL ' + url + ' : ' + str(e))
@@ -692,9 +688,7 @@ def handler(clientsock, addr):
                         url = 'http://things.ubidots.com/api/v1.6/devices/' + spindle_name + '?token=' + token
                         http = urllib3.PoolManager()
                         req = http.request('POST',url,body=out, headers={'Content-Type': 'application/json', 'User-Agent': spindle_name})
-# response to be updated for debugging
-#                        response = urllib2.urlopen(req, out)
-#                        dbgprint(repr(addr) + ' - received: ' + response.read())
+                        dbgprint(repr(addr) + ' - HTTP Status code received: ' + str(req.status))
             except Exception as e:
                 dbgprint(repr(addr) + ' Ubidots Error: ' + str(e))
 
@@ -754,27 +748,21 @@ def handler(clientsock, addr):
                         dbgprint(repr(addr) + ' to : ' + url)
                         http = urllib3.PoolManager()
                         req = http.request('POST',url,body=out, headers={'Content-Type': 'application/json', 'User-Agent': spindle_name})
-# response to be updated for debugging
-#                        response = urllib3.urlopen(req, out)
-#                        dbgprint(repr(addr) + ' - received: ' + response.read())
+                        dbgprint(repr(addr) + ' - HTTP Status code received: ' + str(req.status))
             except Exception as e:
                 dbgprint(repr(addr) + ' Fermentrack Error: ' + str(e))
 
         if GRAINCONNECT and gauge == 0:
             try:
                 import urllib3
-                if len (GC_URL) != 0:
-                    dbgprint(repr(addr) + ' - forwarding to Grainfather Connect at http://community.grainfather.com:80' + GC_URL)
-                    out = inpstr
-                    dbgprint(repr(addr) + ' - sending: ' + out)
-                    url = 'http://community.grainfather.com:80' + GC_URL
-                    dbgprint(repr(addr) + ' to : ' + url)
-                    http = urllib3.PoolManager()
-                    req = http.request('POST', url, body=out, headers={'Content-Type': 'application/json'})
-# response to be updated for debugging
-#                    dbgprint(repr(addr) + ' - received: ' + response.read())
-                else:
-                    dbgprint(repr(addr) + ' - forwarding to GC - No usable iSpindel name found: "' + spindle_name + '"')
+                dbgprint(repr(addr) + ' - forwarding to Grainfather Connect at http://community.grainfather.com:80' + GC_URL)
+                out = inpstr
+                dbgprint(repr(addr) + ' - sending: ' + out)
+                url = 'http://community.grainfather.com:80' + GC_URL
+                dbgprint(repr(addr) + ' to : ' + url)
+                http = urllib3.PoolManager()
+                req = http.request('POST', url, body=out, headers={'Content-Type': 'application/json'})
+                dbgprint(repr(addr) + ' - HTTP Status code received: ' + str(req.status))
             except Exception as e:
                 dbgprint(repr(addr) + ' - forwarding to Grainfather Connect Error: ' + str(e))
 
@@ -835,9 +823,7 @@ def handler(clientsock, addr):
                         dbgprint(repr(addr) + ' to : ' + url)
                         http = urllib3.PoolManager()
                         req = http.request('POST',url,body=out, headers={'Content-Type': 'application/json', 'User-Agent': spindle_name})
-# response to be updated for debugging
-#                        response = urllib2.urlopen(req, out)
-#                        dbgprint(repr(addr) + ' - received: ' + response.read())
+                        dbgprint(repr(addr) + ' - HTTP Status code received: ' + str(req.status))
             except Exception as e:
                 dbgprint(repr(addr) + ' Brewspy Error: ' + str(e))
 
@@ -866,9 +852,7 @@ def handler(clientsock, addr):
                         dbgprint(repr(addr) + ' to : ' + url)
                         http = urllib3.PoolManager()
                         req = http.request('POST',url,body=out, headers={'Content-Type': 'application/json', 'User-Agent': spindle_name})
-# response to be updated for debugging
-#                        response = urllib2.urlopen(req, out)
-#                        dbgprint(repr(addr) + ' - received: ' + response.read())
+                        dbgprint(repr(addr) + ' - HTTP Status code received: ' + str(req.status))
             except Exception as e:
                 dbgprint(repr(addr) + ' Brewfather Error: ' + str(e))
 

@@ -55,11 +55,11 @@ config_path = '~/iSpindel-Srv/config'
 
 try:
   with open(os.path.join(os.path.expanduser(config_path),'iSpindle_config.ini')) as f:
-    config.readfp(f)
+    config.read_file(f)
 # fall back to default ini file if other file does not exist
 
 except IOError:
-  config.read(os.path.join(os.path.expanduser(config_path),'iSpindle_default.ini'))
+  config.read_file(os.path.join(os.path.expanduser(config_path),'iSpindle_default.ini'))
 
 
 # GENERAL
