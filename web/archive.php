@@ -26,13 +26,22 @@ if ((include_once '../config/common_db_config.php') == FALSE){
       }
      include_once("include/common_db_query.php");
 
-// select the minimum ID for the recipe in the archive table and set it as selected recipe
-$min_recipe_id = "SELECT min(Recipe_ID) FROM Archive";
-$q_sql = mysqli_query($conn, $min_recipe_id) or die(mysqli_error($conn));
-$result = mysqli_fetch_array($q_sql);
-$selected_recipe = $result[0];
+// select the minimum/maximum ID for the recipe in the archive table and set it as selected recipe
+// depending on sort settings 'ARCHIVE_SORT'
+$sort_order = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL","ARCHIVE_SORT"));
+if ($sort_order == 1) {
+    $min_max_recipe_id = "SELECT min(Recipe_ID) FROM Archive";
+    }
+else {
+    $min_max_recipe_id = "SELECT max(Recipe_ID) FROM Archive";
+    }
+    $q_sql = mysqli_query($conn, $min_max_recipe_id) or die(mysqli_error($conn));
+    $result = mysqli_fetch_array($q_sql);
+    $selected_recipe = $result[0];
 
-//write_log('Selected_recipe: '. $selected_recipe);
+
+//write_log('Selected_recipe: '. $selected_recipe)
+
 
 // if archive is empty, go back to index page
 if (!$selected_recipe){
@@ -324,6 +333,12 @@ $txt_archive = get_field_from_sql($conn,$file,"archive");
 $comment_text = get_field_from_sql($conn,$file,"comment_text");
 $txt_initial_gravity = get_field_from_sql($conn,$file,"header_initialgravity");
 $txt_alcohol = get_field_from_sql($conn,$file,"alcohol");
+$auto_change = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL","ARCHIVE_AUTO_CHANGE"));
+$onchange = "";
+if ($auto_change == 1){
+    $onchange="onchange='change_recipe_diagram()'";
+    }
+
 
 $file = "index";
 $show_diagram = get_field_from_sql($conn,$file,"show_diagram");
@@ -334,8 +349,15 @@ $chart_filename_08 = get_field_from_sql($conn,$file,"chart_filename_08");
 $chart_filename_12 = get_field_from_sql($conn,$file,"chart_filename_12");
 $chart_filename_10 = get_field_from_sql($conn,$file,"chart_filename_10");
 
+
 // get all fermentations from the archive table
-$archive_sql = "SELECT * FROM Archive ORDER BY Recipe_ID";
+if ($sort_order == 1) {
+    $ORDER= "ASC";
+    }
+else {
+    $ORDER="DESC";
+    }
+$archive_sql = "SELECT * FROM Archive ORDER BY Recipe_ID $ORDER";
 $archive_result=mysqli_query($conn, $archive_sql) or die(mysqli_error($conn));
 // parameter is used to check if archive table is filled with content
 $len = mysqli_num_rows($archive_result);
@@ -355,6 +377,9 @@ $len = mysqli_num_rows($archive_result);
   <script src="include/moment.min.js"></script>
   <script src="include/moment-timezone-with-data.js"></script>
   <link rel="stylesheet" type="text/css" href="./include/iSpindle.css">
+  <link rel="shortcut icon" href="./include/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="./include/favicon.ico" type="image/x-icon">
+
 <script type="text/javascript">
 
 
@@ -391,6 +416,19 @@ function reload_page() {
     var server = window.location.hostname;
     var path = window.location.pathname;
     var full_path = url.concat(server).concat(path).concat(variable_r).concat(variable_t).concat(variable_end).concat(variable_c);
+    window.open(full_path,"_self");
+    }
+// function to reload ppage
+function change_recipe_diagram() {
+    var dia_type = document.getElementById('diagram_type').value;
+    var recipe_id = document.getElementById('archive_name').value;
+//    var recipe_id = '<?php echo $selected_recipe ?>';
+    var variable_r = '?recipe_id='.concat(recipe_id);
+    var variable_t = '&type='.concat(dia_type);
+    var url = "http://";
+    var server = window.location.hostname;
+    var path = window.location.pathname;
+    var full_path = url.concat(server).concat(path).concat(variable_r).concat(variable_t);
     window.open(full_path,"_self");
     }
 
@@ -578,6 +616,7 @@ $(function ()
 
                     name: first_y,
                     color: '#FF0000',
+                    lineWidth: 2,
                     data: chartDens.map(row => [row.timestamp, row.value]),
                     marker: 
                     {
@@ -598,6 +637,7 @@ $(function ()
                     name: second_y,
                     yAxis: 1,
                     color: '#0000FF',
+                    lineWidth: 2,
                     data: chartTemp.map(row => [row.timestamp, row.value]),
                     marker: 
                         {
@@ -638,7 +678,7 @@ echo "<td><b>$txt_archive :</b></td><td>";
 // show results from the archive select if the table has content
 if ($len != 0)
 {
-    echo "<select id='archive_name' name = 'archive_name'>";
+    echo "<select id='archive_name' name = 'archive_name' $onchange>";
     while($row = mysqli_fetch_assoc($archive_result) )
     {
         $start = $row['Start_date'];
@@ -676,7 +716,7 @@ echo "</tr>";
 
 echo "<tr><td><b>Diagram :</b></td>";
 echo "<td align='center'>";
-echo "<select id='diagram_type' name='diagram_type'>";
+echo "<select id='diagram_type' name='diagram_type' $onchange>";
 echo "<option value='0'";
 if ($diagram_type == 0) echo " selected";
 echo ">$chart_filename_04</option>";
@@ -696,8 +736,9 @@ echo "</select>";
 
 
 echo "</td><td align='center'>"; // Diagram type selection
-echo "<span title='$show_diagram'><input type = 'submit' id='Go' name = 'Go' value = '$show_diagram'></span>";
-
+if ($auto_change == 0 ) {
+    echo "<span title='$show_diagram'><input type = 'submit' id='Go' name = 'Go' value = '$show_diagram'></span>";
+    }
 echo "</td><td></td>";
 echo "<td><b>$txt_initial_gravity :</b></td>";
 echo "<td align='center'>" . number_format($initial_gravity,1) . " °P</td>";

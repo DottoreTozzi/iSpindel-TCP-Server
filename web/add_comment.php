@@ -47,6 +47,6 @@ if (! $q_sql){
 else {
    echo $comment_written . "<b>" . $Comment . "</b>";" <br>";
 }
-echo "<br/><br/><a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt='$stop'></a>"
+echo "<br/><br/><a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt='$stop' width='50' height='50'></a>"
 ?>
 

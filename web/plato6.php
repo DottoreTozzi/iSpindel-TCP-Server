@@ -99,6 +99,9 @@ $timetext .= $tfhours . ' ' . $subheader_hours;
   <meta http-equiv="refresh" content="120">
   <meta name="Keywords" content="iSpindle, iSpindel, Chart, genericTCP">
   <meta name="Description" content="iSpindle Fermentation Chart">
+  <link rel="shortcut icon" href="./include/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="./include/favicon.ico" type="image/x-icon">
+
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
   <script src="http://code.highcharts.com/highcharts.js"></script>
   <script src="include/moment-timezone-with-data.js"></script>
@@ -284,7 +287,7 @@ $(function ()
 </head>
 <body class='<?php echo $document_class ?>'>
 
-<a href=/iSpindle/index.php><img src=./include/icons8-home-26.png></a>
+<a href=/iSpindle/index.php><img src=./include/icons8-home-26.png width="50" height="50"></a>
  
 <div id="wrapper">
  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>

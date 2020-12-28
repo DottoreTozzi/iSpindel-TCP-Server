@@ -63,6 +63,13 @@ if (!$conn){
     header("Location: ".$url);
 }
 
+// set connection to utf-8 to display characters like umlauts correctly
+    mysqli_set_charset($conn, "utf8mb4");
+// query to get language setting. e.g. DE for German or EN for english
+    $sql_language = mysqli_query($conn, "SELECT value FROM Settings WHERE Section = 'GENERAL' AND Parameter = 'LANGUAGE'") or die(mysqli_error($conn));
+    $LANGUAGE = mysqli_fetch_array($sql_language);
+
+
 // Update calibration and archive table to allow for 3rd degree polynom if required
 // check first, if archive table exists
     $q_sql="SHOW TABLES LIKE '%Archive%'";
@@ -214,6 +221,23 @@ include_once("../config/tables.php");
         exit;
     }
 
+// Self-called by reset_settings button
+// updates settings table with latest version and re-loads index page
+
+    if (isset($_POST['Reset_Set']))
+    {
+        reset_settings_table($conn);
+        // establish path by the current URL used to invoke this page
+        $url="http://";
+        $url .= $_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/";
+        $url .= 'index.php';
+        // open the page
+        header("Location: ".$url);
+        unset($result, $sql_q);
+        exit;
+    }
+
+
 // Self-called by upgrade_data table button
 // migrates data table and adds recipe_id and comment column
 // creates archive table based on existing data
@@ -283,6 +307,8 @@ $document_class = get_color_scheme($conn);
     $send_comment = get_field_from_sql($conn,$file,"send_comment");
     $comment_text = get_field_from_sql($conn,$file,"comment_text");
     $header_deltagravity = get_field_from_sql($conn,$file,"header_deltagravity");
+    $reset_warning = get_field_from_sql($conn,$file,"reset_warning");
+    $reset_settings = get_field_from_sql($conn,$file,"reset_settings");
 
 // time in hours for the calculation of the delta plato shown on the overview table
     $hours_ago = 12;
@@ -417,6 +443,8 @@ write_log('iGauge Table exists: '. $iGauge_exists);
     <meta name="Description" content="iSpindle Fermentation Chart Selection Screen">
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8"> 
     <link rel="stylesheet" type="text/css" href="./include/iSpindle.css">
+    <link rel="shortcut icon" href="./include/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="./include/favicon.ico" type="image/x-icon">
 </head>
 <script type="text/javascript">
 
@@ -705,6 +733,11 @@ echo "</table>";
 <br/> <b><?php echo($upgrade_warning)?></b><br/><br/>
 <span title="<?php echo($upgrade_settings)?>"><input type = "submit" id='up_settings' name = "Up_Set" value = "<?php echo($upgrade_settings)?>"></span>
 <?php echo($installed_version)?> <?php echo($installed_settings_version)?> | <?php echo($available_version)?> <?php echo(LATEST_SETTINGS_TABLE)?>
+<br/>
+<br/>
+<br/> <b><?php echo($reset_warning)?></b><br/><br/>
+<span title="<?php echo($reset_settings)?>"><input type = "submit" id='reset_settings' name = "Reset_Set" value = "<?php echo($reset_settings)?>"></span>
+
 
 <!-- Data table migration: only shown if recipe_id column does not exist in data table  -->
 <?php if ($exists == 0) { ?>
@@ -717,7 +750,7 @@ echo "</table>";
 
 
 <footer>
-<?php echo"<div><a href='help.php' title='$help'>$help</a></div>"; ?>
+<?php echo"<div><a href='help.php?LANGUAGE=$LANGUAGE[0]' title='$help'>$help</a></div>"; ?>
 <br/><?php echo($iSpindleServerRunning)?>
 <!-- <div>Icons made by <a href="https://www.flaticon.com/authors/prosymbols" title="Prosymbols">Prosymbols</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div> -->
 </footer>

@@ -288,6 +288,15 @@ function upgrade_settings_table($conn)
     }
 }
 
+// reset settings table and revert back to DEFAULT Settings
+function reset_settings_table($conn)
+{
+// check version of existig strings table in database
+    $q_sql="UPDATE Settings SET value = DEFAULT_value";
+    $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
+}
+
+
 // function to get selected css layout for webpages
 function get_color_scheme($conn)
 {
@@ -630,7 +639,7 @@ function UpdateSettings($conn, $Section, $Device, $Parameter, $value)
 // function to copy current _DEFAULT settings to a device. Settings can be changed individually for the device afterwards
 function CopySettingsToDevice($conn, $device)
 {
-    $sql_select="INSERT INTO Settings(Section,Parameter,value,Description_DE,Description_EN,Description_IT,DeviceName) SELECT Section,Parameter,value,Description_DE,Description_EN,Description_IT,'" . $device . "' FROM Settings WHERE DeviceName ='_DEFAULT'";
+    $sql_select="INSERT INTO Settings(Section,Parameter,value,DEFAULT_value,Description_DE,Description_EN,Description_IT,DeviceName) SELECT Section,Parameter,value,DEFAULT_value,Description_DE,Description_EN,Description_IT,'" . $device . "' FROM Settings WHERE DeviceName ='_DEFAULT'";
 
    $q_sql = mysqli_query($conn, $sql_select) or die(mysqli_error($conn));
     return 1;

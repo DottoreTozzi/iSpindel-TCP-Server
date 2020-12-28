@@ -99,6 +99,8 @@ $timetext .= $tfhours . ' ' . $subheader_hours;
   <script src="http://code.highcharts.com/highcharts.js"></script>
   <script src="http://code.highcharts.com/modules/debugger.js"></script>
   <script src="include/moment-timezone-with-data.js"></script>
+  <link rel="shortcut icon" href="./include/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="./include/favicon.ico" type="image/x-icon">
 
 <script type="text/javascript">
 
@@ -324,7 +326,7 @@ $(function ()
 </head>
 <body class='<?php echo $document_class ?>'>
 
-<a href=/iSpindle/index.php><img src=./include/icons8-home-26.png></a>
+<a href=/iSpindle/index.php><img src=./include/icons8-home-26.png width="50" height="50"></a>
  
 <div id="wrapper">
  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>

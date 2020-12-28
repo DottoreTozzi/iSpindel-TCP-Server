@@ -53,6 +53,9 @@ $export = get_field_from_sql($conn,$file,"export");
 $import = get_field_from_sql($conn,$file,"import");
 $database_header = get_field_from_sql($conn,$file,"database_header");
 $settings_header = get_field_from_sql($conn,$file,"settings_header");
+$import_data = get_field_from_sql($conn,$file,"import_data");
+$import_settings = get_field_from_sql($conn,$file,"import_settings");
+
 
 // retrieve or define _GET parameters for section and device
 // if parameter section not set, '0' for first section in config is default to be displayed
@@ -345,6 +348,8 @@ while($row_s = mysqli_fetch_assoc($result3) ) {
     <meta name="Keywords" content="iSpindle, iSpindel, Chart, genericTCP, Select">
     <meta name="Description" content="iSpindle Fermentation Chart Selection Screen">
     <link rel="stylesheet" type="text/css" href="./include/iSpindle.css">
+    <link rel="shortcut icon" href="./include/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="./include/favicon.ico" type="image/x-icon">
 
 <script type="text/javascript">
 // alert window will be displayed when values are submitted to database
@@ -369,7 +374,7 @@ function reload_page() {
 </head>
 <body class='<?php echo $document_class ?>'>
 <form name="main" action="<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method="post" enctype="multipart/form-data">
-<a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt="<?php echo $stop; ?>"></a>
+<a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt="<?php echo $stop; ?>" width="50" height="50"></a>
 <h1><?php echo $settings_header; ?></h1>
 <h3><?php echo $select_section; ?></h3>
 
@@ -549,7 +554,7 @@ echo "<input type = 'submit' name = 'Stop' value = '$stop'>";
 <?php echo $import; ?>
 </br>
 <input type="file" name="fileupload" value="fileupload" id="fileupload">
-<input type="submit" name="Import_Data" value="Daten Importieren">        
+<input type="submit" name="Import_Data" value="<?php echo $import_data; ?>">        
 </td>
 <td>
 <?php echo $export; ?>
@@ -560,7 +565,7 @@ echo "<input type = 'submit' name = 'Stop' value = '$stop'>";
 <?php echo $import; ?>
 </br>
 <input type="file" name="settingsupload" value="settingsupload" id="settingsupload">
-<input type="submit" name="Import_Settings" value="Settings Importieren">
+<input type="submit" name="Import_Settings" value="<?php echo $import_settings; ?>">
 </br>
 </td>
 </tr>

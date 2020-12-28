@@ -1,7 +1,7 @@
 <?php
 
     // information for update of internal tables:
-    define('LATEST_STRINGS_TABLE',"010");
-    define('LATEST_SETTINGS_TABLE',"004");
+    define('LATEST_STRINGS_TABLE',"011");
+    define('LATEST_SETTINGS_TABLE',"005");
 ?>
 

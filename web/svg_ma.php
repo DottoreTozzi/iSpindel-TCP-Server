@@ -128,6 +128,8 @@ $timetext .= $tfhours . ' ' . $subheader_hours;
   <script src="include/moment.min.js"></script>
   <script src="include/moment-timezone-with-data.js"></script>
   <link rel="stylesheet" type="text/css" href="./include/iSpindle.css">
+  <link rel="shortcut icon" href="./include/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="./include/favicon.ico" type="image/x-icon">
 <script type="text/javascript">
 
 // define constants for data in chart. Allows for mor than two variables. Recipe information is included here and can be displayed in tooltip
@@ -387,7 +389,7 @@ $(function ()
 </head>
 <body class='<?php echo $document_class ?>'>
 
-<a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt="<?php echo $stop; ?>"></a>
+<a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt="<?php echo $stop; ?>" width="50" height="50"></a>
  
 <div id="wrapper">
   <script src="include/highcharts.js"></script>

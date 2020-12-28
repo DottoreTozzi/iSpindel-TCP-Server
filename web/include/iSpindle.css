@@ -168,13 +168,16 @@ li a:hover:not(.active) {
   width: 80%;
   max-width: 1280px; 
   height: auto;
+  border: 1px solid #000;
 }
 
 .img_small {
   width: 45%;
   max-width: 640px;
   height: auto;
+  border: 1px solid #000;
 }
+
 
 table.blue {
   border: 1px solid #1C6EA4;

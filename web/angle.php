@@ -128,6 +128,8 @@ $timetext .= $tfhours . ' ' . $subheader_hours;
   <script src="include/highcharts.js"></script>
   <meta http-equiv="content-type" content="text/html; charset=utf-8"> 
   <link rel="stylesheet" type="text/css" href="./include/iSpindle.css">
+  <link rel="shortcut icon" href="./include/favicon.ico" type="image/x-icon">
+  <link rel="icon" href="./include/favicon.ico" type="image/x-icon">
 <script type="text/javascript">
 
 // define constants for data in chart. Allows for mor than two variables. Recipe information is included here and can be displayed in tooltip
@@ -348,7 +350,7 @@ $(function ()
 <body class='<?php echo $document_class ?>'>
 <form name="main" action="<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method="post">
  
-<a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt="<?php echo $stop; ?>"></a>
+<a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt="<?php echo $stop; ?>" width="50" height="50"></a>
 <input type = "hidden" name="name" value="<?php echo $_GET['name']; ?>">
 <input type = "hidden" name="days" value="<?php echo $_GET['days']; ?>">
 <input type = "hidden" name="hours" value="<?php echo $_GET['hours']; ?>">

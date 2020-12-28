@@ -38,6 +38,8 @@ $document_class = get_color_scheme($conn);
   <meta name="Description" content="iSpindle Current Status">
   <script src="include/jquery-3.1.1.min.js"></script>
   <link rel="stylesheet" type="text/css" href="./include/iSpindle.css">
+   <link rel="shortcut icon" href="./include/favicon.ico" type="image/x-icon">
+   <link rel="icon" href="./include/favicon.ico" type="image/x-icon">
 
 <script type="text/javascript">
 $(function () 
@@ -147,7 +149,7 @@ $(function ()
 </script>
 </head>
 <body class='<?php echo $document_class ?>'>
-<a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt="<?php echo $stop; ?>"></a>
+<a href=/iSpindle/index.php><img src=include/icons8-home-26.png alt="<?php echo $stop; ?>" width="50" height="50"></a>
 
 <div id="wrapper">
 <script src="include/highcharts.js"></script>

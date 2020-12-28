@@ -1,14 +1,13 @@
 -- phpMyAdmin SQL Dump
--- version 4.9.0.1
+-- version 5.0.2
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3308
--- Erstellungszeit: 14. Aug 2020 um 13:02
--- Server-Version: 10.4.7-MariaDB-debug
+-- Erstellungszeit: 28. Dez 2020 um 23:52
+-- Server-Version: 10.4.12-MariaDB
 -- PHP-Version: 7.3.7
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
-SET AUTOCOMMIT = 0;
 START TRANSACTION;
 SET time_zone = "+00:00";
 
@@ -126,6 +125,8 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('index', 'or', 'oder:', 'or:', 'o:'),
 ('index', 'recipe_name', 'Optional Sudnamen eingeben:', 'Enter optional recipe name:', 'Imposta nome ricetta (opzionale):'),
 ('index', 'reset_flag', 'Daten seit zuletzt gesetztem \"Reset\" Flag zeigen', 'Show data since last set \'Reset\'', 'Visualizzare dati dall\'ultimo reset impostato'),
+('index', 'reset_settings', 'Standard Einstellungen ', 'Default settings', 'Impostazioni predefinite'),
+('index', 'reset_warning', 'Achtung: Individuelle Settings werden gelöscht und mit Default Werten überschrieben.', 'Attention: Individual settings will be deleted and replaced with the default settings.', 'Attenzione: le singole impostazioni vengono eliminate e sovrascritte con i valori predefiniti dell\'applicazione.'),
 ('index', 'send_comment', 'Kommentar senden', 'Send Comment', 'Invia un commento'),
 ('index', 'send_rdi_end', 'Gärende festlegen', 'Set fermentation end', 'Definire la fermentazione'),
 ('index', 'send_reset', 'Gärbegin festlegen', 'Set fermentation start', 'Imposta inizio fermentazione'),
@@ -180,6 +181,8 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('settings', 'export_data', 'Daten Tabelle exportieren', 'Export Data Table', 'Esporta tabella dati'),
 ('settings', 'export_settings', 'Einstellungen exportieren', 'Export Settings', 'Esporta impostazioni'),
 ('settings', 'import', 'Importieren:', 'Import:', 'Importazione:'),
+('settings', 'import_data', 'Daten Tabelle importieren', 'Import Data Table', 'Importa tabella dati'),
+('settings', 'import_settings', 'Einstellungen importieren', 'Import Settings', 'Importa impostazioni'),
 ('settings', 'problem', 'Probleme beim Schreiben der Settings', 'Problem with writing settings', 'Problema nella scrittura delle impostazioni'),
 ('settings', 'select_section', 'Section Auswahl', 'Select Section', 'Selezione sezione'),
 ('settings', 'send', 'Settings in DB schreiben', 'Send settings to database', 'Invia impostazioni al database'),
@@ -200,7 +203,7 @@ INSERT INTO `Strings` (`File`, `Field`, `Description_DE`, `Description_EN`, `Des
 ('svg_ma', 'timetext', 'Temperatur und scheinbarer Vergärungsgrad der letzten', 'Temperature and extract of the last ', 'Tenperatura e densità delle ultime'),
 ('svg_ma', 'timetext_reset', 'Temperatur und scheinbarer Vergärungsgrad seit dem letzten Reset: ', 'Temperature and apparent attenuation since last reset: ', 'Temperatura e attenuazione apparente dall\'ultimo reset: '),
 ('svg_ma', 'x_axis', 'Datum / Uhrzeit', 'Date / Time', 'Data / Orario'),
-('version', '010', '', '', ''),
+('version', '011', '', '', ''),
 ('wifi', 'header', 'WiFi Empfangsqualität:', 'Wifi reception: ', 'Qualità della ricezione WiFi: ');
 
 --

@@ -292,6 +292,8 @@ $document_class = 'blue';
     <meta name="Keywords" content="iSpindle, iSpindel, Chart, genericTCP, Select">
     <meta name="Description" content="iSpindle Fermentation Chart Selection Screen">
     <link rel="stylesheet" type="text/css" href="./include/iSpindle.css">
+    <link rel="shortcut icon" href="./include/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="./include/favicon.ico" type="image/x-icon">
 
 <script type="text/javascript">
 
