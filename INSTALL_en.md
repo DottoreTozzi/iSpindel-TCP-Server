@@ -1,6 +1,8 @@
 # Installation Guide for Ubuntu 
 ### Step-by-Step
 
+If the server has been already installed, you can perform an update with  sudo./update.sh in the server folder.
+
 Installation on Raspi: (https://github.com/avollkopf/iSpindel-TCP-Server/blob/master/INSTALL_en_Raspi.md)
 
 I am running the server in an ubuntu 16.04 container environement on my NAS. 

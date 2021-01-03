@@ -2,11 +2,17 @@
 
 #### (iSpindle.py Version 3.1)
 [English Version](README_en.md)
+***Neu (03.01.2021)
+- Überarbeitete Hilfe
+- Home Button im Repo enthalten
+- Zusätzliche Parameter beim Archiv zur automatischen Darstellung der Diagramme bei Wechsel der Auswahl (konfigurierbar)
+- Neues Raspi image zum Download: (https://mrhyde.spdns.eu:8081/share.cgi?ssid=06RqfSd) Link gültig bis 2.2.2021
+
 ***Neu (11.12.2020)
 - KBH2 CSV export aus dem Archiv
 - Bug Fix für Datenbankmigration von alter Datenbank (Automatische Erstellung der Archive Tabelle)
 - Info auf index page wenn settings oder strings tabellen bei update aktualisiert werden müssen
-- Neues Raspi Image zum Download (https://mrhyde.spdns.eu:8081/share.cgi?ssid=0x1kSHQ) Link gültig bis 10.Januar 2021
+- Neues Raspi Image zum Download 
 	- ntp läuft jetzt und Zeit sollte automatisch syncronisiert werden
 	- default python version ist nun python3 (kann über update-alternatives angepasst werden)
 

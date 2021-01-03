@@ -4,6 +4,8 @@
 [English Version] (INSTALL_en.md)
 Installation auf Raspi: (https://github.com/avollkopf/iSpindel-TCP-Server/blob/master/INSTALL_Raspi.md)
 
+Sollte der Server bereits installiert sein, so kann man im Server Verzeichnis mit sudo./update.sh ein Update durchführen.
+
 Bei mir läuft der Server in einem Ubuntu 16.04 Container auf meiner NAS. 
 
 Nach der Installation des Systems habe ich zunächst ein Update durchgeführt:

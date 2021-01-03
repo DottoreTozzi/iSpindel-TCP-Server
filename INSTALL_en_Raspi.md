@@ -1,6 +1,8 @@
 # Installation Guide for Raspberry Pi (Raspbian)
 ### Step-by-Step
 
+If the server has been already installed, you can perform an update with  sudo./update-raspi.sh in the server folder.
+
 After installation of the system (I was using Rasbpian lite) I started to update it:
 
 	sudo apt-get update
@@ -36,7 +38,7 @@ Configure the database:
 
 Enter a password for the datase user root during the configuration
 
-Add a user Pi to the database that has all privileges to create also the iSPindle database during setup (Password as example here: 'PiSpindle'):
+Add a user Pi to the database that has all privileges to create also the iSpindle database during setup (Password as example here: 'PiSpindle'):
 	
 	sudo mysql --user=root mysql
 

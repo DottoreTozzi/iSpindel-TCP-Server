@@ -3,6 +3,8 @@
 
 [English Version] (INSTALL_en_Raspi.md)
 
+Sollte der Server bereits installiert sein, so kann man im Server Verzeichnis mit sudo./update-raspi.sh ein Update durchführen.
+
 Nach der Installation des Systems (ich habe z.B. Raaspian 32 bit lite verwendet) habe ich zunächst ein Update durchgeführt:
 
 	sudo apt-get update
