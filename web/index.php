@@ -98,6 +98,8 @@ if (!$conn){
 include_once("./include/common_db_query.php");
 include_once("../config/tables.php");
  
+// check datbase status
+check_database($conn);
 
     // Self-called by submit button to load diagrams
     if (isset($_POST['Go']))

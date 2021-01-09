@@ -296,7 +296,26 @@ function reset_settings_table($conn)
     $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
 }
 
-
+// check database tables on start of index script
+function check_database($conn)
+{
+	// Test if constants in calibration table have default values
+        $database=DB_NAME;
+	$q_sql = "Select COLUMN_DEFAULT
+   		  FROM INFORMATION_SCHEMA.COLUMNS 
+                  WHERE TABLE_SCHEMA='$database' and TABLE_NAME='Calibration' and COLUMN_NAME='const0'";
+		$result = mysqli_query($conn, $q_sql);
+	        $row = mysqli_fetch_array($result);
+		if ($row[0] == "") {
+			$change_sql="ALTER TABLE `Calibration` 
+				     CHANGE `const0` `const0` DOUBLE NOT NULL DEFAULT '0', 
+				     CHANGE `const1` `const1` DOUBLE NOT NULL DEFAULT '0', 
+                                     CHANGE `const2` `const2` DOUBLE NOT NULL DEFAULT '0', 
+                                     CHANGE `const3` `const3` DOUBLE NOT NULL DEFAULT '0';";
+                        $result = mysqli_query($conn, $change_sql) or die(mysqli_error($conn)); 
+	}	
+}
+	
 // function to get selected css layout for webpages
 function get_color_scheme($conn)
 {

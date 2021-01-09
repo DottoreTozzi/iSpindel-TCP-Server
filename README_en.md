@@ -1,13 +1,13 @@
 # iSpindel Generic TCP Server
 
 #### (iSpindle.py Version 3.1)
-***New (03.01.2021)
+**New (03.01.2021)
 - Added Help in English 
 - Home Button included im Repo.
 - Additional parameters for Archive to update diagrams automatically on changes in the selection (configurable)
 - New Raspi image for Download: (https://mrhyde.spdns.eu:8081/share.cgi?ssid=06RqfSd) Link valid until 2.2.2021
 
-***New (11.12.2020)
+**New (11.12.2020)
 - KBH2 CSV export from archive
 - Bug Fix for database migration from old version (automatic generation of archive table)
 - Info on index page if  settings or strings tables need to be updated after runnuing update.sh
@@ -15,17 +15,17 @@
 	- ntp starts now and time should be synced automatically
 	- default python version ist now python3 (can be changed via update-alternatives)
 
-***New (05.12.2020)
+**New (05.12.2020)
 - More detailied Installation manual for Raspi: (https://github.com/avollkopf/iSpindel-TCP-Server/blob/master/INSTALL_en_Raspi.md)
 - Downloadable image for Raspi. 
 - Possibility to forward data to Grainfather Connect (Individual settings need to be configured for each spindle)
 	- Not yet inccluded in the image. pdate possible via git pull and settings database upgrade
 
-***New (20.11.2020)
+**New (20.11.2020)
 - Updated [Installation Instructions](INSTALL_en.md) for ubuntu (should also work for a rasbpi with small modifications)
 - Updated setup.php script that informs you if write access is not granted for config directory
 
-***New (14.08.2020)
+**New (14.08.2020)
 -  3rd degree polynomial can be also used now 
 - 'const0' has been added to database tables
 - index.php checks, if const0 is existing in tables. If not, it is automatically added  to the tables calibration and archive.

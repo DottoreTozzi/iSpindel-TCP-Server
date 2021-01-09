@@ -2,13 +2,13 @@
 
 #### (iSpindle.py Version 3.1)
 [English Version](README_en.md)
-***Neu (03.01.2021)
+**Neu (03.01.2021)
 - Überarbeitete Hilfe
 - Home Button im Repo enthalten
 - Zusätzliche Parameter beim Archiv zur automatischen Darstellung der Diagramme bei Wechsel der Auswahl (konfigurierbar)
 - Neues Raspi image zum Download: (https://mrhyde.spdns.eu:8081/share.cgi?ssid=06RqfSd) Link gültig bis 2.2.2021
 
-***Neu (11.12.2020)
+**Neu (11.12.2020)
 - KBH2 CSV export aus dem Archiv
 - Bug Fix für Datenbankmigration von alter Datenbank (Automatische Erstellung der Archive Tabelle)
 - Info auf index page wenn settings oder strings tabellen bei update aktualisiert werden müssen
@@ -16,17 +16,17 @@
 	- ntp läuft jetzt und Zeit sollte automatisch syncronisiert werden
 	- default python version ist nun python3 (kann über update-alternatives angepasst werden)
 
-***Neu (05.12.2020)
+**Neu (05.12.2020)
 - Detailiertere Installationsanleitung für Raspi: (https://github.com/avollkopf/iSpindel-TCP-Server/blob/master/INSTALL_Raspi.md)
 - Image für Raspi zum Download. 
 - Möglichkeit zur Weiterleitung der Daten an Grainfather Connect (Für jede Spindel müssen individuelle Settings angelegt werden)
 	- Noch nicht im Image enthalten, kann aber über git pull und Update der settings Datenbank aktualisiert werden
 
-***Neu (20.11.2020)
+**Neu (20.11.2020)
 - Aktualisierte [Installations Anleitung](INSTALL.md) für ubuntu (diese sollte mit leichten Anpassungen auch auf einer Raspberry laufen)
 - Aktualiseirtes setup.php Skript das zunächst prüft, ob ausreichende Schreibrechte für das config Verzeichnis vorhanden sind.
 
-***Neu (14.08.2020)
+**Neu (14.08.2020)
 - Polynom 3. Grades kann nun auch verwendet werden.
 - 'const0' wurde hierfür in Datenbank eingefügt
 - index.php überprüft, ob const0 bei bestehender Datenbank vorhanden ist. Falls nicht, wird die Spalte automatisch in die Tabellen calibration und archive ergänzt
