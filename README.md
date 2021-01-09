@@ -2,6 +2,13 @@
 
 #### (iSpindle.py Version 3.1)
 [English Version](README_en.md)
+**Neu (09.01.2021)
+- Bugfix für Kalibrierung
+- index.php testet, ob default values für Kalibriertabelle existieren.
+	- Falls nicht, wir kalibriertabelle automatisch angepasst
+	- Das kann später auch für Datenbank Upgrades erweitert werden, falls notwendig.
+- Um das update zu nutzen, muss die update routine duchgeführt werden, wie sie in install.md beschrieben ist.
+
 **Neu (03.01.2021)
 - Überarbeitete Hilfe
 - Home Button im Repo enthalten

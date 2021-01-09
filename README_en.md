@@ -1,6 +1,14 @@
 # iSpindel Generic TCP Server
 
 #### (iSpindle.py Version 3.1)
+**New (09.01.2021)
+- Bugfix for calibration
+- index.php is testing, if default values exists for calibration table.
+	- If not, table will be upgraded automatically.
+	- Funvtion can be also extended for poetential database changes at a later point of time.
+- to apply bugfix, just run an update as described in the install_en.md files
+
+
 **New (03.01.2021)
 - Added Help in English 
 - Home Button included im Repo.
