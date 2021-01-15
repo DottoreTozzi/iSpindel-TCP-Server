@@ -703,7 +703,7 @@ function setSpindleCalibration($conn, $ID, $Calibrated, $const0, $const1, $const
     } 
 // if spindle is not yet calibrated, new dataset needs to be created in calibration table
     else {
-        $q_sql = mysqli_query($conn, "INSERT INTO Calibration (ID, const1, const2, const3) VALUES ('" . $ID . "', '" . $const1 . "', '" . $const2 . "', '" . $const3 . "')") or die(mysqli_error($conn));
+        $q_sql = mysqli_query($conn, "INSERT INTO Calibration (ID, const0, const1, const2, const3) VALUES ('" . $ID . "', '" . $const0 . "', '" . $const1 . "', '" . $const2 . "', '" . $const3 . "')") or die(mysqli_error($conn));
     }
     return 1;
 }
