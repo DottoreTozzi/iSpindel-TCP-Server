@@ -1,6 +1,12 @@
 # iSpindel Generic TCP Server
 
 #### (iSpindle.py Version 3.1)
+**New (16.01.2021)
+- Additional bugfix for calibration of a new spindle has been fixed.
+- New raspi image incl. change on accessibilty of database from other hosts
+- Excel sheet for calibration, which allows pulling data from the database and writing calibration values back.
+- New downlodlink for Rapsi image incl. Excel sheet: (https://mrhyde.spdns.eu:8081/share.cgi?ssid=0xOk17o) Link valid until 16.02.2021
+
 **New (09.01.2021)
 - Bugfix for calibration
 - index.php is testing, if default values exists for calibration table.
@@ -13,7 +19,6 @@
 - Added Help in English 
 - Home Button included im Repo.
 - Additional parameters for Archive to update diagrams automatically on changes in the selection (configurable)
-- New Raspi image for Download: (https://mrhyde.spdns.eu:8081/share.cgi?ssid=06RqfSd) Link valid until 2.2.2021
 
 **New (11.12.2020)
 - KBH2 CSV export from archive

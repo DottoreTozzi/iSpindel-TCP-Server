@@ -2,6 +2,12 @@
 
 #### (iSpindle.py Version 3.1)
 [English Version](README_en.md)
+**Neu (16.01.2021)
+- Weitere Bugfix für Kalibrierung einer neuen Spindel behoben.
+- Neues Rapsi image mit Änderung der DB Konfiguration: Zugriff auch von anderen hosts möglich
+- Excel sheet zur Kalibrierung, dass Daten aus der Kalibriertabelle lesen un dauch zurückschreiben kann
+- Neuer Downlodlink für Rapsi image inkl. Excel sheet: (https://mrhyde.spdns.eu:8081/share.cgi?ssid=0xOk17o) Link gültig bis 16.02.2021
+
 **Neu (09.01.2021)
 - Bugfix für Kalibrierung
 - index.php testet, ob default values für Kalibriertabelle existieren.
@@ -13,7 +19,6 @@
 - Überarbeitete Hilfe
 - Home Button im Repo enthalten
 - Zusätzliche Parameter beim Archiv zur automatischen Darstellung der Diagramme bei Wechsel der Auswahl (konfigurierbar)
-- Neues Raspi image zum Download: (https://mrhyde.spdns.eu:8081/share.cgi?ssid=06RqfSd) Link gültig bis 2.2.2021
 
 **Neu (11.12.2020)
 - KBH2 CSV export aus dem Archiv
