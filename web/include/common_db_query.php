@@ -122,8 +122,13 @@ $result = mysqli_query($conn, $create_recipe_table) or die(mysqli_error($conn));
 
 // Add Recipe_ID , Internal and Comment columns to Data table
 // Internal column is currently used for RID_END flag, but can be used later for other pruposes in addition
-$q_sql="ALTER TABLE `Calibration` ADD COLUMN `const0` DOUBLE DEFAULT (0) AFTER `ID`";
+$q_sql = "SHOW COLUMNS FROM `Calibration` LIKE 'const0'";
 $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
+$rows = mysqli_fetch_array($result);
+if ($rows[0] != 'const0'){
+    $q_sql="ALTER TABLE `Calibration` ADD COLUMN `const0` DOUBLE DEFAULT (0) AFTER `ID`";
+    $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
+    }
 $q_sql="ALTER TABLE `Data` ADD COLUMN `Recipe_ID` INT NOT NULL AFTER `Recipe`";
 $result = mysqli_query($conn, $q_sql) or die(mysqli_error($conn));
 $q_sql="ALTER TABLE `Data` ADD `Internal` VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL AFTER `Recipe_ID`";
@@ -147,6 +152,7 @@ if($rows > 0) {
         $recipe = $row['Recipe'];
         // Write Recipe ID each of the selected lines with reset flag = 1
         $update_sql = "UPDATE Data SET Recipe_ID = '".$recipe_id."' WHERE Timestamp = '".$timestamp."' AND Name = '".$name."';";
+        write_log($update_sql);
         $update = mysqli_query($conn, $update_sql) or die(mysqli_error($conn));
 
         // set default value for calibration constants
@@ -170,6 +176,7 @@ if($rows > 0) {
         $entry_recipe_table_sql = "INSERT INTO `Archive` 
                                  (`Recipe_ID`, `Name`, `ID`, `Recipe`, `Start_date`, `End_date`, `const0`, `const1`, `const2`, `const3`) 
                                  VALUES (NULL, '".$name."', '".$ID."', '".$recipe."', '".$timestamp."', NULL, '".$const0."', '".$const1."', '".$const2."', '".$const3."')";
+        write_log($entry_recipe_table_sql);
         $entry_result = mysqli_query($conn, $entry_recipe_table_sql) or die(mysqli_error($conn));
         // increase recipe_id number for next entry
         $recipe_id++;
@@ -182,7 +189,7 @@ if($rows > 0) {
         // receive start timestamp, Spindle Name and Spindle ID for each row with resetflag = 1
         $Timestamp = $row['Timestamp'];
         $Name = $row['Name'];
-        $Recipe_ID = $row['ID'];
+        $Recipe_ID = $row['Recipe_ID'];
         // select the current entry and the next for this particular Spindle with a reset 
         $timestamp_sql="SELECT Timestamp,Recipe FROM Data WHERE Name= '".$Name."' AND Timestamp >= '$Timestamp' AND ResetFlag = '1' ORDER BY Timestamp ASC limit 2";
         $timestamp_result = mysqli_query($conn, $timestamp_sql) or die(mysqli_error($conn));
