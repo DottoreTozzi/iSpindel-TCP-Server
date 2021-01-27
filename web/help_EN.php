@@ -257,19 +257,19 @@ $document_class = get_color_scheme($conn);
 <body class='<?php echo $document_class ?>'>
 <form name="main" action="<?php echo htmlentities($_SERVER['PHP_SELF']); ?>" method="post">
 
-<?php echo"<ul class='nav navbar-nav'>" ?> 
+<?php echo"<div id='SideMenu' class='sidebar'>" ?>
 <h2>RasPySpindel</h2>
-  <li><a class="active" href="#home">Help</a></li>
-  <li><a href="#main">Main Page</a></li>
-  <li><a href="#config">Configuration</a></li>
-  <li><a href="#calibration">Calibration</a></li>
-  <li><a href="#diagram">Diagrams</a></li>
-  <li><a href="#archive">Archive</a></li>
-  <li><a href="#sendmail">Email Alarm Configuration</a></li>
-  <li><a href="#parameter">php Script Parameters</a></li>
-  <li><a href="#about">About</a></li>
-  <li><a href="index.php">Back</a></li>
-</ul>
+  <a id="lnk_home"class="lnk active" href="#home">Help</a>
+  <a id="lnk_main" class="lnk" href="#main">Main Page</a>
+  <a id="lnk_config" class="lnk" href="#config">Configuration</a>
+  <a id="lnk_calibration" class="lnk" href="#calibration">Calibration</a>
+  <a id="lnk_diagram" class="lnk" href="#diagram">Diagrams</a>
+  <a id="lnk_archive" class="lnk" href="#archive">Archive</a>
+  <a id="lnk_sendmail" class="lnk" href="#sendmail">Email Alarm Configuration</a>
+  <a id="lnk_parameter" class="lnk" href="#parameter">php Script Parameters</a>
+  <a id="lnk_about" class="lnk" href="#about">About</a>
+  <a id="lnk_back" class="lnk" href="index.php">Back</a>
+</div>
 
 <div id="home" style="margin-left:15%;padding:1px 16px;height:1000px;">
   <h2>Help</h2>
@@ -355,7 +355,7 @@ If new strings or settings are available during the update, this will be display
 </div>
 
 <div id="calibration" style="margin-left:15%;padding:1px 16px;height:1500px;">
-  <h2>Calibrtion</h2>
+  <h2>Calibration</h2>
   <p>From the main page you can access the calibration page via the link 'Calibrate spindle in TCP server'. </br>
      To get back to the main page, you can use the 'Home' button or the 'Back' button at the top left. </br>
      The spindle for which a calibration is to be stored in the server must be selected in the selection field. </br>
@@ -834,6 +834,91 @@ If you e.g. has a number of devices for which no email should be sent, you can g
   <p><a href="https://github.com/PHPMailer/PHPMailer">PHPMailer for the mailfunctions</a></p>
   <p><a href="https://www.deviantart.com/blackvariant">Buttons are from Blackvariant</a></p>
 </div>
+
+<script>
+var scrollPos = 0;
+var sections = ["lnk_home","lnk_main","lnk_config","lnk_calibration","lnk_diagram","lnk_archive","lnk_sendmail","lnk_parameter","lnk_about"];
+
+window.onscroll = function() {myFunction()};
+
+function myFunction() {
+
+  if ((document.body.getBoundingClientRect()).top > scrollPos)
+                var direction = 'UP';
+        else
+                var direction = 'DOWN';
+        // saves the new position for iteration.
+        scrollPos = (document.body.getBoundingClientRect()).top;
+
+  var h = window.innerHeight;
+  var offsets = document.getElementById('home').getBoundingClientRect();
+  var home_top = offsets.top;
+  var home_bottom = offsets.bottom;;
+  var offsets = document.getElementById('main').getBoundingClientRect();
+  var main_top = offsets.top;
+  var main_bottom = offsets.bottom;
+  var offsets = document.getElementById('config').getBoundingClientRect();
+  var config_top = offsets.top;
+  var config_bottom = offsets.bottom;
+  var offsets = document.getElementById('calibration').getBoundingClientRect();
+  var calibration_top = offsets.top;
+  var calibration_bottom = offsets.bottom;
+  var offsets = document.getElementById('diagram').getBoundingClientRect();
+  var diagram_top = offsets.top;
+  var diagram_bottom = offsets.bottom;
+  var offsets = document.getElementById('archive').getBoundingClientRect();
+  var archive_top = offsets.top;
+  var archive_bottom = offsets.bottom;
+  var offsets = document.getElementById('sendmail').getBoundingClientRect();
+  var sendmail_top = offsets.top;
+  var sendmail_bottom = offsets.bottom;
+  var offsets = document.getElementById('parameter').getBoundingClientRect();
+  var parameter_top = offsets.top;
+  var parameter_bottom = offsets.bottom;
+  var offsets = document.getElementById('about').getBoundingClientRect();
+  var about_top = offsets.top;
+  var about_bottom = offsets.bottom;
+
+  var positions = [{"ID": 0,"name": "lnk_home","position_top": home_top,"position_bottom": home_bottom},
+                   {"ID": 1,"name": "lnk_main","position_top": main_top,"position_bottom": main_bottom},
+                   {"ID": 2,"name": "lnk_config","position_top": config_top,"position_bottom": config_bottom},
+                   {"ID": 3,"name": "lnk_calibration","position_top": calibration_top,"position_bottom": calibration_bottom},
+                   {"ID": 4,"name": "lnk_diagram","position_top": diagram_top,"position_bottom": diagram_bottom},
+                   {"ID": 5,"name": "lnk_archive","position_top": archive_top,"position_bottom": archive_bottom},
+                   {"ID": 6,"name": "lnk_sendmail","position_top": sendmail_top,"position_bottom": sendmail_bottom},
+                   {"ID": 7,"name": "lnk_parameter","position_top": parameter_top,"position_bottom": parameter_bottom},
+                   {"ID": 8,"name": "lnk_about","position_top": about_top,"position_bottom": about_bottom}];
+
+  min_top = getMin(positions,"position_top");
+  min_bottom = getMin(positions,"position_bottom");
+  if (direction == 'DOWN'){
+  if (min_top.position_top <= h){
+  var current = document.getElementsByClassName("active");
+  current[0].className = current[0].className.replace(" active", "");
+  var newActive = document.getElementById(min_top.name);
+  newActive.className += " active";}
+  }
+
+  if (direction == 'UP'){
+  if (min_top.position_top >= h){
+  var current = document.getElementsByClassName("active");
+  current[0].className = current[0].className.replace(" active", "");
+  var newActive = document.getElementById(min_bottom.name);
+  newActive.className += " active";}
+  }
+
+}
+
+function getMin(arr, prop) {
+    var min;
+    for (var i=0 ; i<arr.length ; i++) {
+        if (min == null || parseInt(Math.abs(arr[i][prop])) < parseInt(Math.abs(min[prop])))
+            min = arr[i];
+    }
+    return min;
+}
+
+</script>
 
 </body>
 </form>

@@ -63,6 +63,14 @@ if (!$conn){
     header("Location: ".$url);
 }
 
+$iSpindle_Version = shell_exec('cat /usr/local/bin/iSpindle.py | grep "# Version" | head -1');
+$iSpindle_Version = str_replace('# Version','',$iSpindle_Version);
+$sendmail_Version = shell_exec('cat /usr/local/bin/sendmail.py | grep "# V" | head -1');
+$sendmail_Version = str_replace('# V','',$sendmail_Version);
+
+
+
+
 // set connection to utf-8 to display characters like umlauts correctly
     mysqli_set_charset($conn, "utf8mb4");
 // query to get language setting. e.g. DE for German or EN for english
@@ -747,13 +755,17 @@ echo "</table>";
 <br/>
 <span title="<?php echo($upgrade_data_table)?>"><input type = "submit" id='up_data_table' name = "Up_DataTab" value = "<?php echo($upgrade_data_table)?>"></span>
 <?php } ?>
+<br/>
+<br/>
 </div>
 
 
 
 <footer>
 <?php echo"<div><a href='help.php?LANGUAGE=$LANGUAGE[0]' title='$help'>$help</a></div>"; ?>
-<br/><?php echo($iSpindleServerRunning)?>
+<br/><?php echo($iSpindleServerRunning)?><?php echo("| Version: ".$iSpindle_Version)?><?php echo("| Sendmail Version: ".$sendmail_Version)?>
+
+
 <!-- <div>Icons made by <a href="https://www.flaticon.com/authors/prosymbols" title="Prosymbols">Prosymbols</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div> -->
 </footer>
 </form>

@@ -147,7 +147,7 @@ ul.wheat {
 }
 
 
-li a {
+/*li a {
   display: block;
   color: #000;
   padding: 8px 16px;
@@ -158,12 +158,14 @@ li a {
   border-radius: 7px;
   background-color: #4CAF50;
   color: white;
-}*/
+}
 
 li a:hover:not(.active) {
   background-color: #555;
   color: white;
-}
+}*/
+
+
 .img_norm {
   width: 80%;
   max-width: 1280px; 
@@ -334,6 +336,62 @@ input#reset{
     height: 48px;
 }
 
-*/
+ /* The side navigation menu */
+.sidebar {
+  margin: 0;
+  padding: 0;
+  width: 200px;
+ /* background-color: #EEEEEE;*/
+  position: fixed;
+  height: 100%;
+  overflow: auto;
+}
+
+/* Sidebar links */
+.sidebar a {
+  display: block;
+  color: black;
+  padding: 16px;
+  text-decoration: none;
+}
+
+/* Active/current link */
+.sidebar a.active {
+  background-color: #696969;
+  color: white;
+}
+
+/* Links on mouse-over */
+.sidebar a:hover:not(.active) {
+  background-color: #D3D3D3;
+  color: black;
+}
+
+
+/* Page content. The value of the margin-left property should match the value of the sidebar's width property */
+div.content {
+  margin-left: 200px;
+  padding: 1px 16px;
+  height: 1000px;
+}
+
+/* On screens that are less than 700px wide, make the sidebar into a topbar */
+@media screen and (max-width: 700px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+  }
+  .sidebar a {float: left;}
+  div.content {margin-left: 0;}
+}
+
+/* On screens that are less than 400px, display the bar vertically, instead of horizontally */
+@media screen and (max-width: 400px) {
+  .sidebar a {
+    text-align: center;
+    float: none;
+  }
+
 /* @import 'highcharts.css'; */
 
