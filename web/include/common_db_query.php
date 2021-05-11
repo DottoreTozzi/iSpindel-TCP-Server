@@ -517,7 +517,7 @@ if (substr(trim($line), -1, 1) == ';')
 // Function to Export individual settings as CSV file
 // Global settings but also settings for individual spindles will be exported 
 // Settings can be also imported at a later point of time
-function export_settings($conn,$table='Settings',$filename)
+function export_settings($conn,$table,$filename)
 {
 // select all parameters expect table version and flags for sent emails
     $q_sql="Select Section, Parameter, value, DeviceName from $table WHERE Parameter NOT LIKE 'Sent%' AND Section NOT LIKE 'VERSION' ORDER by DeviceName";
@@ -541,7 +541,7 @@ function export_settings($conn,$table='Settings',$filename)
 }
 
 // function to import settings from csv file
-function import_settings($conn,$table='Settings',$filename)
+function import_settings($conn,$table,$filename)
 {
 $Devices='';
 //check if settings talbe does exist
@@ -1648,7 +1648,7 @@ function getlastValuesPlato4($conn, $iSpindleID = 'iSpindel000')
 }
 
 // get data from databse for selected spindle that is from $hours before $lasttime
-function getValuesHoursAgoPlato4($conn, $iSpindleID = 'iSpindel000', $lasttime, $hours)
+function getValuesHoursAgoPlato4($conn, $iSpindleID, $lasttime, $hours)
 {
 // define empty variables
     $isCalibrated = 0;
@@ -1841,7 +1841,7 @@ function getChartValuesPlato4_delta($conn, $iSpindleID = 'iSpindel000', $timeFra
 // function to pull data for trend diagrams with moving average calculation of angle and gravity values
 // attenuation and alcohol content is also calculated
 // $movingtime defines the timefrime for the average calculation
-function getChartValues_ma($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $movingtime, $reset = defaultReset)
+function getChartValues_ma($conn, $iSpindleID, $timeFrameHours = defaultTimePeriod, $movingtime=120, $reset = defaultReset)
 {
 // define empty variables
     $isCalibrated = 0;
