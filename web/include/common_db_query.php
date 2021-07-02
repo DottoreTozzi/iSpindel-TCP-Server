@@ -320,7 +320,19 @@ function check_database($conn)
                                      CHANGE `const2` `const2` DOUBLE NOT NULL DEFAULT '0', 
                                      CHANGE `const3` `const3` DOUBLE NOT NULL DEFAULT '0';";
                         $result = mysqli_query($conn, $change_sql) or die(mysqli_error($conn)); 
-	}	
+	}
+	// Check if alternative temperature column exists in data table
+        $q_sql = "Select COLUMN_DEFAULT
+                  FROM INFORMATION_SCHEMA.COLUMNS
+                  WHERE TABLE_SCHEMA='$database' and TABLE_NAME='Data' and COLUMN_NAME='Temperature_Alt'";	
+                $result = mysqli_query($conn, $q_sql);
+                $row = mysqli_fetch_array($result);
+                if ($row[0] == "") {
+			$change_sql="ALTER TABLE `Data` ADD `Temperature_Alt` DOUBLE NULL DEFAULT NULL AFTER `Comment`";
+                        $result = mysqli_query($conn, $change_sql) or die(mysqli_error($conn));
+
+	}
+
 }
 	
 // function to get selected css layout for webpages
@@ -517,7 +529,7 @@ if (substr(trim($line), -1, 1) == ';')
 // Function to Export individual settings as CSV file
 // Global settings but also settings for individual spindles will be exported 
 // Settings can be also imported at a later point of time
-function export_settings($conn,$table,$filename)
+function export_settings($conn,$table='Settings',$filename)
 {
 // select all parameters expect table version and flags for sent emails
     $q_sql="Select Section, Parameter, value, DeviceName from $table WHERE Parameter NOT LIKE 'Sent%' AND Section NOT LIKE 'VERSION' ORDER by DeviceName";
@@ -541,7 +553,7 @@ function export_settings($conn,$table,$filename)
 }
 
 // function to import settings from csv file
-function import_settings($conn,$table,$filename)
+function import_settings($conn,$table='Settings',$filename)
 {
 $Devices='';
 //check if settings talbe does exist
@@ -1131,7 +1143,7 @@ function ExportArchiveValues($conn, $recipe_ID, $txt_recipe_name, $txt_end, $txt
     // if regular csv export is selected
     if ($csv_type == "csv1") {
     // select that calculates all parameters to be exported while pulling data from the database
-        $q_sql = mysqli_query($conn, "SELECT Timestamp, Name, ID, Angle, Temperature, Battery, Gravity AS Spindle_Gravity, ($const0*Angle*Angle*Angle + $const1*Angle*Angle + $const2*Angle + $const3) AS Calculated_Gravity, 
+        $q_sql = mysqli_query($conn, "SELECT Timestamp, Name, ID, Angle, Temperature, Temperature_Alt, Battery, Gravity AS Spindle_Gravity, ($const0*Angle*Angle*Angle + $const1*Angle*Angle + $const2*Angle + $const3) AS Calculated_Gravity, 
                                       (($sql_IG-($const0*Angle*Angle*Angle + $const1*Angle*Angle + $const2*Angle + $const3))*100 / $sql_IG) AS Attenuation, RSSI, Recipe, Comment
                                       FROM Data WHERE Recipe_ID = '$recipe_ID'" . $AND_RID . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
     // filename for download
@@ -1225,6 +1237,7 @@ function getArchiveValues($conn, $recipe_ID, $initial_gravity)
 // define empty variables
     $valAngle = '';
     $valTemperature = '';
+    $valTemperature2 = '';
     $valDens = '';
     $valGravity = '';
     $valRSSI = '';
@@ -1274,7 +1287,7 @@ function getArchiveValues($conn, $recipe_ID, $initial_gravity)
     }
 
 // select that pulls all parameters to be displayed in the archive.php diagram types
-    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, gravity, battery, rssi, recipe, comment
+    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, temperature_alt, angle, gravity, battery, rssi, recipe, comment
                            FROM Data WHERE Recipe_ID = '$recipe_ID'" . $AND_RID . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
 // variable to help positioning comments as label above or below the data line (alternating)
 	$label_position = 1;
@@ -1330,6 +1343,9 @@ function getArchiveValues($conn, $recipe_ID, $initial_gravity)
             }
 // arrays where no comment is displayed at all
             $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            if ($r_row['temperature_alt']) {
+            $valTemperature2 .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature_alt'] . ", recipe: \"" . $r_row['recipe'] . "\"},";}
+
             $valRSSI .= '{ timestamp: ' . $jsTime . ', value: ' . $rssi . ", recipe: \"" . $r_row['recipe'] . "\"},";
             $valABV .= '{ timestamp: ' . $jsTime . ', value: ' . $alcohol_by_volume . ", recipe: \"" . $r_row['recipe'] . "\"},";
 
@@ -1347,7 +1363,8 @@ function getArchiveValues($conn, $recipe_ID, $initial_gravity)
             $valBattery,
             $valRSSI,
             $valSVG,
-            $valABV
+            $valABV,
+	    $valTemperature2
         );
   
 }
@@ -1362,6 +1379,7 @@ function getChartValues($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = de
     $isCalibrated = 0;
     $valAngle = '';
     $valTemperature = '';
+    $valTemperature2 = '';
     $valDens = '';
     $valGravity = '';
     $valRSSI = '';
@@ -1385,7 +1403,7 @@ function getChartValues($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = de
     mysqli_set_charset($conn, "utf8mb4");
 
 // sql query to pull all relevant data from data table for trend charts
-    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe, battery, rssi, gravity, comment
+    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, temperature_alt, angle, recipe, battery, rssi, gravity, comment
                            FROM Data " . $where . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
     
 // retrieve number of rows
@@ -1458,6 +1476,9 @@ function getChartValues($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = de
             }
 // arrays where no comment is displayed at all
             $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            if ($r_row['temperature_alt']) {
+            $valTemperature2 .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature_alt'] . ", recipe: \"" . $r_row['recipe'] . "\"},";}
+
             $valRSSI .= '{ timestamp: ' . $jsTime . ', value: ' . $rssi . ", recipe: \"" . $r_row['recipe'] . "\"},";
 
         }
@@ -1468,7 +1489,8 @@ function getChartValues($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = de
             $valAngle,
             $valGravity,
             $valBattery,
-            $valRSSI
+            $valRSSI,
+	    $valTemperature2
         );
     }
 }
@@ -1648,7 +1670,7 @@ function getlastValuesPlato4($conn, $iSpindleID = 'iSpindel000')
 }
 
 // get data from databse for selected spindle that is from $hours before $lasttime
-function getValuesHoursAgoPlato4($conn, $iSpindleID, $lasttime, $hours)
+function getValuesHoursAgoPlato4($conn, $iSpindleID = 'iSpindel000', $lasttime, $hours)
 {
 // define empty variables
     $isCalibrated = 0;
@@ -1841,12 +1863,13 @@ function getChartValuesPlato4_delta($conn, $iSpindleID = 'iSpindel000', $timeFra
 // function to pull data for trend diagrams with moving average calculation of angle and gravity values
 // attenuation and alcohol content is also calculated
 // $movingtime defines the timefrime for the average calculation
-function getChartValues_ma($conn, $iSpindleID, $timeFrameHours = defaultTimePeriod, $movingtime=120, $reset = defaultReset)
+function getChartValues_ma($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $movingtime, $reset = defaultReset)
 {
 // define empty variables
     $isCalibrated = 0;
     $valAngle = '';
     $valTemperature = '';
+    $valTemperature2 = '';
     $valGravity = '';
     $valDens = '';
     $valSVG = '';
@@ -1879,7 +1902,7 @@ function getChartValues_ma($conn, $iSpindleID, $timeFrameHours = defaultTimePeri
 
 // query for moving average calculation that is using sql windows functions for the calculation
 // $Rows is used to define the amount of rows that is used for the average calculation
-    if (!$q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data.Timestamp) as unixtime, Data.temperature, Data.angle, Data.recipe, Data.comment,
+    if (!$q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Data.Timestamp) as unixtime, Data.temperature, Data.temperature_alt, Data.angle, Data.recipe, Data.comment,
                                 AVG(Data.Angle) OVER (ORDER BY Data.Timestamp ASC ROWS " . $Rows . " PRECEDING) AS mv_angle, 
                                 AVG(Data.gravity) OVER (ORDER BY Data.Timestamp ASC ROWS " . $Rows . " PRECEDING) AS mv_gravity
                                 FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND " . $where)) {
@@ -1963,6 +1986,9 @@ function getChartValues_ma($conn, $iSpindleID, $timeFrameHours = defaultTimePeri
             }
 // arrays where no comment is displayed at all
             $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
+            if ($r_row['temperature_alt']) {
+            $valTemperature2 .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature_alt'] . ", recipe: \"" . $r_row['recipe'] . "\"},";}
+
             $valABV .= '{ timestamp: ' . $jsTime . ', value: ' . $alcohol_by_volume . ", recipe: \"" . $r_row['recipe'] . "\"},";
 
         }
@@ -1974,7 +2000,8 @@ function getChartValues_ma($conn, $iSpindleID, $timeFrameHours = defaultTimePeri
             $valAngle,
             $valGravity,
             $valSVG,
-            $valABV
+            $valABV,
+	    $valTemperature2
         );
     }
 }

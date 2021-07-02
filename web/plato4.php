@@ -34,7 +34,7 @@ $tfdays = floor($tftemp / 24);
 $tftemp -= $tfdays * 24;
 $tfhours = $tftemp;                                
                                                    
-list($isCalib, $dens, $temperature, $angle) = getChartValues($conn, $_GET['name'], $timeFrame, $_GET['reset']);
+list($isCalib, $dens, $temperature, $angle, $dummy1, $dummy2, $dummy3, $temperature2) = getChartValues($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 list($RecipeName, $show) = getCurrentRecipeName($conn, $_GET['name'], $timeFrame, $_GET['reset']);
 
 $document_class = get_color_scheme($conn);
@@ -61,8 +61,11 @@ $PARA_SECOND_Y_MIN = "TEMPERATURE_Y_AXIS_MIN";
 $PARA_SECOND_Y_MAX = "TEMPERATURE_Y_AXIS_MAX";
 $first_y_unit = " °P";
 $second_y_unit = " °C";
+$third_y_unit = " °C";
+
 $ChartFirst = $dens;
 $ChartSecond = $temperature;
+$ChartThird = $temperature2;
 
 $first_y_min = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_FIRST_Y_MIN));
 $first_y_max = intval(get_settings_from_sql($conn,"DIAGRAM","GLOBAL",$PARA_FIRST_Y_MAX));
@@ -129,10 +132,19 @@ $timetext .= $tfhours . ' ' . $subheader_hours;
 // define constants for data in chart. Allows for mor than two variables. Recipe information is included here and can be displayed in tooltip
 const chartDens=[<?php echo $ChartFirst;?>]
 const chartTemp=[<?php echo $ChartSecond;?>]
+const chartTemp2=[<?php echo $ChartThird;?>]
+
 // define constants to be displayed in diagram -> no php code needed in chart
 const recipe_name=[<?php echo "'".$recipe_name."'";?>]
 const first_y=[<?php echo "'".$first_y."'";?>]
 const second_y=[<?php echo "'".$second_y."'";?>]
+const third_y=[<?php echo "'".$second_y." 2'";?>]
+const ThirdChartAvailable=chartTemp2.length
+var third_legend = false
+if (ThirdChartAvailable != 0){
+        var third_legend = true
+        }
+
 const first_y_min = <?php echo $first_y_min;?>;
 const second_y_min = <?php echo $second_y_min;?>;
 const first_y_max = <?php echo $first_y_max;?>;
@@ -333,7 +345,30 @@ $(function ()
                             }
                         }
 
+                },
+                {
+                    name: third_y,
+                    showInLegend: third_legend,
+                    yAxis: 1,
+                    color: '#2e7d32',
+                    data: chartTemp2.map(row => [row.timestamp, row.value]),
+                    marker:
+                        {
+                            symbol: 'square',
+                            enabled: false,
+                            states:
+                            {
+                                hover:
+                                {
+                                symbol: 'square',
+                                enabled: true,
+                                radius: 8
+                                }
+                            }
+                        }
+
                 }
+
             ] //series      
             });
     }

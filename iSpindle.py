@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Version 3.2
+# Added support for alternative Fermenter temperature from CBPiv4 iSpindle plugin
+#
 # Version 3.1
 # Added support to forwrd data to Grainfather Connect
 #
@@ -283,6 +286,7 @@ def handler(clientsock, addr):
     pressure = 0.0
     carbondioxid = 0.0
     gauge = 0
+    CBPiTemp = None
 
     while 1:
         data = clientsock.recv(BUFF)
@@ -508,6 +512,40 @@ def handler(clientsock, addr):
             except Exception as e:
                 dbgprint(repr(addr) + ' CSV Error: ' + str(e))
 
+        if CRAFTBEERPI3 and gauge == 0:
+            try:
+                dbgprint(repr(addr) + ' - forwarding to CraftBeerPi3 at http://' + CRAFTBEERPI3ADDR)
+                import urllib3
+                import requests
+                outdata = {
+                    'name': spindle_name,
+                    'angle': angle if CRAFTBEERPI3_SEND_ANGLE else gravity,
+                    'temperature': temperature,
+                    'battery': battery,
+                }
+                out = json.dumps(outdata).encode('utf-8')
+                dbgprint(repr(addr) + ' - sending: ' + out.decode('utf-8'))
+                url = 'http://' + CRAFTBEERPI3ADDR + '/api/hydrometer/v1/data'
+                http = urllib3.PoolManager()
+                req = http.request('POST',url,body=out, headers={'Content-Type': 'application/json', 'User-Agent': spindle_name})
+                dbgprint(repr(addr) + ' - HTTP Status code received: ' + str(req.status))
+
+            except Exception as e:
+                dbgprint(repr(addr) + ' Error while forwarding to URL ' + url + ' : ' + str(e))
+
+            try:
+                url = 'http://' + CRAFTBEERPI3ADDR + '/api/hydrometer/v1/data/gettemp/'+ spindle_name
+                http = urllib3.PoolManager()
+                req = http.request('POST',url, headers={'Content-Type': 'application/json'})
+                response=json.loads(req.data.decode())
+                dbgprint(response)
+                CBPiTemp=response["Temp"]
+                dbgprint(CBPiTemp)
+
+            except Exception as e:
+                dbgprint(repr(addr) + ' Error while forwarding to URL ' + url + ' : ' + str(e))
+
+
         if SQL:
             recipe = 'n/a'
             try:
@@ -551,8 +589,8 @@ def handler(clientsock, addr):
                 dbgprint(repr(addr) + ' - writing to database')
                 # standard field definitions:
                 if gauge == 0 :
-                    fieldlist = ['Timestamp', 'Name', 'ID', 'Angle', 'Temperature', 'Battery', 'Gravity', 'Recipe', 'Recipe_ID']
-                    valuelist = [datetime.now(), spindle_name, spindle_id, angle, temperature, battery, gravity, recipe, recipe_id]
+                    fieldlist = ['Timestamp', 'Name', 'ID', 'Angle', 'Temperature', 'Battery', 'Gravity', 'Recipe', 'Recipe_ID', 'Temperature_Alt']
+                    valuelist = [datetime.now(), spindle_name, spindle_id, angle, temperature, battery, gravity, recipe, recipe_id, CBPiTemp]
                 else:
                     fieldlist = ['Timestamp', 'Name', 'ID', 'Pressure', 'Temperature', 'Carbondioxid', 'Recipe']
                     valuelist = [datetime.now(), spindle_name, spindle_id, pressure, temperature, carbondioxid, recipe]
@@ -569,7 +607,8 @@ def handler(clientsock, addr):
                     valuelist.append(interval)
                     fieldlist.append('RSSI')
                     valuelist.append(rssi)
-
+                dbgprint(fieldlist)
+                dbgprint(valuelist)
                 # establish database connection
                 cnx = mysql.connector.connect(user=SQL_USER,  port=SQL_PORT, password=SQL_PASSWORD, host=SQL_HOST, database=SQL_DB)
                 cur = cnx.cursor()
@@ -642,28 +681,6 @@ def handler(clientsock, addr):
 
             except Exception as e:
                 dbgprint(repr(addr) + ' Error while forwarding to URL ' + url + ' : ' + str(e))
-
-        if CRAFTBEERPI3 and gauge == 0:
-            try:
-                dbgprint(repr(addr) + ' - forwarding to CraftBeerPi3 at http://' + CRAFTBEERPI3ADDR)
-                import urllib3
-                import requests
-                outdata = {
-                    'name': spindle_name,
-                    'angle': angle if CRAFTBEERPI3_SEND_ANGLE else gravity,
-                    'temperature': temperature,
-                    'battery': battery,
-                }
-                out = json.dumps(outdata).encode('utf-8')
-                dbgprint(repr(addr) + ' - sending: ' + out.decode('utf-8'))
-                url = 'http://' + CRAFTBEERPI3ADDR + '/api/hydrometer/v1/data'
-                http = urllib3.PoolManager()                
-                req = http.request('POST',url,body=out, headers={'Content-Type': 'application/json', 'User-Agent': spindle_name})
-                dbgprint(repr(addr) + ' - HTTP Status code received: ' + str(req.status))
-
-            except Exception as e:
-                dbgprint(repr(addr) + ' Error while forwarding to URL ' + url + ' : ' + str(e))
-
 
         if UBIDOTS and gauge == 0:
             try:

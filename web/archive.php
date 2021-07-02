@@ -206,7 +206,7 @@ if (isset($_POST['Export']))
 // get initial gravity and constants for gravity calulaction to be shown in the header table
 list($isCalib,$initial_gravity, $const0, $const1, $const2, $const3) = getArchiveInitialGravity($conn, $selected_recipe);
 // get all data for the different diagram tyes
-list($SpindleName, $RecipeName, $start_date, $end_date, $dens, $temperature, $angle, $gravity, $battery, $rssi, $SVG, $ABV) = getArchiveValues($conn, $selected_recipe, $initial_gravity);
+list($SpindleName, $RecipeName, $start_date, $end_date, $dens, $temperature, $angle, $gravity, $battery, $rssi, $SVG, $ABV, $temperature2) = getArchiveValues($conn, $selected_recipe, $initial_gravity);
 // get the final gracvitry for this ID
 list($isCalib,$final_gravity) = getArchiveFinalGravity($conn, $selected_recipe, $end_date);
 // get selected colo scheme for the layout
@@ -228,6 +228,9 @@ $cal = 0;
 
 // define diagram parameters such as units and max/min values and data to be shown depenting on the selection of diagram_type
 
+$ChartThird = Null;
+
+
 if($diagram_type == '0')
 {
     $file = "plato4";
@@ -239,7 +242,10 @@ if($diagram_type == '0')
     $second_y_unit = " °C";
     $ChartFirst = $dens;
     $ChartSecond = $temperature;
+    $ChartThird = $temperature2;
     $cal = 1;
+    $third_y = "Temperature 2";
+
 }
 
 if($diagram_type == '2')
@@ -253,6 +259,9 @@ if($diagram_type == '2')
     $second_y_unit = " °C";
     $ChartFirst = $gravity;
     $ChartSecond = $temperature;
+    $ChartThird = $temperature2;
+    $third_y = "Temperature 2";
+
 }
 
 if($diagram_type == '1')
@@ -266,6 +275,10 @@ if($diagram_type == '1')
     $second_y_unit = " °C";
     $ChartFirst = $angle;
     $ChartSecond = $temperature;
+    $ChartThird = $temperature2;
+    $third_y = "Temperature 2";
+
+
 }
 if($diagram_type == '3')
 {
@@ -278,6 +291,7 @@ if($diagram_type == '3')
     $second_y_unit = " dB";
     $ChartFirst = $battery;
     $ChartSecond = $rssi;
+    $third_y = "";
 }
 
 if($diagram_type == '4')
@@ -291,6 +305,9 @@ if($diagram_type == '4')
     $second_y_unit = " %";
     $ChartFirst = $SVG;
     $ChartSecond = $ABV;
+    $ChartThird = $temperature;
+    $third_y = "Temperature";
+
 }
 
 // pull axis lable for first y depending on selected diagram type
@@ -386,10 +403,18 @@ $len = mysqli_num_rows($archive_result);
 // define constants for data in chart. Allows for more than two variables. Recipe information is included here and can be displayed in tooltip
 const chartDens=[<?php echo $ChartFirst;?>]
 const chartTemp=[<?php echo $ChartSecond;?>]
+const chartTemp2=[<?php echo $ChartThird;?>]
+const ThirdChartAvailable=chartTemp2.length
 // define constants to be displayed in diagram -> no php code needed in chart
 const recipe_name=[<?php echo "'".$recipe_name."'";?>]
 const first_y=[<?php echo "'".$first_y."'";?>]
 const second_y=[<?php echo "'".$second_y."'";?>]
+const third_y=[<?php echo "'".$third_y."'";?>]
+var third_legend = false
+if (ThirdChartAvailable != 0){
+	var third_legend = true
+	}
+console.log(third_legend)
 const first_y_min = <?php echo $first_y_min;?>;
 const second_y_min = <?php echo $second_y_min;?>;
 const first_y_max = <?php echo $first_y_max;?>;
@@ -556,7 +581,7 @@ $(function ()
                 crosshairs: [true, true],
                 formatter: function() 
                 {
-                    if(this.series.name == second_y) {
+                    if(this.series.name == second_y || this.series.name == third_y) {
 			const pointData = chartTemp.find(row => row.timestamp === this.point.x)
                         return '<b>' + recipe_name + ' </b>'+pointData.recipe+'<br>'+'<b>'+ this.series.name + ' </b>' + tooltip_at + ' ' + Highcharts.dateFormat('%d.%m %H:%M', new Date(this.x)) + ' ' + tooltip_time + ' ' + this.y.toFixed(2) + second_y_unit;
                     } else {
@@ -654,7 +679,31 @@ $(function ()
                             }
                         }
 
+                },
+                {
+                    name: third_y,
+		    showInLegend: third_legend,
+                    yAxis: 1,
+                    color: '#2e7d32',
+                    lineWidth: 2,
+                    data: chartTemp2.map(row => [row.timestamp, row.value]),
+                    marker:
+                        {
+                            symbol: 'square',
+                            enabled: false,
+                            states:
+                            {
+                                hover:
+                                {
+                                symbol: 'square',
+                                enabled: true,
+                                radius: 8
+                                }
+                            }
+                        }
+
                 }
+
             ] //series      
 
     });
