@@ -16,9 +16,12 @@ if ((include_once '../config/common_db_config.php') == FALSE){
 // Parameter recipe to set recipe name at reset point. Recipe name will be displayed in diagrams as header and in tooltip for selected spindle 
 if(!isset($_GET['name'])) $_GET['name'] = 'iSpindel000'; else $_GET['name'] = $_GET['name'];
 if(!isset($_GET['recipe'])) $_GET['recipe'] = ''; else $_GET['recipe'] = $_GET['recipe'];
+if(!isset($_GET['batch'])) $_GET['batch'] = ''; else $_GET['batch'] = $_GET['batch'];
+
 
 $Name = $_GET['name'];
 $Recipe = $_GET['recipe'];
+$Batch = $_GET['batch'];
 
 // Get fields from database in language selected in settings
 $file = "reset_now";
@@ -80,13 +83,13 @@ if($ID[0]){
 $timestamp = date("Y-m-d H:i:s");
 if ($const1 != NULL){
 $entry_recipe_table_sql = "INSERT INTO `Archive`
-                           (`Recipe_ID`, `Name`, `ID`, `Recipe`, `Start_date`, `End_date`, `const0`, `const1`, `const2`, `const3`)
-                           VALUES (NULL, '".$Name."', '".$valID."', '".$Recipe."', '".$timestamp."', NULL, '$const0', '$const1', '$const2', '$const3')";
+                           (`Recipe_ID`, `Name`, `ID`, `Recipe`, `Batch`, `Start_date`, `End_date`, `const0`, `const1`, `const2`, `const3`)
+                           VALUES (NULL, '".$Name."', '".$valID."', '".$Recipe."', '".$Batch."', '".$timestamp."', NULL, '$const0', '$const1', '$const2', '$const3')";
 }
 else {
 $entry_recipe_table_sql = "INSERT INTO `Archive`
-                           (`Recipe_ID`, `Name`, `ID`, `Recipe`, `Start_date`, `End_date`, `const0`,`const1`, `const2`, `const3`)
-                           VALUES (NULL, '".$Name."', '".$valID."', '".$Recipe."', '".$timestamp."', NULL, NULL, NULL, NULL, NULL)";
+                           (`Recipe_ID`, `Name`, `ID`, `Recipe`, `Batch`, `Start_date`, `End_date`, `const0`,`const1`, `const2`, `const3`)
+                           VALUES (NULL, '".$Name."', '".$valID."', '".$Recipe."', '".$Batch."', '".$timestamp."', NULL, NULL, NULL, NULL, NULL)";
 }
 write_log($entry_recipe_table_sql);
 mysqli_set_charset($conn, "utf8mb4");

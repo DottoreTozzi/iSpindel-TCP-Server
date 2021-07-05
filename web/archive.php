@@ -206,7 +206,7 @@ if (isset($_POST['Export']))
 // get initial gravity and constants for gravity calulaction to be shown in the header table
 list($isCalib,$initial_gravity, $const0, $const1, $const2, $const3) = getArchiveInitialGravity($conn, $selected_recipe);
 // get all data for the different diagram tyes
-list($SpindleName, $RecipeName, $start_date, $end_date, $dens, $temperature, $angle, $gravity, $battery, $rssi, $SVG, $ABV, $temperature2) = getArchiveValues($conn, $selected_recipe, $initial_gravity);
+list($SpindleName, $RecipeName, $start_date, $end_date, $dens, $temperature, $angle, $gravity, $battery, $rssi, $SVG, $ABV, $temperature2, $batch) = getArchiveValues($conn, $selected_recipe, $initial_gravity);
 // get the final gracvitry for this ID
 list($isCalib,$final_gravity) = getArchiveFinalGravity($conn, $selected_recipe, $end_date);
 // get selected colo scheme for the layout
@@ -742,7 +742,7 @@ if ($len != 0)
         {
             echo "<option value = '$ID'>";
         }
-        echo($row['Recipe_ID']." | ".$row['Name']." | ".$newDate." | ".$row['Recipe']);
+        echo($row['Batch']." | ".$row['Name']." | ".$newDate." | ".$row['Recipe']. " (".$row['Recipe_ID'].")");
     }
 
     echo "</option>";

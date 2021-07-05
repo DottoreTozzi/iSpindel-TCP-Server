@@ -333,6 +333,19 @@ function check_database($conn)
 
 	}
 
+        // Check if alternative temperature column exists in data table
+        $q_sql = "Select COLUMN_DEFAULT
+                  FROM INFORMATION_SCHEMA.COLUMNS
+                  WHERE TABLE_SCHEMA='$database' and TABLE_NAME='Archive' and COLUMN_NAME='Batch'";
+                $result = mysqli_query($conn, $q_sql);
+                $row = mysqli_fetch_array($result);
+                if ($row[0] == "") {
+                        $change_sql="ALTER TABLE `Archive` ADD `Batch` VARCHAR(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL AFTER `Recipe`";
+                        $result = mysqli_query($conn, $change_sql) or die(mysqli_error($conn));
+
+			}
+
+
 }
 	
 // function to get selected css layout for webpages
@@ -1259,6 +1272,7 @@ function getArchiveValues($conn, $recipe_ID, $initial_gravity)
     $archive_result = mysqli_fetch_array($result);
     $spindle_name = $archive_result['Name'];
     $recipe_name = $archive_result['Recipe'];
+    $batch = $archive_result['Batch'];
     $start_date = $archive_result['Start_date'];
     $end_date = $archive_result['End_date'];
     $const0 = $archive_result['const0'];
@@ -1364,7 +1378,8 @@ function getArchiveValues($conn, $recipe_ID, $initial_gravity)
             $valRSSI,
             $valSVG,
             $valABV,
-	    $valTemperature2
+	    $valTemperature2,
+	    $batch
         );
   
 }
@@ -1614,7 +1629,7 @@ function getlastValuesPlato4($conn, $iSpindleID = 'iSpindel000')
     mysqli_set_charset($conn, "utf8mb4");
 
 // sql query to pull last dataset for selected spindle from database
-    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe, battery, 'interval', rssi, gravity
+    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe, battery, 'interval', rssi, gravity, recipe_id
                 FROM Data
                 WHERE Name = '" . $iSpindleID . "'
                 ORDER BY Timestamp DESC LIMIT 1") or die(mysqli_error($conn));
@@ -1654,6 +1669,11 @@ function getlastValuesPlato4($conn, $iSpindleID = 'iSpindel000')
         $valBattery = $r_row['battery'];
         $valRSSI = $r_row['rssi'];
         $valGravity = $r_row['gravity'];
+	$valRecipe_ID=$r_row['recipe_id'];
+	$query_sql= mysqli_query($conn, "SELECT Batch from Archive WHERE Recipe_ID = ".$valRecipe_ID);
+	$r_row = mysqli_fetch_array($query_sql);
+	$batch = $r_row['Batch'];
+
         return array(
             $isCalibrated,
             $valTime,
@@ -1664,7 +1684,8 @@ function getlastValuesPlato4($conn, $iSpindleID = 'iSpindel000')
             $valDens,
             $valRSSI,
             $valInterval,
-            $valGravity
+            $valGravity,
+	    $batch
         );
     }
 }

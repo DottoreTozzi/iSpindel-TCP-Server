@@ -124,6 +124,8 @@ check_database($conn);
 	$url .="&reset=".$_POST["fromreset"];}
         if ($_POST["recipename"]<>''){
         $url .="&recipe=".$_POST["recipename"];}
+        if ($_POST["batch"]<>''){
+        $url .="&batch=".$_POST["batch"];}
         if ($_POST["comment_text"]<>''){
         $url .="&comment=".$_POST["comment_text"];}
 
@@ -605,6 +607,9 @@ if ($iGauge_exists != 0) {
 <div id="ResetNow" style="display: none;">
 <p><?php echo($recipe_name)?>
 <input type = "text" name = "recipename" /> </p>
+<p>Batch (e.g. 2101):
+<input type = "text" name = "batch" /> </p>
+
 </div>
 
 <!-- Comment text field for comment function (enabled or disabled via JS functions) -->
@@ -663,6 +668,7 @@ if ($len !=0 ){
     echo "<tr>";
     echo "<th>Device</th>";
     echo "<th>$header_time</th>";
+    echo "<th>Batch</th>";
     echo "<th>$header_recipe</th>";
     echo "<th>$header_angle [°]</th>";
     echo "<th>$header_temperature [°C]</th>";
@@ -681,7 +687,7 @@ if ($len !=0 ){
         $show_device=get_settings_from_sql($conn, 'GENERAL', $row['Name'],'SHOWSUMMARY'); 
         if ($show_device == 1){
 //get current data
-        list($iscalibrated, $time, $temperature, $angle, $battery, $recipe, $dens, $RSSI) = getlastValuesPlato4($conn, $row['Name']);
+        list($iscalibrated, $time, $temperature, $angle, $battery, $recipe, $dens, $RSSI, $Interval, $Gravity, $batch) = getlastValuesPlato4($conn, $row['Name']);
 // get data from $hours_ago
         list($iscalibrated, $time_ago, $temperature_ago, $angle_ago, $battery_ago, $recipe_ago, $dens_ago, $RSSI_ago) = getValuesHoursAgoPlato4($conn, $row['Name'], $time, $hours_ago);
         $gravity=getInitialGravity($conn, $row['Name']);
@@ -703,6 +709,7 @@ if ($len !=0 ){
         echo "<tr>";
         echo "<td style='text-align: left'><b>" . $row['Name'] . "</b></td>";
         echo "<td style='text-align: left'>" . date("Y-m-d\ H:i:s\ ", $time) . "</td>";
+        echo "<td style='text-align: left'>" .  $batch . "</td>";
         echo "<td style='text-align: left'>" .  $recipe . "</td>";
         echo "<td>" . number_format($angle,1) . "</td>";
         echo "<td>" . number_format($temperature,1) . "</td>";
