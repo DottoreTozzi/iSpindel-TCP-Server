@@ -1,10 +1,10 @@
 -- phpMyAdmin SQL Dump
--- version 5.0.2
+-- version 5.1.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3308
--- Erstellungszeit: 28. Dez 2020 um 23:53
--- Server-Version: 10.4.12-MariaDB
+-- Erstellungszeit: 27. Aug 2021 um 23:34
+-- Server-Version: 10.5.11-MariaDB
 -- PHP-Version: 7.3.7
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Datenbank: `iSpindle2`
+-- Datenbank: `iSpindle`
 --
 
 -- --------------------------------------------------------
@@ -113,6 +113,7 @@ INSERT INTO `Settings` (`Section`, `Parameter`, `value`, `DEFAULT_value`, `Descr
 ('GENERAL', 'PORT', '9501', '9501', 'Port zur Kommunikation zwischen Spindel und TCP Server (muss auch in der Spindel hinterlegt sein)', 'TCP Port to listen to (to be used in iSpindle config as well)', 'Porta TCP di communicazione (da impostare anche nella configurazione iSpindle)', 'GLOBAL'),
 ('GENERAL', 'SHOWSUMMARY', '1', '1', 'Anzeige von Device in der Übersicht auf der Hauptseite. (0: nein 1: ja)', 'Show device in summary on main page (0: no 1: yes)', 'Visualizzazione del dispositivo nella panoramica sulla pagina principale. (0: no 1: sì)', '_DEFAULT'),
 ('GRAINCONNECT', 'ENABLE_GRAINCONNECT', '0', '0', 'Weiterleitung an Grainfather Connect (muss für jede Spindel individuell angelegt werden)', 'Forward to Grainfather Connect (must be cofigured for individual spindles)', 'Inoltra a Grainfather Connect (deve essere configurato per i singoli spindle)', '_DEFAULT'),
+('GRAINCONNECT', 'ENABLE_SG', '0', '0', 'Weiterleitung als SG (1) anstelle von Plato (0) (muss für jede Spindel individuell angelegt werden)', 'Forward as SG (1) instead of Plato (0) (must be cofigured for individual spindles)', 'Avanti come SG (1) invece di Plato (0) (deve essere configurato per i singoli spindle)', '_DEFAULT'),
 ('GRAINCONNECT', 'GRAINCONNECT_URL', '/URL', '/URL', 'Grainfather \'Server URL\'', 'Grainfather \'Server URL\'', 'Grainfather \'Server URL\'', '_DEFAULT'),
 ('INFLUXDB', 'ENABLE_INFLUXDB', '0', '0', 'Weiterleitung an InfluxDB', 'Forward to InfluxDB', 'Inoltro a InfluxDB', '_DEFAULT'),
 ('INFLUXDB', 'INFLUXDBADDR', 'localhost', 'localhost', 'IP-Adresse/Name des InfluxDB-Servers', 'IP address/hostname of the InfluxDB Server', 'Indirizzo IP / nome del server InfluxDB', '_DEFAULT'),
@@ -128,7 +129,7 @@ INSERT INTO `Settings` (`Section`, `Parameter`, `value`, `DEFAULT_value`, `Descr
 ('UBIDOTS', 'ENABLE_UBIDOTS', '0', '0', 'Weiterleitung der Daten an Ubidots (1: an 0: aus)', '1 to enable output to ubidots', '1 per abilitare l\'inoltro a ubidots ', '_DEFAULT'),
 ('UBIDOTS', 'UBI_TOKEN', 'my_token', 'my_token', 'UBIDOTS Token. Siehe Anleitung oder ubidots.com', 'global ubidots token, see manual or ubidots.com', 'Token ubidots vedi istruzioni o ubidots.com', '_DEFAULT'),
 ('UBIDOTS', 'UBI_USE_ISPINDLE_TOKEN', '0', '0', 'Benutzung des in der Spindel gespeicherten Tokens zur Weiterleitung an Ubidots ', '1 to use \"token\" field in iSpindle config (overrides UBI_TOKEN)', 'Utilizzo del token salvato nella iSpindle per l\'inoltro a ubidots', '_DEFAULT'),
-('VERSION', '', '005', '005', NULL, NULL, NULL, 'GLOBAL');
+('VERSION', '', '006', '006', NULL, NULL, NULL, 'GLOBAL');
 
 --
 -- Indizes der exportierten Tabellen

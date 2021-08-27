@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# Version 3.3
+# Added support for SG transfer to grainconnect
+# Improvement in handling GC_URL in case of tailing whitespace characters
+#
 # Version 3.2
 # Added support for alternative Fermenter temperature from CBPiv4 iSpindle plugin
 #
@@ -276,6 +280,7 @@ def handler(clientsock, addr):
     spindle_id = 0
     angle = 0.0
     temperature = 0.0
+    temp_units = 'C'
     battery = 0.0
     gravity = 0.0
     user_token = ''
@@ -316,6 +321,7 @@ def handler(clientsock, addr):
                     spindle_id = jinput['ID']
                     angle = jinput['angle']
                     temperature = jinput['temperature']
+                    temp_units = jinput['temp_units']
                     battery = jinput['battery']
 
                     try:
@@ -462,7 +468,8 @@ def handler(clientsock, addr):
 
         #Grainfather Connect
         GRAINCONNECT = int(get_config_from_sql('GRAINCONNECT', 'ENABLE_GRAINCONNECT', spindle_name))
-        GC_URL = get_config_from_sql('GRAINCONNECT', 'GRAINCONNECT_URL', spindle_name)
+        GRAIN_SG = int(get_config_from_sql('GRAINCONNECT', 'ENABLE_SG', spindle_name))
+        GC_URL = str(get_config_from_sql('GRAINCONNECT', 'GRAINCONNECT_URL', spindle_name))
 
 
         if CSV:
@@ -773,12 +780,29 @@ def handler(clientsock, addr):
             try:
                 import urllib3
                 dbgprint(repr(addr) + ' - forwarding to Grainfather Connect at http://community.grainfather.com:80' + GC_URL)
-                out = inpstr
+                GRAIN_SUFFIX = ""
+                if GRAIN_SG:
+                    GRAIN_SUFFIX = ",SG"
+                outdata = {
+                    'name': spindle_name + GRAIN_SUFFIX,
+                    'ID': spindle_id,
+                    'angle': angle,
+                    'temperature': temperature,
+                    'temp_units': temp_units,
+                    'battery': battery,
+                    'gravity': gravity,
+                    'token': user_token,
+                    'interval': interval,
+                    'RSSI': rssi
+                }
+                out = json.dumps(outdata)
+
                 dbgprint(repr(addr) + ' - sending: ' + out)
-                url = 'http://community.grainfather.com:80' + GC_URL
+                url = 'http://community.grainfather.com:80' + GC_URL.strip() 
                 dbgprint(repr(addr) + ' to : ' + url)
                 http = urllib3.PoolManager()
-                req = http.request('POST', url, body=out, headers={'Content-Type': 'application/json'})
+                header={'User-Agent': 'iSpindel', 'Connection': 'close', 'Content-Type': 'application/json'}
+                req = http.request('POST', url, body = out, headers = header)
                 dbgprint(repr(addr) + ' - HTTP Status code received: ' + str(req.status))
             except Exception as e:
                 dbgprint(repr(addr) + ' - forwarding to Grainfather Connect Error: ' + str(e))
